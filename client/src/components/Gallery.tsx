@@ -1,172 +1,77 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
+const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/";
+
 const galleryImages = [
-  {
-    id: 1,
-    title: 'Piscina con Vista Panorámica',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
-    alt: 'Piscina del Hotel Beach Canasvieiras al atardecer con vista panorámica del océano',
-    category: 'Instalaciones',
-  },
-  {
-    id: 2,
-    title: 'Habitación Ejecutiva',
-    image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop',
-    alt: 'Interior de la habitación Ejecutiva del Hotel Beach Canasvieiras con cama matrimonial',
-    category: 'Habitaciones',
-  },
-  {
-    id: 3,
-    title: 'Playa de Canasvieiras',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
-    alt: 'Playa de Canasvieiras Florianópolis con agua turquesa frente al hotel',
-    category: 'Playas',
-  },
-  {
-    id: 4,
-    title: 'Restaurante Oasis',
-    image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&h=600&fit=crop',
-    alt: 'Área del buffet del desayuno buffet incluido en el Restaurante Oasis del hotel',
-    category: 'Gastronomía',
-  },
-  {
-    id: 5,
-    title: 'Jacuzzi y Spa',
-    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&h=600&fit=crop',
-    alt: 'Área de bienestar del hotel con jacuzzi de agua templada para huéspedes',
-    category: 'Bienestar',
-  },
-  {
-    id: 6,
-    title: 'Atardecer en la Playa',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
-    alt: 'Vista del atardecer desde el balcón de la suite en Hotel Beach Canasvieiras',
-    category: 'Vistas',
-  },
+  { id: 1, title: 'Recepción Principal', image: `${CLOUDINARY_BASE}hotel/hero-1.webp`, category: 'Hotel' },
+  { id: 2, title: 'Fachada Avenida das Nações', image: `${CLOUDINARY_BASE}hotel/hero-2.webp`, category: 'Exterior' },
+  { id: 3, title: 'Piscina en la Azotea', image: `${CLOUDINARY_BASE}hotel/piscina.webp`, category: 'Instalaciones' },
+  { id: 4, title: 'Atardecer en Canasvieiras', image: `${CLOUDINARY_BASE}hotel/atardecer.webp`, category: 'Vistas' },
+  { id: 5, title: 'Confort Suite', image: `${CLOUDINARY_BASE}suites/single.png`, category: 'Habitaciones' },
+  { id: 6, title: 'Espacios Familiares', image: `${CLOUDINARY_BASE}suites/grupal.png`, category: 'Habitaciones' },
 ];
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.4 },
-  },
-};
 
 export default function Gallery() {
   const [selectedImage, setSelectedImage] = useState<typeof galleryImages[0] | null>(null);
 
   return (
     <section id="gallery" className="py-20 bg-white">
-      <div className="container">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+      <div className="container px-4">
+        <div className="text-center mb-16">
           <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4">
-            Galería de Fotos
+            Nuestro rincón
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
-            Descubre Nuestro Hotel
-          </h2>
-          <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg">
-            Explora las instalaciones, habitaciones y vistas hermosas que te esperan en Beach Hotel Canasvieiras.
-          </p>
-        </motion.div>
+          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">Galería de Momentos</h2>
+        </div>
 
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {galleryImages.map((image) => (
             <motion.div
               key={image.id}
-              variants={itemVariants}
+              layoutId={`img-${image.id}`}
               onClick={() => setSelectedImage(image)}
-              className="relative h-64 rounded-lg overflow-hidden cursor-pointer group"
+              className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all"
             >
-              <motion.img
+              <img
                 src={image.image}
-                alt={image.alt}
+                alt={image.title}
                 loading="lazy"
-                className="w-full h-full object-cover"
-                whileHover={{ scale: 1.1 }}
-                transition={{ duration: 0.4 }}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-end p-4">
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  whileHover={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-white"
-                >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                <div className="text-white">
                   <p className="font-display text-lg">{image.title}</p>
-                  <p className="font-body text-sm text-white/80">{image.category}</p>
-                </motion.div>
+                  <p className="font-body text-xs text-white/80 uppercase tracking-widest">{image.category}</p>
+                </div>
               </div>
             </motion.div>
           ))}
-        </motion.div>
+        </div>
       </div>
 
-      {/* Lightbox */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: selectedImage ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-        onClick={() => setSelectedImage(null)}
-        className={`fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 ${
-          selectedImage ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
-      >
+      <AnimatePresence>
         {selectedImage && (
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative max-w-3xl w-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedImage(null)}
+            className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 md:p-10 backdrop-blur-sm"
           >
-            <img
+            <button className="absolute top-6 right-6 text-white hover:text-blue-400 transition-colors">
+              <X size={32} />
+            </button>
+            <motion.img
+              layoutId={`img-${selectedImage.id}`}
               src={selectedImage.image}
-              alt={selectedImage.alt}
-              className="w-full h-auto rounded-lg"
+              className="max-w-full max-h-full rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             />
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white p-2 rounded-full transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </motion.button>
-            <div className="mt-4 text-white">
-              <h3 className="font-display text-2xl">{selectedImage.title}</h3>
-              <p className="font-body text-white/80">{selectedImage.category}</p>
-            </div>
           </motion.div>
         )}
-      </motion.div>
+      </AnimatePresence>
     </section>
   );
 }

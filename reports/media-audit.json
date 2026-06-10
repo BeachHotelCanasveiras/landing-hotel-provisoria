@@ -1,0 +1,92 @@
+[
+  {
+    "path": "\\client\\public\\images\\hotel\\entrada-principal-hotel-beach-canasvieiras.webp",
+    "name": "entrada-principal-hotel-beach-canasvieiras.webp",
+    "size": "542.29 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\hotel\\fachada-hotel-beach-canasvieiras-exterior.webp",
+    "name": "fachada-hotel-beach-canasvieiras-exterior.webp",
+    "size": "506.61 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\hotel\\piscina.webp",
+    "name": "piscina.webp",
+    "size": "566.51 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\hotel\\por-do-sol.webp",
+    "name": "por-do-sol.webp",
+    "size": "249.79 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\logo\\beach-logo-icon.svg",
+    "name": "beach-logo-icon.svg",
+    "size": "7.10 KB",
+    "extension": ".svg"
+  },
+  {
+    "path": "\\client\\public\\images\\suites\\bano-suite-standard-iluminacion-natural.png",
+    "name": "bano-suite-standard-iluminacion-natural.png",
+    "size": "2130.69 KB",
+    "extension": ".png"
+  },
+  {
+    "path": "\\client\\public\\images\\suites\\habitacion-doble-twin-camas-separadas.png",
+    "name": "habitacion-doble-twin-camas-separadas.png",
+    "size": "1804.17 KB",
+    "extension": ".png"
+  },
+  {
+    "path": "\\client\\public\\images\\suites\\habitacion-single-ejecutiva-cama-matrimonial.png",
+    "name": "habitacion-single-ejecutiva-cama-matrimonial.png",
+    "size": "1861.19 KB",
+    "extension": ".png"
+  },
+  {
+    "path": "\\client\\public\\images\\suites\\habitacion-triple-standard-camas-individuales.png",
+    "name": "habitacion-triple-standard-camas-individuales.png",
+    "size": "2084.73 KB",
+    "extension": ".png"
+  },
+  {
+    "path": "\\client\\public\\images\\testimonials\\avatar-cliente-argentina.webp",
+    "name": "avatar-cliente-argentina.webp",
+    "size": "522.99 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\testimonials\\avatar-cliente-brasil.webp",
+    "name": "avatar-cliente-brasil.webp",
+    "size": "521.21 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\testimonials\\avatar-cliente-chile.webp",
+    "name": "avatar-cliente-chile.webp",
+    "size": "605.18 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\images\\testimonials\\avatar-cliente-uruguay.webp",
+    "name": "avatar-cliente-uruguay.webp",
+    "size": "260.25 KB",
+    "extension": ".webp"
+  },
+  {
+    "path": "\\client\\public\\logo-dark.svg",
+    "name": "logo-dark.svg",
+    "size": "16.96 KB",
+    "extension": ".svg"
+  },
+  {
+    "path": "\\client\\public\\logo-light.svg",
+    "name": "logo-light.svg",
+    "size": "16.67 KB",
+    "extension": ".svg"
+  }
+]

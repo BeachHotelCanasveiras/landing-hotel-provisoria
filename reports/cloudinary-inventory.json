@@ -1,0 +1,72 @@
+[
+  {
+    "public_id": "beach-hotel/hotel/atardecer",
+    "format": "webp",
+    "version": 1781114936,
+    "size_kb": "249.79",
+    "width": 2560,
+    "height": 1440,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114936/beach-hotel/hotel/atardecer.webp",
+    "created_at": "2026-06-10T18:08:56Z"
+  },
+  {
+    "public_id": "beach-hotel/hotel/hero-1",
+    "format": "webp",
+    "version": 1781114927,
+    "size_kb": "542.29",
+    "width": 2560,
+    "height": 1440,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114927/beach-hotel/hotel/hero-1.webp",
+    "created_at": "2026-06-10T18:08:47Z"
+  },
+  {
+    "public_id": "beach-hotel/hotel/hero-2",
+    "format": "webp",
+    "version": 1781114930,
+    "size_kb": "506.61",
+    "width": 2560,
+    "height": 1440,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114930/beach-hotel/hotel/hero-2.webp",
+    "created_at": "2026-06-10T18:08:50Z"
+  },
+  {
+    "public_id": "beach-hotel/hotel/piscina",
+    "format": "webp",
+    "version": 1781114935,
+    "size_kb": "566.51",
+    "width": 2560,
+    "height": 1440,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114935/beach-hotel/hotel/piscina.webp",
+    "created_at": "2026-06-10T18:08:55Z"
+  },
+  {
+    "public_id": "beach-hotel/suites/grupal",
+    "format": "png",
+    "version": 1781114968,
+    "size_kb": "1804.17",
+    "width": 1448,
+    "height": 1086,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114968/beach-hotel/suites/grupal.png",
+    "created_at": "2026-06-10T18:09:28Z"
+  },
+  {
+    "public_id": "beach-hotel/suites/single",
+    "format": "png",
+    "version": 1781114943,
+    "size_kb": "1861.19",
+    "width": 1448,
+    "height": 1086,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114943/beach-hotel/suites/single.png",
+    "created_at": "2026-06-10T18:09:03Z"
+  },
+  {
+    "public_id": "beach-hotel/suites/triple",
+    "format": "png",
+    "version": 1781114959,
+    "size_kb": "2084.73",
+    "width": 1448,
+    "height": 1086,
+    "url": "https://res.cloudinary.com/dap9ukdyq/image/upload/v1781114959/beach-hotel/suites/triple.png",
+    "created_at": "2026-06-10T18:09:19Z"
+  }
+]
