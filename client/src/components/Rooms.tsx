@@ -5,38 +5,30 @@ const rooms = [
   {
     id: 1,
     name: 'Habitación Doble',
-    description: 'Confortable habitación para dos personas con desayuno incluido. Ideal para parejas o estancias individuales de negocios.',
-    image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=400&fit=crop',
-    amenities: ['Desayuno Incluido', 'WiFi Gratis', 'Aire Acondicionado', 'Minibar'],
-    price: 'R$ 200',
-    suffix: '',
+    description: 'Confortable y acogedora habitación para dos personas con desayuno buffet completo incluido. Perfecta para descansar a pasos del mar con la calidez del hogar.',
+    image: '/images/suites/habitacion-single-ejecutiva-cama-matrimonial.png',
+    amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Minibar'],
   },
   {
     id: 2,
     name: 'Habitación Triple',
-    description: 'Amplia habitación para tres personas con desayuno incluido. Excelente distribución para viajes familiares o de negocios grupales.',
-    image: 'https://images.unsplash.com/photo-1566073041694-a8fc8c3e7c3f?w=600&h=400&fit=crop',
-    amenities: ['Desayuno Incluido', 'WiFi Gratis', 'Aire Acondicionado', 'Minibar'],
-    price: 'R$ 280',
-    suffix: '',
+    description: 'Amplia habitación ideal para familias pequeñas. Ofrece una distribución muy acogedora para disfrutar de una estadía cómoda, sintiéndose siempre como en casa.',
+    image: '/images/suites/habitacion-triple-standard-camas-individuales.png',
+    amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Minibar'],
   },
   {
     id: 3,
     name: 'Habitación Cuádruple',
-    description: 'Espaciosa y equipada para alojar cómodamente a cuatro personas con desayuno incluido. Ideal para familias o delegaciones.',
-    image: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=600&h=400&fit=crop',
-    amenities: ['Desayuno Incluido', 'WiFi Gratis', 'Aire Acondicionado', 'Zona de Estar'],
-    price: 'R$ 340',
-    suffix: '',
+    description: 'Espaciosa y totalmente equipada para alojar cómodamente a cuatro integrantes. El espacio ideal y seguro para compartir unas vacaciones familiares inolvidables.',
+    image: '/images/suites/habitacion-doble-twin-camas-separadas.png',
+    amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Zona de Estar'],
   },
   {
     id: 4,
-    name: 'Tarifa Grupal Especial',
-    description: 'Tarifa preferencial por pasajero para delegaciones y grupos de viaje. Incluye desayuno completo y política especial de cortesía.',
-    image: 'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=600&h=400&fit=crop',
-    amenities: ['Desayuno Incluido', '1 Liberada c/10 hab.', 'Soporte Coordinador', 'WiFi Gratis'],
-    price: 'R$ 80',
-    suffix: ' / por pasajero',
+    name: 'Plan Familiar & Grupos',
+    description: 'Atención personalizada y tarifas especiales para grandes familias, delegaciones o grupos de viaje. Coordinación dedicada para que disfruten sin preocupaciones.',
+    image: '/images/suites/habitacion-triple-standard-camas-individuales.png',
+    amenities: ['Desayuno Buffet', 'Atención Coordinada', 'Camas Adicionales', 'WiFi de Alta Velocidad'],
   },
 ];
 
@@ -45,8 +37,8 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.3,
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
     },
   },
 };
@@ -56,7 +48,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6 },
+    transition: { duration: 0.5 },
   },
 };
 
@@ -72,13 +64,13 @@ export default function Rooms() {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4">
-            Tarifario de Temporada
+            Tu Hogar en la Playa
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
-            Habitaciones y Tarifas Netas
+            Nuestras Habitaciones Familiares
           </h2>
           <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg">
-            Consulta nuestras tarifas netas particulares vigentes de junio a agosto con desayuno incluido.
+            Espacios diseñados para ofrecerte descanso, calidez y el máximo confort a metros de la playa de Canasvieiras.
           </p>
         </motion.div>
 
@@ -93,7 +85,7 @@ export default function Rooms() {
             <motion.div
               key={room.id}
               variants={itemVariants}
-              whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}
+              whileHover={{ y: -8, boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}
               className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col justify-between"
             >
               <div>
@@ -112,7 +104,7 @@ export default function Rooms() {
                   <p className="font-body text-sm text-gray-600 mb-4">{room.description}</p>
 
                   <div className="mb-4">
-                    <p className="font-body text-xs font-semibold text-gray-700 mb-2">COMODIDADES Y CONDICIONES</p>
+                    <p className="font-body text-xs font-semibold text-gray-700 mb-2">COMODIDADES Y DETALLES</p>
                     <div className="flex flex-wrap gap-2">
                       {room.amenities.map((amenity, i) => (
                         <span
@@ -127,19 +119,19 @@ export default function Rooms() {
                 </div>
               </div>
 
+              {/* Botón de conversión cálido sin precios fijos */}
               <div className="p-6 pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
                 <div className="flex flex-col">
-                  <span className="font-display text-2xl text-blue-700 leading-none">
-                    {room.price}
+                  <span className="font-body text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Disponibilidad
                   </span>
-                  {room.suffix && (
-                    <span className="text-[10px] text-gray-500 font-body mt-1">
-                      {room.suffix}
-                    </span>
-                  )}
+                  <span className="font-display text-sm text-green-600 font-medium mt-1 flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+                    Inmediata
+                  </span>
                 </div>
                 <motion.a
-                  href={`${HOTEL_CONFIG.whatsappUrl}?text=Hola!%20Me%20gustaría%20consultar%20disponibilidad%20para%20la%20${encodeURIComponent(room.name)}%20con%20tarifa%20de%20${encodeURIComponent(room.price)}`}
+                  href={`${HOTEL_CONFIG.whatsappUrl}?text=Hola!%20Me%20gustaría%20consultar%20disponibilidad%20y%20tarifas%20para%20la%20${encodeURIComponent(room.name)}%20en%20el%20Hotel%20Beach%20Canasvieiras.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.05 }}

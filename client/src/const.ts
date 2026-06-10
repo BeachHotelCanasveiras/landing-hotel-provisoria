@@ -4,11 +4,12 @@ export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 export const HOTEL_CONFIG = {
   name: "Beach Canasvieiras",
   fullName: "Hotel Beach Canasvieiras",
-  tagline: "Hotel a pasos de la playa",
+  tagline: "Hospitalidad y descanso a pasos del mar",
   location: "Canasvieiras - Florianópolis - SC, Brasil",
-  address: "Rua Hypolito Gregorio Pereira, 700, Canasvieiras, Florianópolis, SC, Brasil",
+  address: "Avenida das Nações, 75, Canasvieiras, Florianópolis, SC, Brasil",
   phoneDisplay: "+55 (48) 99812-6650",
   email: "Hotelbeachcanasvieiras@gmail.com",
+  websiteUrl: "https://beachcanasvieiras.com",
   
   // Enlaces de Conversión Directa
   whatsappUrl: "https://wa.me/5548998126650",
