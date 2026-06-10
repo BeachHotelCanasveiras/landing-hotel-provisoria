@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { HOTEL_CONFIG } from '@/const';
+import { Logo } from '@/components/Logo';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -27,7 +28,6 @@ export default function Footer() {
     <footer id="contact" className="bg-gray-900 text-white">
       <div className="container py-16">
         <motion.div
-          border-b border-gray-200
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -37,15 +37,10 @@ export default function Footer() {
           {/* About */}
           <motion.div variants={itemVariants}>
             <div className="flex items-center mb-4">
-              <img 
-                src="/logo-light.svg" 
-                alt={`Logotipo oficial de ${HOTEL_CONFIG.name}`} 
-                className="h-10 sm:h-12 w-auto object-contain"
-                loading="lazy" // Carga diferida al estar debajo de la línea de pliegue inicial (below the fold)
-              />
+              <Logo className="h-12 text-white" fill="white" withIcon={true} />
             </div>
             <p className="font-body text-gray-400 text-sm leading-relaxed">
-              Lujo ejecutivo frente al mar en Canasvieiras, Florianópolis. Tu destino perfecto para relajación y negocios.
+              Tu hogar cálido y acogedor en la Avenida das Nações. Disfruta de la tranquilidad a solo dos cuadras del mar en Canasvieiras.
             </p>
           </motion.div>
 
@@ -86,6 +81,9 @@ export default function Footer() {
           <motion.div variants={itemVariants}>
             <h4 className="font-display text-lg mb-4">Enlaces Rápidos</h4>
             <div className="space-y-2">
+              <a href="#home" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
+                Inicio
+              </a>
               <a href="#rooms" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
                 Habitaciones
               </a>
@@ -94,9 +92,6 @@ export default function Footer() {
               </a>
               <a href="#attractions" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
                 Atracciones
-              </a>
-              <a href="#testimonials" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Reseñas
               </a>
             </div>
           </motion.div>
@@ -153,10 +148,8 @@ export default function Footer() {
           </motion.div>
         </motion.div>
 
-        {/* Divider */}
         <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8" />
 
-        {/* Bottom */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -168,12 +161,9 @@ export default function Footer() {
             © 2026 {HOTEL_CONFIG.fullName}. Todos los derechos reservados.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="font-body text-sm text-gray-400 hover:text-white transition-colors">
-              Política de Privacidad
-            </a>
-            <a href="#" className="font-body text-sm text-gray-400 hover:text-white transition-colors">
-              Términos de Servicio
-            </a>
+            <span className="font-body text-xs text-gray-500 italic">
+              Desarrollado por Raz Podestá - MetaShark Tech
+            </span>
           </div>
         </motion.div>
       </div>

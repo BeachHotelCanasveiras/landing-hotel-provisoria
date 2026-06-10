@@ -1,60 +1,55 @@
 import { motion } from 'framer-motion';
 import { MapPin, Clock } from 'lucide-react';
+import { HOTEL_CONFIG } from '@/const';
 
 const attractions = [
   {
     id: 1,
     name: 'Praia Brava',
-    description: 'Playa salvaje y hermosa a 9 km del hotel, perfecta para surfistas y amantes de la naturaleza.',
+    description: 'Un refugio natural a pocos minutos de nuestra ubicación en Avenida das Nações, ideal para conectar con el surf y la serenidad.',
     distance: '9 km',
     time: '15 min en auto',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop',
-    alt: 'Paisaje natural y olas de Praia Brava en Florianópolis cerca del hotel'
+    image: '/images/attractions/praia-brava.webp',
   },
   {
     id: 2,
     name: 'Playa Jurerê',
-    description: 'Playa tradicional con ambiente bohemio, tiendas y restaurantes. Ideal para familias.',
+    description: 'Tradición y frescura a corta distancia. Una opción excelente para disfrutar momentos inolvidables en familia.',
     distance: '4 km',
     time: '10 min en auto',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop',
-    alt: 'Arena blanca y aguas calmas de la Playa Jurerê en Florianópolis'
+    image: '/images/attractions/jurere.webp',
   },
   {
     id: 3,
-    name: 'Parque Acuático Água Show',
-    description: 'Parque acuático con piscinas, toboganes y entretenimiento para toda la familia.',
+    name: 'Parque Água Show',
+    description: 'Entretenimiento garantizado para todas las edades. Diversión y risas a pocos minutos de tu estadía.',
     distance: '4 km',
     time: '10 min en auto',
-    image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&h=400&fit=crop',
-    alt: 'Toboganes de agua y piscinas recreativas en el Parque Acuático Água Show'
+    image: '/images/attractions/agua-show.webp',
   },
   {
     id: 4,
     name: 'Centro Histórico',
-    description: 'Centro colonial de Florianópolis con arquitectura histórica, museos y gastronomía.',
+    description: 'Un paseo por la arquitectura colonial y la cultura de Florianópolis. Descubre la historia de la isla.',
     distance: '27 km',
     time: '30 min en auto',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
-    alt: 'Arquitectura histórica y calles coloniales en el Centro de Florianópolis'
+    image: '/images/attractions/centro-historico.webp',
   },
   {
     id: 5,
     name: 'Isla del Francés',
-    description: 'Tours en kayak, snorkel y avistamiento de fauna marina. Experiencia inolvidable.',
-    distance: 'Tours desde el hotel',
+    description: 'Un destino mágico para conectar con la fauna marina y las aguas cristalinas. Tours disponibles desde nuestra recepción.',
+    distance: 'Salidas cercanas',
     time: 'Medio día',
-    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop',
-    alt: 'Excursión marítima y snorkel en las aguas cristalinas de la Isla del Francés'
+    image: '/images/attractions/ilha-frances.webp',
   },
   {
     id: 6,
     name: 'Fortaleza São José',
-    description: 'Fortaleza histórica del siglo XVIII con vistas panorámicas del océano.',
+    description: 'Vistas panorámicas y un viaje al pasado. Un punto de encuentro con la historia local frente al océano.',
     distance: '15 km',
     time: '20 min en auto',
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
-    alt: 'Murallas de piedra de la histórica Fortaleza de São José frente al mar'
+    image: '/images/attractions/fortaleza.webp',
   },
 ];
 
@@ -62,20 +57,13 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.2,
-    },
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
 };
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
 export default function Attractions() {
@@ -90,13 +78,13 @@ export default function Attractions() {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4">
-            Explora la Isla
+            Ubicación Privilegiada
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
-            Atracciones de Florianópolis
+            Explora Canasvieiras
           </h2>
           <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg">
-            Descubre las mejores playas, parques y atracciones turísticas cerca de nuestro hotel.
+            Desde nuestro hogar en Avenida das Nações, tienes acceso rápido a lo mejor de Florianópolis.
           </p>
         </motion.div>
 
@@ -112,24 +100,22 @@ export default function Attractions() {
               key={attraction.id}
               variants={itemVariants}
               whileHover={{ y: -8 }}
-              className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
+              className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100"
             >
               <div className="relative h-48 overflow-hidden">
-                <motion.img
+                <img
                   src={attraction.image}
-                  alt={attraction.alt}
+                  alt={attraction.name}
                   loading="lazy"
                   className="w-full h-full object-cover"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.4 }}
                 />
               </div>
 
               <div className="p-6">
                 <h3 className="font-display text-xl text-gray-900 mb-2">{attraction.name}</h3>
-                <p className="font-body text-sm text-gray-600 mb-4">{attraction.description}</p>
+                <p className="font-body text-sm text-gray-600 mb-4 h-16">{attraction.description}</p>
 
-                <div className="space-y-2">
+                <div className="space-y-2 mb-6">
                   <div className="flex items-center gap-2 text-gray-700">
                     <MapPin className="w-4 h-4 text-blue-700" />
                     <span className="font-body text-sm">{attraction.distance}</span>
@@ -140,13 +126,16 @@ export default function Attractions() {
                   </div>
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full mt-4 px-4 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors"
+                <motion.a
+                  href={`${HOTEL_CONFIG.whatsappUrl}?text=Hola!%20Me%20gustaría%20información%20para%20visitar%20${encodeURIComponent(attraction.name)}%20desde%20el%20Hotel.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="block w-full text-center px-4 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors"
                 >
-                  Más Información
-                </motion.button>
+                  Saber cómo llegar
+                </motion.a>
               </div>
             </motion.div>
           ))}

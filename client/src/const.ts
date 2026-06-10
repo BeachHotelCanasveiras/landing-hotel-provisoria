@@ -6,7 +6,7 @@ export const HOTEL_CONFIG = {
   fullName: "Hotel Beach Canasvieiras",
   tagline: "Hospitalidad y descanso a pasos del mar",
   location: "Canasvieiras - Florianópolis - SC, Brasil",
-  address: "Avenida das Nações, 75, Canasvieiras, Florianópolis, SC, Brasil",
+  address: "Avenida das Nações, 375, Canasvieiras, Florianópolis, SC, Brasil",
   phoneDisplay: "+55 (48) 99812-6650",
   email: "Hotelbeachcanasvieiras@gmail.com",
   websiteUrl: "https://beachcanasvieiras.com",

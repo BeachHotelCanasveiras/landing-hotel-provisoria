@@ -63,3 +63,10 @@ Cada suite requiere imágenes exclusivas que reflejen su nivel de confort y just
 *   **Atributo ALT Altamente Descriptivo:** "Inmersión de música techno con iluminación láser en club subterráneo de Florianópolis"
 *   **Nombre de Archivo Optimizado para S3:** `the-sanctuary-night-club-underground-techno.webp`
 *   **Dimensiones Óptimas:** 768 x 1024 px (Card)
+
+### E. Testimonios (Avatares de Clientes)
+*   **Nombre de Archivo Optimizado:** `avatar-cliente-chile.webp`, `avatar-cliente-argentina.webp`, `avatar-cliente-uruguay.webp`, `avatar-cliente-brasil.webp`
+*   **Ruta S3:** `sanctuary-vault/testimonials/`
+*   **Dimensiones:** 200 x 200 px (Círculo)
+*   **SEO ALT:** "Opinión verificada de huésped de [PAÍS] en el Beach Hotel Canasvieiras"
+

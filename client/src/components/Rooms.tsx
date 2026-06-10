@@ -4,30 +4,30 @@ import { HOTEL_CONFIG } from '@/const';
 const rooms = [
   {
     id: 1,
-    name: 'Habitación Doble',
-    description: 'Confortable y acogedora habitación para dos personas con desayuno buffet completo incluido. Perfecta para descansar a pasos del mar con la calidez del hogar.',
+    name: 'Habitación Single',
+    description: 'Espacio personal diseñado para tu descanso y desconexión. Un refugio tranquilo a pasos de la playa para disfrutar de tu propio tiempo.',
     image: '/images/suites/habitacion-single-ejecutiva-cama-matrimonial.png',
     amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Minibar'],
   },
   {
     id: 2,
-    name: 'Habitación Triple',
-    description: 'Amplia habitación ideal para familias pequeñas. Ofrece una distribución muy acogedora para disfrutar de una estadía cómoda, sintiéndose siempre como en casa.',
-    image: '/images/suites/habitacion-triple-standard-camas-individuales.png',
+    name: 'Habitación Doble',
+    description: 'El refugio ideal para parejas que buscan compartir momentos especiales. Comodidad y calidez en un ambiente pensado para el descanso.',
+    image: '/images/suites/habitacion-single-ejecutiva-cama-matrimonial.png',
     amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Minibar'],
   },
   {
     id: 3,
-    name: 'Habitación Cuádruple',
-    description: 'Espaciosa y totalmente equipada para alojar cómodamente a cuatro integrantes. El espacio ideal y seguro para compartir unas vacaciones familiares inolvidables.',
-    image: '/images/suites/habitacion-doble-twin-camas-separadas.png',
-    amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Zona de Estar'],
+    name: 'Habitación Triple',
+    description: 'Perfecta para compartir con amigos o familiares. Una distribución acogedora que invita a la convivencia y al buen descanso.',
+    image: '/images/suites/habitacion-triple-standard-camas-individuales.png',
+    amenities: ['Desayuno Buffet', 'WiFi de Alta Velocidad', 'Aire Acondicionado', 'Minibar'],
   },
   {
     id: 4,
     name: 'Plan Familiar & Grupos',
-    description: 'Atención personalizada y tarifas especiales para grandes familias, delegaciones o grupos de viaje. Coordinación dedicada para que disfruten sin preocupaciones.',
-    image: '/images/suites/habitacion-triple-standard-camas-individuales.png',
+    description: 'Atención personalizada para grandes familias o grupos. Coordinación dedicada para asegurar que la logística sea impecable y todos disfruten por igual.',
+    image: '/images/suites/habitacion-doble-twin-camas-separadas.png',
     amenities: ['Desayuno Buffet', 'Atención Coordinada', 'Camas Adicionales', 'WiFi de Alta Velocidad'],
   },
 ];
@@ -64,13 +64,13 @@ export default function Rooms() {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4">
-            Tu Hogar en la Playa
+            Tu Lugar en Canasvieiras
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
-            Nuestras Habitaciones Familiares
+            Nuestras Habitaciones
           </h2>
           <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg">
-            Espacios diseñados para ofrecerte descanso, calidez y el máximo confort a metros de la playa de Canasvieiras.
+            Cada rincón está pensado para que te sientas como en casa, con la tranquilidad que buscas a solo 2 cuadras del mar.
           </p>
         </motion.div>
 
@@ -107,31 +107,23 @@ export default function Rooms() {
                     <p className="font-body text-xs font-semibold text-gray-700 mb-2">COMODIDADES Y DETALLES</p>
                     <div className="flex flex-wrap gap-2">
                       {room.amenities.map((amenity, i) => (
-                        <span
-                          key={i}
-                          className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-body"
-                        >
-                          {amenity}
-                        </span>
+                        <span key={i} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-body">{amenity}</span>
                       ))}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Botón de conversión cálido sin precios fijos */}
               <div className="p-6 pt-4 border-t border-gray-100 flex items-center justify-between mt-auto">
                 <div className="flex flex-col">
-                  <span className="font-body text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Disponibilidad
-                  </span>
+                  <span className="font-body text-xs font-semibold text-gray-500 uppercase tracking-wider">Disponibilidad</span>
                   <span className="font-display text-sm text-green-600 font-medium mt-1 flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
                     Inmediata
                   </span>
                 </div>
                 <motion.a
-                  href={`${HOTEL_CONFIG.whatsappUrl}?text=Hola!%20Me%20gustaría%20consultar%20disponibilidad%20y%20tarifas%20para%20la%20${encodeURIComponent(room.name)}%20en%20el%20Hotel%20Beach%20Canasvieiras.`}
+                  href={`${HOTEL_CONFIG.whatsappUrl}?text=Hola!%20Me%20gustaría%20consultar%20disponibilidad%20para%20${encodeURIComponent(room.name)}%20en%20el%20Hotel%20Beach%20Canasvieiras.`}
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.05 }}

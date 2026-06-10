@@ -1,9 +1,14 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/(.*)\\.(webp|avif|svg|png|jpg|jpeg)$",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
     }
   ]
 }

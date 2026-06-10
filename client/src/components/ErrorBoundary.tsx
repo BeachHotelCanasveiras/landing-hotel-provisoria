@@ -24,31 +24,28 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
+        <div className="flex items-center justify-center min-h-screen p-8 bg-gray-50">
+          <div className="flex flex-col items-center w-full max-w-lg p-8 bg-white rounded-2xl shadow-xl text-center">
             <AlertTriangle
               size={48}
-              className="text-destructive mb-6 flex-shrink-0"
+              className="text-blue-700 mb-6 flex-shrink-0"
             />
 
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
-
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
-            </div>
+            <h2 className="font-display text-2xl mb-2 text-gray-900">Ups, algo salió mal</h2>
+            <p className="font-body text-gray-600 mb-6">
+              Estamos trabajando para que tu experiencia sea perfecta. Por favor, intenta refrescar la página.
+            </p>
 
             <button
               onClick={() => window.location.reload()}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg",
-                "bg-primary text-primary-foreground",
-                "hover:opacity-90 cursor-pointer"
+                "flex items-center gap-2 px-6 py-3 rounded-lg",
+                "bg-blue-700 text-white",
+                "hover:bg-blue-800 transition-all cursor-pointer font-body font-medium"
               )}
             >
               <RotateCcw size={16} />
-              Reload Page
+              Recargar página
             </button>
           </div>
         </div>
