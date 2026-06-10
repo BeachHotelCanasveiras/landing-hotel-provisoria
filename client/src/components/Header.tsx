@@ -1,6 +1,7 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { HOTEL_CONFIG } from '@/const';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,38 +14,62 @@ export default function Header() {
     { label: 'Contacto', href: '#contact' },
   ];
 
-  const menuVariants = {
-    closed: { opacity: 0, y: -20 },
-    open: { opacity: 1, y: 0 },
+  // Prevenir scroll en el fondo cuando el menú móvil está abierto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Se añade anotación explícita de tipo para cumplir con Framer Motion 12
+  const menuVariants: Variants = {
+    closed: { 
+      opacity: 0, 
+      height: 0,
+      transition: { duration: 0.25, ease: 'easeInOut' }
+    },
+    open: { 
+      opacity: 1, 
+      height: 'auto',
+      transition: { duration: 0.3, ease: 'easeInOut' }
+    },
   };
 
-  const itemVariants = {
+  // Se añade anotación explícita de tipo para evitar colisiones en firmas de índice
+  const itemVariants: Variants = {
     closed: { opacity: 0, x: -10 },
     open: (i: number) => ({
       opacity: 1,
       x: 0,
-      transition: { delay: i * 0.1 },
+      transition: { delay: i * 0.05 },
     }),
   };
 
+  const whatsappMessage = `Hola, me gustaría consultar disponibilidad para hacer una reserva en ${HOTEL_CONFIG.name}`;
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
-      <nav className="container flex items-center justify-between h-20">
-        {/* Logo */}
-        <motion.div
+      <nav className="container flex items-center justify-between h-16 sm:h-20 px-4">
+        {/* Logo Real con fondo transparente */}
+        <motion.a
+          href="#home"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="flex items-center gap-2"
+          className="flex items-center"
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-700 to-teal-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-display text-lg">B</span>
-          </div>
-          <div className="hidden sm:block">
-            <h1 className="font-display text-lg text-blue-700">Beach Hotel</h1>
-            <p className="text-xs text-gray-600">Canasvieiras</p>
-          </div>
-        </motion.div>
+          <img 
+            src="/logo-dark.svg" 
+            alt={`Logotipo oficial de ${HOTEL_CONFIG.name}`} 
+            className="h-10 sm:h-12 w-auto object-contain"
+            loading="eager" // Carga inmediata para LCP óptimo
+          />
+        </motion.a>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
@@ -63,9 +88,9 @@ export default function Header() {
           ))}
         </div>
 
-        {/* CTA Button */}
+        {/* CTA Button (Desktop) */}
         <motion.a
-          href="https://wa.me/5548999999999?text=Hola%20Beach%20Hotel%20Canasvieiras%2C%20me%20gustaría%20hacer%20una%20reserva"
+          href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
           target="_blank"
           rel="noopener noreferrer"
           initial={{ opacity: 0, x: 20 }}
@@ -73,7 +98,7 @@ export default function Header() {
           transition={{ duration: 0.5 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="hidden sm:block px-6 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors"
+          className="hidden md:block px-6 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors"
         >
           Reservar
         </motion.a>
@@ -81,55 +106,51 @@ export default function Header() {
         {/* Mobile Menu Button */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2"
-          whileHover={{ scale: 1.1 }}
+          className="md:hidden p-2 text-gray-700 focus:outline-none"
           whileTap={{ scale: 0.95 }}
+          aria-label="Abrir menú"
         >
-          {isOpen ? (
-            <X className="w-6 h-6 text-gray-700" />
-          ) : (
-            <Menu className="w-6 h-6 text-gray-700" />
-          )}
+          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </motion.button>
       </nav>
 
       {/* Mobile Menu */}
-      <motion.div
-        variants={menuVariants}
-        initial="closed"
-        animate={isOpen ? 'open' : 'closed'}
-        transition={{ duration: 0.3 }}
-        className="md:hidden bg-white border-b border-gray-200 overflow-hidden"
-      >
-        <div className="container py-4 flex flex-col gap-4">
-          {navItems.map((item, i) => (
-            <motion.a
-              key={item.href}
-              href={item.href}
-              custom={i}
-              variants={itemVariants}
-              initial="closed"
-              animate={isOpen ? 'open' : 'closed'}
-              onClick={() => setIsOpen(false)}
-              className="text-gray-700 hover:text-blue-700 font-body text-sm font-medium transition-colors"
-            >
-              {item.label}
-            </motion.a>
-          ))}
-          <motion.a
-            href="https://wa.me/5548999999999?text=Hola%20Beach%20Hotel%20Canasvieiras%2C%20me%20gustaría%20hacer%20una%20reserva"
-            target="_blank"
-            rel="noopener noreferrer"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            variants={menuVariants}
             initial="closed"
-            animate={isOpen ? 'open' : 'closed'}
-            custom={navItems.length}
-            variants={itemVariants}
-            className="px-4 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors text-center"
+            animate="open"
+            exit="closed"
+            className="md:hidden bg-white border-b border-gray-200 overflow-y-auto max-h-[calc(100vh-4rem)]"
           >
-            Reservar por WhatsApp
-          </motion.a>
-        </div>
-      </motion.div>
+            <div className="container py-6 px-4 flex flex-col gap-4">
+              {navItems.map((item, i) => (
+                <motion.a
+                  key={item.href}
+                  href={item.href}
+                  custom={i}
+                  variants={itemVariants}
+                  onClick={() => setIsOpen(false)}
+                  className="text-gray-700 hover:text-blue-700 font-body text-base font-medium py-2 border-b border-gray-100 transition-colors"
+                >
+                  {item.label}
+                </motion.a>
+              ))}
+              <motion.a
+                href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                custom={navItems.length}
+                variants={itemVariants}
+                className="mt-2 px-4 py-3 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors text-center"
+              >
+                Reservar por WhatsApp
+              </motion.a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

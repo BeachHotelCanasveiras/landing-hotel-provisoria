@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { MessageCircle } from 'lucide-react';
+import { HOTEL_CONFIG } from '@/const';
 
 export default function WhatsAppButton() {
   const pulseVariants = {
@@ -12,9 +13,11 @@ export default function WhatsAppButton() {
     },
   };
 
+  const whatsappMessage = `Hola, me gustaría consultar disponibilidad para hacer una reserva en ${HOTEL_CONFIG.name}`;
+
   return (
     <motion.a
-      href="https://wa.me/5548999999999?text=Hola%20Beach%20Hotel%20Canasvieiras%2C%20me%20gustaría%20hacer%20una%20reserva"
+      href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
       target="_blank"
       rel="noopener noreferrer"
       variants={pulseVariants}

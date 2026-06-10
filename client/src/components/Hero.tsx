@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { HOTEL_CONFIG } from '@/const';
 
 export default function Hero() {
   const containerVariants = {
@@ -21,6 +22,8 @@ export default function Hero() {
       transition: { duration: 0.8 },
     },
   };
+
+  const whatsappMessage = `Hola, me gustaría consultar disponibilidad para hacer una reserva en ${HOTEL_CONFIG.name}`;
 
   return (
     <section
@@ -56,7 +59,7 @@ export default function Hero() {
           variants={itemVariants}
           className="font-display text-5xl md:text-7xl font-bold mb-6 leading-tight"
         >
-          Beach Hotel Canasvieiras
+          {HOTEL_CONFIG.fullName}
         </motion.h1>
 
         <motion.p
@@ -71,7 +74,7 @@ export default function Hero() {
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
           <motion.a
-            href="https://wa.me/5548999999999?text=Hola%20Beach%20Hotel%20Canasvieiras%2C%20me%20gustaría%20hacer%20una%20reserva"
+            href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(0,0,0,0.3)' }}

@@ -1,6 +1,27 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
-// Generate login URL at runtime so redirect URI reflects the current origin.
+// Fuente Única de Verdad (SSoT) de los datos reales del Hotel Beach Canasvieiras
+export const HOTEL_CONFIG = {
+  name: "Beach Canasvieiras",
+  fullName: "Hotel Beach Canasvieiras",
+  tagline: "Hotel a pasos de la playa",
+  location: "Canasvieiras - Florianópolis - SC, Brasil",
+  address: "Rua Hypolito Gregorio Pereira, 700, Canasvieiras, Florianópolis, SC, Brasil",
+  phoneDisplay: "+55 (48) 99812-6650",
+  email: "Hotelbeachcanasvieiras@gmail.com",
+  
+  // Enlaces de Conversión Directa
+  whatsappUrl: "https://wa.me/5548998126650",
+  whatsappShortUrl: "https://w.app/hotelbeach", // Redirección corta alternativa
+  
+  // Redes Sociales Oficiales y Canales Profesionales
+  instagramUrl: "https://www.instagram.com/hotelbeachcanasvieiras/",
+  facebookUrl: "https://www.facebook.com/profile.php?id=61585066297738",
+  twitterUrl: "https://x.com/beachcanasvieir",
+  linkedinUrl: "https://www.linkedin.com/in/beach-canasvieiras"
+};
+
+// Generador dinámico de URL de Login en tiempo de ejecución
 export const getLoginUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
   const appId = import.meta.env.VITE_APP_ID;

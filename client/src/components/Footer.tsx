@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
+import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { HOTEL_CONFIG } from '@/const';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -26,6 +27,7 @@ export default function Footer() {
     <footer id="contact" className="bg-gray-900 text-white">
       <div className="container py-16">
         <motion.div
+          border-b border-gray-200
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
@@ -34,14 +36,16 @@ export default function Footer() {
         >
           {/* About */}
           <motion.div variants={itemVariants}>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-teal-400 rounded-lg flex items-center justify-center">
-                <span className="text-gray-900 font-display text-lg font-bold">B</span>
-              </div>
-              <h3 className="font-display text-lg">Beach Hotel</h3>
+            <div className="flex items-center mb-4">
+              <img 
+                src="/logo-light.svg" 
+                alt={`Logotipo oficial de ${HOTEL_CONFIG.name}`} 
+                className="h-10 sm:h-12 w-auto object-contain"
+                loading="lazy" // Carga diferida al estar debajo de la línea de pliegue inicial (below the fold)
+              />
             </div>
             <p className="font-body text-gray-400 text-sm leading-relaxed">
-              Lujo ejecutivo frente al mar en Canasvieiras, Florianopolis. Tu destino perfecto para relajacion y negocios.
+              Lujo ejecutivo frente al mar en Canasvieiras, Florianópolis. Tu destino perfecto para relajación y negocios.
             </p>
           </motion.div>
 
@@ -52,20 +56,27 @@ export default function Footer() {
               <div className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="font-body text-sm text-gray-400">
-                  Rua Hypolito Gregorio Pereira, 700<br />
-                  Canasvieiras, Florianopolis, SC
+                  {HOTEL_CONFIG.address}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <a href="tel:+5548999999999" className="font-body text-sm text-gray-400 hover:text-white transition-colors">
-                  +55 (48) 99999-9999
+                <a 
+                  href={HOTEL_CONFIG.whatsappUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="font-body text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  {HOTEL_CONFIG.phoneDisplay}
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                <a href="mailto:info@beachhotel.com.br" className="font-body text-sm text-gray-400 hover:text-white transition-colors">
-                  info@beachhotel.com.br
+                <a 
+                  href={`mailto:${HOTEL_CONFIG.email}`} 
+                  className="font-body text-sm text-gray-400 hover:text-white transition-colors break-all"
+                >
+                  {HOTEL_CONFIG.email}
                 </a>
               </div>
             </div>
@@ -73,56 +84,70 @@ export default function Footer() {
 
           {/* Links */}
           <motion.div variants={itemVariants}>
-            <h4 className="font-display text-lg mb-4">Enlaces Rapidos</h4>
+            <h4 className="font-display text-lg mb-4">Enlaces Rápidos</h4>
             <div className="space-y-2">
               <a href="#rooms" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
                 Habitaciones
               </a>
               <a href="#gallery" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Galeria
+                Galería
               </a>
               <a href="#attractions" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
                 Atracciones
               </a>
               <a href="#testimonials" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Resenas
+                Reseñas
               </a>
             </div>
           </motion.div>
 
           {/* Social */}
           <motion.div variants={itemVariants}>
-            <h4 className="font-display text-lg mb-4">Siguenos</h4>
-            <div className="flex gap-4">
+            <h4 className="font-display text-lg mb-4">Síguenos</h4>
+            <div className="flex flex-wrap gap-4">
               <motion.a
-                href="https://facebook.com"
+                href={HOTEL_CONFIG.facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                title="Facebook"
               >
                 <Facebook className="w-5 h-5" />
               </motion.a>
               <motion.a
-                href="https://instagram.com"
+                href={HOTEL_CONFIG.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors"
+                title="Instagram"
               >
                 <Instagram className="w-5 h-5" />
               </motion.a>
               <motion.a
-                href="https://twitter.com"
+                href={HOTEL_CONFIG.twitterUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center hover:bg-blue-500 transition-colors"
+                className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors"
+                title="Twitter"
               >
                 <Twitter className="w-5 h-5" />
+              </motion.a>
+              <motion.a
+                href={HOTEL_CONFIG.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.2 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors"
+                title="LinkedIn"
+              >
+                <Linkedin className="w-5 h-5" />
               </motion.a>
             </div>
           </motion.div>
@@ -140,14 +165,14 @@ export default function Footer() {
           className="flex flex-col md:flex-row items-center justify-between gap-4"
         >
           <p className="font-body text-sm text-gray-400">
-            © 2026 Beach Hotel Canasvieiras. Todos los derechos reservados.
+            © 2026 {HOTEL_CONFIG.fullName}. Todos los derechos reservados.
           </p>
           <div className="flex gap-6">
             <a href="#" className="font-body text-sm text-gray-400 hover:text-white transition-colors">
-              Politica de Privacidad
+              Política de Privacidad
             </a>
             <a href="#" className="font-body text-sm text-gray-400 hover:text-white transition-colors">
-              Terminos de Servicio
+              Términos de Servicio
             </a>
           </div>
         </motion.div>

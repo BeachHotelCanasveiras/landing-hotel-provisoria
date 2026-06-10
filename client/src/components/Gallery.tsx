@@ -5,38 +5,44 @@ import { X } from 'lucide-react';
 const galleryImages = [
   {
     id: 1,
-    title: 'Piscina con Vista Panoramica',
+    title: 'Piscina con Vista Panorámica',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
+    alt: 'Piscina del Hotel Beach Canasvieiras al atardecer con vista panorámica del océano',
     category: 'Instalaciones',
   },
   {
     id: 2,
-    title: 'Habitacion Ejecutiva',
+    title: 'Habitación Ejecutiva',
     image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop',
+    alt: 'Interior de la habitación Ejecutiva del Hotel Beach Canasvieiras con cama matrimonial',
     category: 'Habitaciones',
   },
   {
     id: 3,
     title: 'Playa de Canasvieiras',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
+    alt: 'Playa de Canasvieiras Florianópolis con agua turquesa frente al hotel',
     category: 'Playas',
   },
   {
     id: 4,
     title: 'Restaurante Oasis',
     image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=800&h=600&fit=crop',
-    category: 'Gastronomia',
+    alt: 'Área del buffet del desayuno buffet incluido en el Restaurante Oasis del hotel',
+    category: 'Gastronomía',
   },
   {
     id: 5,
     title: 'Jacuzzi y Spa',
     image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&h=600&fit=crop',
+    alt: 'Área de bienestar del hotel con jacuzzi de agua templada para huéspedes',
     category: 'Bienestar',
   },
   {
     id: 6,
     title: 'Atardecer en la Playa',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop',
+    alt: 'Vista del atardecer desde el balcón de la suite en Hotel Beach Canasvieiras',
     category: 'Vistas',
   },
 ];
@@ -75,7 +81,7 @@ export default function Gallery() {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4">
-            Galeria de Fotos
+            Galería de Fotos
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
             Descubre Nuestro Hotel
@@ -101,7 +107,8 @@ export default function Gallery() {
             >
               <motion.img
                 src={image.image}
-                alt={image.title}
+                alt={image.alt}
+                loading="lazy"
                 className="w-full h-full object-cover"
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.4 }}
@@ -142,7 +149,7 @@ export default function Gallery() {
           >
             <img
               src={selectedImage.image}
-              alt={selectedImage.title}
+              alt={selectedImage.alt}
               className="w-full h-auto rounded-lg"
             />
             <motion.button

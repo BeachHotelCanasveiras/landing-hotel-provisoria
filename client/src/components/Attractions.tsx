@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Users } from 'lucide-react';
+import { MapPin, Clock } from 'lucide-react';
 
 const attractions = [
   {
@@ -9,46 +9,52 @@ const attractions = [
     distance: '9 km',
     time: '15 min en auto',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop',
+    alt: 'Paisaje natural y olas de Praia Brava en Florianópolis cerca del hotel'
   },
   {
     id: 2,
-    name: 'Playa Jurera',
+    name: 'Playa Jurerê',
     description: 'Playa tradicional con ambiente bohemio, tiendas y restaurantes. Ideal para familias.',
     distance: '4 km',
     time: '10 min en auto',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop',
+    alt: 'Arena blanca y aguas calmas de la Playa Jurerê en Florianópolis'
   },
   {
     id: 3,
-    name: 'Parque Aquatico Agua Show',
-    description: 'Parque acuatico con piscinas, toboganes y entretenimiento para toda la familia.',
+    name: 'Parque Acuático Água Show',
+    description: 'Parque acuático con piscinas, toboganes y entretenimiento para toda la familia.',
     distance: '4 km',
     time: '10 min en auto',
     image: 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&h=400&fit=crop',
+    alt: 'Toboganes de agua y piscinas recreativas en el Parque Acuático Água Show'
   },
   {
     id: 4,
-    name: 'Centro Historico',
-    description: 'Centro colonial de Florianopolis con arquitectura historica, museos y gastronomia.',
+    name: 'Centro Histórico',
+    description: 'Centro colonial de Florianópolis con arquitectura histórica, museos y gastronomía.',
     distance: '27 km',
     time: '30 min en auto',
     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
+    alt: 'Arquitectura histórica y calles coloniales en el Centro de Florianópolis'
   },
   {
     id: 5,
-    name: 'Isla del Frances',
+    name: 'Isla del Francés',
     description: 'Tours en kayak, snorkel y avistamiento de fauna marina. Experiencia inolvidable.',
     distance: 'Tours desde el hotel',
-    time: 'Medio dia',
+    time: 'Medio día',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&h=400&fit=crop',
+    alt: 'Excursión marítima y snorkel en las aguas cristalinas de la Isla del Francés'
   },
   {
     id: 6,
-    name: 'Fortaleza Sao Jose',
-    description: 'Fortaleza historica del siglo XVIII con vistas panoramicas del oceano.',
+    name: 'Fortaleza São José',
+    description: 'Fortaleza histórica del siglo XVIII con vistas panorámicas del océano.',
     distance: '15 km',
     time: '20 min en auto',
     image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop',
+    alt: 'Murallas de piedra de la histórica Fortaleza de São José frente al mar'
   },
 ];
 
@@ -87,10 +93,10 @@ export default function Attractions() {
             Explora la Isla
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
-            Atracciones de Florianopolis
+            Atracciones de Florianópolis
           </h2>
           <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg">
-            Descubre las mejores playas, parques y atracciones turisticas cerca de nuestro hotel.
+            Descubre las mejores playas, parques y atracciones turísticas cerca de nuestro hotel.
           </p>
         </motion.div>
 
@@ -111,7 +117,8 @@ export default function Attractions() {
               <div className="relative h-48 overflow-hidden">
                 <motion.img
                   src={attraction.image}
-                  alt={attraction.name}
+                  alt={attraction.alt}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                   whileHover={{ scale: 1.05 }}
                   transition={{ duration: 0.4 }}
@@ -138,7 +145,7 @@ export default function Attractions() {
                   whileTap={{ scale: 0.95 }}
                   className="w-full mt-4 px-4 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors"
                 >
-                  Mas Informacion
+                  Más Información
                 </motion.button>
               </div>
             </motion.div>
