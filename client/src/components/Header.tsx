@@ -16,14 +16,8 @@ export default function Header() {
   ];
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
+    document.body.style.overflow = isOpen ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
   const menuVariants: Variants = {
@@ -31,67 +25,61 @@ export default function Header() {
     open: { opacity: 1, height: 'auto', transition: { duration: 0.3, ease: 'easeInOut' } },
   };
 
-  const itemVariants: Variants = {
-    closed: { opacity: 0, x: -10 },
-    open: (i: number) => ({ opacity: 1, x: 0, transition: { delay: i * 0.05 } }),
-  };
-
   const whatsappMessage = `Hola, me gustaría consultar disponibilidad para hacer una reserva en ${HOTEL_CONFIG.name}`;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
-      <nav className="container flex items-center justify-between h-20 px-4">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/98 backdrop-blur-md border-b border-gray-100">
+      <nav className="container flex items-center justify-between h-20 md:h-24 px-4">
         
-        {/* Logo Integrado con Proporciones de Marca */}
+        {/* Logo Oficial Rectificado (Color Negro, Proporciones Exactas) */}
         <motion.a
           href="#home"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
+          initial={{ opacity: 0, x: -15 }}
+          animate={{ opacity: 1, x: 0 }}
           className="flex items-center shrink-0"
         >
-          <Logo className="h-12 text-blue-900" withIcon={true} />
+          <Logo className="scale-90 md:scale-100 transform-origin-left" withIcon={true} />
         </motion.a>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
-          {navItems.map((item, i) => (
-            <motion.a
+        {/* Navegación Desktop: Aumentado el gap para airear el diseño */}
+        <div className="hidden lg:flex items-center gap-10">
+          {navItems.map((item) => (
+            <a
               key={item.href}
               href={item.href}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="text-gray-700 hover:text-blue-700 font-body text-sm font-medium transition-colors relative group"
+              className="text-gray-800 hover:text-blue-700 font-body text-sm font-semibold transition-colors relative group"
             >
               {item.label}
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-700 group-hover:w-full transition-all duration-300" />
-            </motion.a>
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-700 group-hover:w-full transition-all duration-300" />
+            </a>
           ))}
         </div>
 
-        {/* CTA Button */}
-        <motion.a
-          href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="hidden md:block px-6 py-2 bg-blue-700 text-white rounded-lg font-body text-sm font-medium hover:bg-blue-800 transition-colors"
-        >
-          Reservar
-        </motion.a>
+        {/* Botón CTA: Azul corporativo para contraste con el logo negro */}
+        <div className="flex items-center gap-4">
+          <motion.a
+            href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="hidden md:block px-8 py-3 bg-blue-700 text-white rounded-xl font-body text-sm font-bold hover:bg-blue-800 transition-all shadow-md"
+          >
+            Reservar
+          </motion.a>
 
-        <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 text-gray-700"
-          aria-label="Abrir menú"
-        >
-          {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </motion.button>
+          {/* Botón de Menú Móvil */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="lg:hidden p-2 text-gray-900"
+            aria-label="Abrir menú"
+          >
+            {isOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* Menú Móvil Refactorizado */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -99,21 +87,25 @@ export default function Header() {
             initial="closed"
             animate="open"
             exit="closed"
-            className="md:hidden bg-white border-b border-gray-200"
+            className="lg:hidden bg-white border-b border-gray-200 overflow-hidden"
           >
-            <div className="container py-6 px-4 flex flex-col gap-4">
-              {navItems.map((item, i) => (
-                <motion.a
+            <div className="container py-8 px-6 flex flex-col gap-6">
+              {navItems.map((item) => (
+                <a
                   key={item.href}
                   href={item.href}
-                  custom={i}
-                  variants={itemVariants}
                   onClick={() => setIsOpen(false)}
-                  className="text-gray-700 hover:text-blue-700 font-body text-base font-medium py-2 border-b border-gray-100"
+                  className="text-gray-900 text-xl font-bold border-b border-gray-50 pb-2"
                 >
                   {item.label}
-                </motion.a>
+                </a>
               ))}
+              <a
+                href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(whatsappMessage)}`}
+                className="mt-2 px-4 py-4 bg-blue-700 text-white rounded-xl font-bold text-center text-lg"
+              >
+                Reservar por WhatsApp
+              </a>
             </div>
           </motion.div>
         )}

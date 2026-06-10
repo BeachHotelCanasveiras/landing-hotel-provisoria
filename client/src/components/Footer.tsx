@@ -26,36 +26,40 @@ const itemVariants = {
 export default function Footer() {
   return (
     <footer id="contact" className="bg-gray-900 text-white">
-      <div className="container py-16">
+      <div className="container py-16 px-4">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12"
+          className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12"
         >
-          {/* About */}
-          <motion.div variants={itemVariants}>
-            <div className="flex items-center mb-4">
-              <Logo className="h-12 text-white" fill="white" withIcon={true} />
+          {/* Bloque de Marca: Versión Blanca para fondo oscuro */}
+          <motion.div variants={itemVariants} className="flex flex-col gap-6">
+            <div className="flex items-center">
+              <Logo 
+                className="scale-110 origin-left" 
+                fill="white" 
+                withIcon={true} 
+              />
             </div>
-            <p className="font-body text-gray-400 text-sm leading-relaxed">
-              Tu hogar cálido y acogedor en la Avenida das Nações. Disfruta de la tranquilidad a solo dos cuadras del mar en Canasvieiras.
+            <p className="font-body text-gray-400 text-sm leading-relaxed max-w-xs">
+              Tu rincón de hospitalidad en el corazón de Canasvieiras. Un espacio diseñado para el descanso auténtico a pasos del mar.
             </p>
           </motion.div>
 
-          {/* Contact */}
+          {/* Contacto: Sincronizado con SSoT */}
           <motion.div variants={itemVariants}>
-            <h4 className="font-display text-lg mb-4">Contacto</h4>
-            <div className="space-y-3">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                <span className="font-body text-sm text-gray-400">
+            <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">Contacto</h4>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 group">
+                <MapPin className="w-5 h-5 text-blue-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform" />
+                <span className="font-body text-sm text-gray-400 leading-tight">
                   {HOTEL_CONFIG.address}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-blue-400 flex-shrink-0" />
+              <div className="flex items-center gap-3 group">
+                <Phone className="w-5 h-5 text-blue-400 shrink-0 group-hover:scale-110 transition-transform" />
                 <a 
                   href={HOTEL_CONFIG.whatsappUrl} 
                   target="_blank" 
@@ -65,8 +69,8 @@ export default function Footer() {
                   {HOTEL_CONFIG.phoneDisplay}
                 </a>
               </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-blue-400 flex-shrink-0" />
+              <div className="flex items-center gap-3 group">
+                <Mail className="w-5 h-5 text-blue-400 shrink-0 group-hover:scale-110 transition-transform" />
                 <a 
                   href={`mailto:${HOTEL_CONFIG.email}`} 
                   className="font-body text-sm text-gray-400 hover:text-white transition-colors break-all"
@@ -77,92 +81,72 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Links */}
+          {/* Navegación Rápida */}
           <motion.div variants={itemVariants}>
-            <h4 className="font-display text-lg mb-4">Enlaces Rápidos</h4>
-            <div className="space-y-2">
-              <a href="#home" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Inicio
-              </a>
-              <a href="#rooms" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Habitaciones
-              </a>
-              <a href="#gallery" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Galería
-              </a>
-              <a href="#attractions" className="font-body text-sm text-gray-400 hover:text-white transition-colors block">
-                Atracciones
-              </a>
-            </div>
+            <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">Explorar</h4>
+            <ul className="space-y-3">
+              <li>
+                <a href="#home" className="font-body text-sm text-gray-400 hover:text-blue-400 transition-colors">Inicio</a>
+              </li>
+              <li>
+                <a href="#rooms" className="font-body text-sm text-gray-400 hover:text-blue-400 transition-colors">Habitaciones</a>
+              </li>
+              <li>
+                <a href="#gallery" className="font-body text-sm text-gray-400 hover:text-blue-400 transition-colors">Galería</a>
+              </li>
+              <li>
+                <a href="#attractions" className="font-body text-sm text-gray-400 hover:text-blue-400 transition-colors">Atracciones</a>
+              </li>
+            </ul>
           </motion.div>
 
-          {/* Social */}
+          {/* Canales Digitales */}
           <motion.div variants={itemVariants}>
-            <h4 className="font-display text-lg mb-4">Síguenos</h4>
-            <div className="flex flex-wrap gap-4">
-              <motion.a
-                href={HOTEL_CONFIG.facebookUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
-                title="Facebook"
-              >
-                <Facebook className="w-5 h-5" />
-              </motion.a>
-              <motion.a
-                href={HOTEL_CONFIG.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center hover:bg-pink-700 transition-colors"
-                title="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </motion.a>
-              <motion.a
-                href={HOTEL_CONFIG.twitterUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 bg-sky-500 rounded-full flex items-center justify-center hover:bg-sky-600 transition-colors"
-                title="Twitter"
-              >
-                <Twitter className="w-5 h-5" />
-              </motion.a>
-              <motion.a
-                href={HOTEL_CONFIG.linkedinUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-10 h-10 bg-blue-700 rounded-full flex items-center justify-center hover:bg-blue-800 transition-colors"
-                title="LinkedIn"
-              >
-                <Linkedin className="w-5 h-5" />
-              </motion.a>
+            <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">Síguenos</h4>
+            <div className="flex flex-wrap gap-3">
+              {[
+                { icon: Facebook, url: HOTEL_CONFIG.facebookUrl, color: 'hover:bg-blue-600' },
+                { icon: Instagram, url: HOTEL_CONFIG.instagramUrl, color: 'hover:bg-pink-600' },
+                { icon: Twitter, url: HOTEL_CONFIG.twitterUrl, color: 'hover:bg-sky-500' },
+                { icon: Linkedin, url: HOTEL_CONFIG.linkedinUrl, color: 'hover:bg-blue-700' }
+              ].map((social, i) => (
+                <motion.a
+                  key={i}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center transition-colors ${social.color}`}
+                >
+                  <social.icon className="w-5 h-5" />
+                </motion.a>
+              ))}
             </div>
           </motion.div>
         </motion.div>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8" />
+        <div className="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent my-10" />
 
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+          transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="flex flex-col md:flex-row items-center justify-between gap-4"
+          className="flex flex-col md:flex-row items-center justify-between gap-6"
         >
-          <p className="font-body text-sm text-gray-400">
-            © 2026 {HOTEL_CONFIG.fullName}. Todos los derechos reservados.
-          </p>
-          <div className="flex gap-6">
-            <span className="font-body text-xs text-gray-500 italic">
-              Desarrollado por Raz Podestá - MetaShark Tech
+          <div className="text-center md:text-left">
+            <p className="font-body text-xs text-gray-500 uppercase tracking-widest">
+              © 2026 {HOTEL_CONFIG.fullName}
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2 group cursor-default">
+            <span className="font-body text-[10px] text-gray-600 uppercase tracking-[0.2em]">
+              Crafted by
+            </span>
+            <span className="font-display text-xs text-gray-400 group-hover:text-blue-400 transition-colors">
+              Raz Podestá - MetaShark Tech
             </span>
           </div>
         </motion.div>
