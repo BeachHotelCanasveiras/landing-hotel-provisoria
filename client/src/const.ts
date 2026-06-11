@@ -8,7 +8,7 @@ export const HOTEL_CONFIG = {
   location: "Canasvieiras - Florianópolis - SC, Brasil",
   address: "Avenida das Nações, 375, Canasvieiras, Florianópolis, SC, Brasil",
   phoneDisplay: "+55 (48) 99812-6650",
-  email: "Hotelbeachcanasvieiras@gmail.com",
+  email: "reservas@beachcanasvieiras.com",
   websiteUrl: "https://beachcanasvieiras.com",
   
   // Enlaces de Conversión Directa
