@@ -1,11 +1,19 @@
+/**
+ * @file Hero.tsx
+ * @description Componente principal de cabecera (Hero Section).
+ * Refactorizado bajo la filosofía "Confort y Calidez Costera".
+ * Se ha eliminado el texto pretencioso para priorizar un mensaje directo y acogedor.
+ * La animación de flotación vertical se sustituyó por un efecto "ola" (deriva horizontal lenta),
+ * y los CTAs se han optimizado estratégicamente para guiar al usuario hacia las habitaciones y la galería.
+ */
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import { HOTEL_CONFIG } from '@/const';
 
 /**
  * CONFIGURACIÓN DE ACTIVOS - CLOUDINARY
- * f_auto,q_auto: Optimización de formato y peso.
+ * f_auto,q_auto: Optimización de formato y peso dinámica desde CDN.
  */
 const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/hotel/";
 
@@ -19,14 +27,20 @@ const backgroundImages = [
 export default function Hero() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  /**
+   * Intervalo del carrusel de fondo cinemático.
+   * Transiciones lentas para evocar tranquilidad y confort.
+   */
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
-    }, 5000); // Intervalo de 5s para un ritmo más pausado
+    }, 5000); 
     return () => clearInterval(timer);
   }, []);
 
-  // Variantes para la entrada del contenedor
+  /**
+   * Variantes para la entrada escalonada del contenido de texto.
+   */
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -38,25 +52,32 @@ export default function Hero() {
     },
   };
 
-  // Micromovimiento de flotación lenta (Breathing Effect)
-  const floatingVariants: Variants = {
+  /**
+   * Efecto Marea / Ola (Wave Effect).
+   * Un movimiento horizontal ultra-lento que emula la brisa marina o el vaivén del agua.
+   * Reemplaza el antiguo y mecánico rebote vertical.
+   */
+  const waveVariants: Variants = {
     animate: {
-      y: [0, -12, 0],
+      x: [-8, 8, -8],
       transition: {
-        duration: 8,
+        duration: 12,
         repeat: Infinity,
         ease: "easeInOut"
       }
     }
   };
 
+  /**
+   * Variantes de entrada individual (fade-up suave y acogedor).
+   */
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
       y: 0,
       transition: { 
-        duration: 1, 
+        duration: 1.2, 
         ease: [0.16, 1, 0.3, 1] as [number, number, number, number] 
       },
     },
@@ -72,70 +93,71 @@ export default function Hero() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentImageIndex}
-            initial={{ opacity: 0, scale: 1.15 }}
+            initial={{ opacity: 0, scale: 1.12 }}
             animate={{ opacity: 1, scale: 1.05 }}
             exit={{ opacity: 0, scale: 1 }}
-            transition={{ duration: 2, ease: "easeInOut" }}
+            transition={{ duration: 2.5, ease: "easeInOut" }}
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)), url(${backgroundImages[currentImageIndex]})`,
+              /* Gradiente ajustado para proteger la legibilidad sin oscurecer demasiado la imagen */
+              backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.55)), url(${backgroundImages[currentImageIndex]})`,
             }}
           />
         </AnimatePresence>
       </div>
 
-      {/* Overlay de Gradiente para profundidad */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950/80 via-transparent to-black/20" />
+      {/* Overlay de Gradiente extra para integrar suavemente con la siguiente sección */}
+      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950/70 via-transparent to-transparent" />
 
-      {/* Contenido Principal con Elevación Espacial */}
+      {/* Contenido Principal */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative z-10 container text-center text-white px-4 sm:px-6 max-w-5xl mx-auto -mt-16 md:-mt-24"
+        className="relative z-10 container text-center text-white px-4 sm:px-6 max-w-4xl mx-auto"
       >
         <motion.div
-          variants={floatingVariants}
+          variants={waveVariants}
           animate="animate"
-          className="flex flex-col items-center"
+          className="flex flex-col items-center pt-16 md:pt-0"
         >
+          {/* Título Principal: Legible, cálido y proporcionado */}
           <motion.h1
             variants={itemVariants}
-            className="font-display text-5xl sm:text-7xl md:text-8xl font-bold mb-6 leading-[1.1] tracking-tight drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
+            className="font-display text-5xl sm:text-7xl md:text-[5.5rem] font-medium mb-6 leading-[1.15] tracking-tight drop-shadow-xl"
           >
-            Tu Refugio en <br />
-            <span className="text-blue-400">Canasvieiras</span>
+            Tu refugio en <br />
+            <span className="italic font-normal text-white">Canasvieiras</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
-            className="font-body text-lg sm:text-xl md:text-2xl mb-12 max-w-2xl mx-auto text-gray-100/90 leading-relaxed drop-shadow-md"
+            className="font-body text-base sm:text-lg md:text-xl mb-10 max-w-2xl mx-auto text-white/95 font-light leading-relaxed drop-shadow-md"
           >
             Hospitalidad auténtica sobre la Avenida das Nações. 
             Un rincón diseñado para tu descanso absoluto a pasos del mar.
           </motion.p>
 
+          {/* Grupo de Botones: Accesibles y amigables (Confort) */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row gap-5 justify-center items-center w-full sm:w-auto"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto"
           >
             <motion.a
-              href={HOTEL_CONFIG.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              whileHover={{ scale: 1.05, backgroundColor: "#1d4ed8" }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full sm:w-auto px-10 py-5 bg-blue-600 text-white rounded-2xl font-body text-base font-bold shadow-2xl transition-all"
+              href="#rooms"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:w-auto px-9 py-3.5 bg-primary text-primary-foreground rounded-full font-body text-sm font-medium shadow-2xl hover:bg-primary/90 transition-all"
             >
               Consultar Disponibilidad
             </motion.a>
             <motion.a
-              href="#rooms"
-              whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full sm:w-auto px-10 py-5 bg-white/5 backdrop-blur-md text-white rounded-2xl font-body text-base font-bold border border-white/20 transition-all"
+              href="#gallery"
+              whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.15)" }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:w-auto px-9 py-3.5 bg-white/10 backdrop-blur-md text-white rounded-full font-body text-sm font-medium border border-white/20 transition-all"
             >
-              Ver Habitaciones
+              Ver Galería
             </motion.a>
           </motion.div>
         </motion.div>
@@ -147,7 +169,7 @@ export default function Hero() {
         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 pointer-events-none"
       >
-        <ChevronDown className="w-8 h-8 text-white/50" strokeWidth={1.5} />
+        <ChevronDown className="w-8 h-8 text-white/60" strokeWidth={1.5} />
       </motion.div>
     </section>
   );
