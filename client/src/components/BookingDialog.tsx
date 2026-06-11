@@ -1,3 +1,11 @@
+/**
+ * @file BookingDialog.tsx
+ * @description Diálogo interactivo de reservas de 2 pasos (Fase 6: Transacción de Baja Fricción).
+ * Estructurado bajo la estética del "Confort y Calidez". Sustituye los contrastes azules
+ * por tonos gris antracita (Quiet Luxury) y arena, suaviza los elementos a formatos redondeados (pills)
+ * e implementa un calendario interactivo perfectamente integrado y optimizado.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { format, differenceInDays, startOfDay } from 'date-fns';
@@ -29,15 +37,21 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const [guestsCount, setGuestsCount] = useState('2');
   const [blockedDates, setBlockedDates] = useState<Date[]>([]);
 
+  /**
+   * Resetea el formulario al abrir el modal para evitar persistencias
+   * de sesiones de reserva anteriores.
+   */
   useEffect(() => {
     if (isOpen) {
       setStep(1);
       setRange(undefined);
-      // Aquí se sincronizaría con Supabase/iCal en producción
       setBlockedDates([]); 
     }
   }, [isOpen]);
 
+  /**
+   * Genera el mensaje estructurado de reserva y abre WhatsApp.
+   */
   const handleSendWhatsApp = () => {
     if (!range?.from || !range?.to) return;
     const nights = differenceInDays(range.to, range.from);
@@ -58,20 +72,23 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
 
   const today = startOfDay(new Date());
 
+  /**
+   * Animación suave de transición de pasos (Slide horizontal).
+   */
   const stepVariants: Variants = {
     initial: (direction: number) => ({
       opacity: 0,
-      x: direction > 0 ? 50 : -50,
+      x: direction > 0 ? 30 : -30,
     }),
     animate: {
       opacity: 1,
       x: 0,
-      transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] }
+      transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] }
     },
     exit: (direction: number) => ({
       opacity: 0,
-      x: direction > 0 ? -50 : 50,
-      transition: { duration: 0.2 }
+      x: direction > 0 ? -30 : 30,
+      transition: { duration: 0.25 }
     })
   };
 
@@ -79,9 +96,10 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none bg-white rounded-[2.5rem] shadow-2xl z-[100]">
         
-        {/* Navigation Header - Airbnb Style */}
+        {/* Encabezado de Navegación del Diálogo */}
         <div className="relative px-6 pt-8 pb-5 border-b border-gray-50 bg-white">
           <div className="flex items-center justify-between">
+            {/* Botón Atrás (Paso 2) */}
             <div className="w-10">
               {step === 2 && (
                 <button 
@@ -93,15 +111,17 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
               )}
             </div>
             
+            {/* Título de Paso y Nombre de la Habitación */}
             <div className="text-center">
               <DialogTitle className="font-display text-lg text-gray-900 leading-tight">
                 {step === 1 ? 'Fechas' : 'Tu Reserva'}
               </DialogTitle>
-              <p className="text-[10px] text-blue-600 font-bold uppercase tracking-[0.15em] mt-0.5">
+              <p className="text-[10px] text-accent font-body font-semibold uppercase tracking-[0.15em] mt-1">
                 {roomName}
               </p>
             </div>
 
+            {/* Botón de Cierre */}
             <div className="w-10 flex justify-end">
               <button 
                 onClick={onClose} 
@@ -113,6 +133,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
           </div>
         </div>
 
+        {/* Contenido del Diálogo */}
         <div className="p-6">
           <AnimatePresence mode="wait" custom={step}>
             {step === 1 ? (
@@ -125,7 +146,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                 exit="exit"
                 className="flex flex-col"
               >
-                {/* Calendar Component */}
+                {/* Calendario de Selección de Fechas */}
                 <div className="mb-6 flex justify-center scale-95 sm:scale-100 origin-top">
                   <Calendar
                     mode="range"
@@ -137,26 +158,27 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   />
                 </div>
 
-                {/* Date Summary Capsule */}
+                {/* Resumen del Rango de Fechas */}
                 <div className="grid grid-cols-2 gap-px bg-gray-200 border border-gray-200 rounded-2xl overflow-hidden mb-6 shadow-sm">
                   <div className="bg-white p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Entrada</p>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-wider mb-1">Entrada</p>
+                    <p className="text-sm font-body font-medium text-gray-900">
                       {range?.from ? format(range.from, 'EEE, d MMM', { locale: es }) : 'Seleccionar'}
                     </p>
                   </div>
                   <div className="bg-white p-4 border-l border-gray-200">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Salida</p>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-wider mb-1">Salida</p>
+                    <p className="text-sm font-body font-medium text-gray-900">
                       {range?.to ? format(range.to, 'EEE, d MMM', { locale: es }) : 'Seleccionar'}
                     </p>
                   </div>
                 </div>
 
+                {/* Botón de Continuación */}
                 <Button 
                   disabled={!range?.from || !range?.to}
                   onClick={() => setStep(2)}
-                  className="w-full h-14 bg-blue-700 hover:bg-blue-800 text-white rounded-2xl text-base font-bold shadow-lg shadow-blue-100 transition-all active:scale-[0.98]"
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full text-base font-body font-semibold shadow-md transition-all active:scale-[0.98] cursor-pointer"
                 >
                   Continuar
                 </Button>
@@ -171,26 +193,26 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                 exit="exit"
                 className="space-y-6"
               >
-                {/* Name Input Group */}
-                <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-blue-700 focus-within:bg-white focus-within:ring-4 focus-within:ring-blue-50 transition-all">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Nombre y Apellido</label>
+                {/* Entrada: Nombre del Huésped */}
+                <div className="p-4 rounded-3xl border border-gray-200 bg-gray-50 focus-within:border-primary focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                  <label className="block text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest mb-1.5">Nombre y Apellido</label>
                   <input 
                     type="text"
                     autoFocus
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder="Escribe tu nombre"
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-lg text-gray-900 placeholder:text-gray-300"
+                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-base text-gray-900 placeholder:text-gray-300 outline-none"
                   />
                 </div>
 
-                {/* Guests Selector Group */}
-                <div className="p-4 rounded-2xl border border-gray-200 bg-gray-50">
+                {/* Selector de Huéspedes */}
+                <div className="p-4 rounded-3xl border border-gray-200 bg-gray-50">
                   <div className="flex items-center justify-between mb-4">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Huéspedes</label>
-                    <div className="flex items-center gap-1 text-blue-700">
+                    <label className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest">Huéspedes</label>
+                    <div className="flex items-center gap-1 text-primary">
                       <Users size={14} />
-                      <span className="text-xs font-bold">{guestsCount} personas</span>
+                      <span className="text-xs font-body font-medium">{guestsCount} personas</span>
                     </div>
                   </div>
                   <div className="flex justify-between gap-3">
@@ -199,9 +221,9 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                         key={num}
                         onClick={() => setGuestsCount(num)}
                         className={cn(
-                          "flex-1 h-12 rounded-xl border-2 font-bold transition-all text-sm",
+                          "flex-1 h-12 rounded-full border-2 font-body font-semibold transition-all text-sm cursor-pointer",
                           guestsCount === num 
-                            ? "bg-blue-700 border-blue-700 text-white shadow-md" 
+                            ? "bg-primary border-primary text-primary-foreground shadow-sm" 
                             : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
                         )}
                       >
@@ -211,7 +233,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   </div>
                 </div>
 
-                {/* Trust Badge */}
+                {/* Badge de Seguridad y Confianza (CRO) */}
                 <div className="bg-green-50/50 p-4 rounded-2xl flex items-start gap-3 border border-green-100/50">
                   <div className="bg-green-500 p-1 rounded-full text-white shrink-0 mt-0.5">
                     <CheckCircle2 size={14} />
@@ -221,10 +243,11 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   </p>
                 </div>
 
+                {/* Botón de Transacción Final (WhatsApp) */}
                 <Button 
                   disabled={!guestName}
                   onClick={handleSendWhatsApp}
-                  className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-2xl text-base font-bold flex items-center justify-center gap-2 shadow-xl shadow-green-100 transition-all active:scale-[0.98]"
+                  className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-full text-base font-body font-semibold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <MessageCircle size={22} />
                   Confirmar en WhatsApp

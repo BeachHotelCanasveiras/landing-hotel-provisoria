@@ -1,8 +1,19 @@
+/**
+ * @file Footer.tsx
+ * @description Pie de página institucional y cierre del embudo (Fase de Contacto).
+ * Refactorizado bajo la estética "Confort y Lujo Silencioso". Integra el logotipo claro
+ * en proporciones boutique simétricas, reestructura la paleta cromática eliminando los azules intensos
+ * por tonos arena cálida (#D4A574) y gris carbono, y suaviza la geometría a formatos redondeados.
+ */
+
 import { motion, Variants } from 'framer-motion';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { HOTEL_CONFIG } from '@/const';
 import { Logo } from '@/components/Logo';
 
+/**
+ * Variantes de Framer Motion para la entrada escalonada de las columnas del Footer.
+ */
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -14,8 +25,11 @@ const containerVariants: Variants = {
   },
 };
 
+/**
+ * Variantes de Framer Motion para los items individuales.
+ */
 const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 15 },
   visible: {
     opacity: 1,
     y: 0,
@@ -25,7 +39,7 @@ const itemVariants: Variants = {
 
 export default function Footer() {
   return (
-    <footer id="contact" className="bg-gray-900 text-white selection:bg-blue-500 selection:text-white">
+    <footer id="contact" className="bg-[#1A1D20] text-white selection:bg-accent/30 selection:text-white">
       <div className="container py-16 px-4 sm:px-6">
         <motion.div
           variants={containerVariants}
@@ -34,16 +48,16 @@ export default function Footer() {
           viewport={{ once: true }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16"
         >
-          {/* Bloque de Identidad: Uso de Logo PNG rectificado */}
+          {/* Bloque de Identidad - Proporción Boutique Integrada */}
           <motion.div variants={itemVariants} className="flex flex-col gap-6">
             <div className="flex items-center">
               <Logo 
                 variant="logo-main" 
                 theme="light" 
-                className="h-14 md:h-16 origin-left scale-110" 
+                className="h-8 md:h-[34px] origin-left" 
               />
             </div>
-            <p className="font-body text-gray-400 text-sm leading-relaxed max-w-xs">
+            <p className="font-body text-gray-400 text-sm leading-relaxed max-w-xs font-light">
               Siente la calidez de un espacio diseñado para tu bienestar. Tu refugio de hospitalidad auténtica en la principal Avenida das Nações.
             </p>
           </motion.div>
@@ -55,27 +69,27 @@ export default function Footer() {
             </h4>
             <div className="space-y-4">
               <div className="flex items-start gap-3 group cursor-default">
-                <MapPin className="w-5 h-5 text-blue-400 shrink-0 mt-0.5 group-hover:scale-110 transition-transform duration-300" />
-                <span className="font-body text-sm text-gray-400 leading-tight">
+                <MapPin className="w-5 h-5 text-accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform duration-300" />
+                <span className="font-body text-sm text-gray-400 leading-tight font-light">
                   {HOTEL_CONFIG.address}
                 </span>
               </div>
               <div className="flex items-center gap-3 group">
-                <Phone className="w-5 h-5 text-blue-400 shrink-0 group-hover:scale-110 transition-transform duration-300" />
+                <Phone className="w-5 h-5 text-accent shrink-0 group-hover:scale-105 transition-transform duration-300" />
                 <a 
                   href={HOTEL_CONFIG.whatsappUrl} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="font-body text-sm text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline"
+                  className="font-body text-sm text-gray-400 hover:text-white transition-colors underline-offset-4 hover:underline font-light"
                 >
                   {HOTEL_CONFIG.phoneDisplay}
                 </a>
               </div>
               <div className="flex items-center gap-3 group">
-                <Mail className="w-5 h-5 text-blue-400 shrink-0 group-hover:scale-110 transition-transform duration-300" />
+                <Mail className="w-5 h-5 text-accent shrink-0 group-hover:scale-105 transition-transform duration-300" />
                 <a 
                   href={`mailto:${HOTEL_CONFIG.email}`} 
-                  className="font-body text-sm text-gray-400 hover:text-white transition-colors break-all underline-offset-4 hover:underline"
+                  className="font-body text-sm text-gray-400 hover:text-white transition-colors break-all underline-offset-4 hover:underline font-light"
                 >
                   {HOTEL_CONFIG.email}
                 </a>
@@ -83,7 +97,7 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Navegación Estratégica */}
+          {/* Navegación Estratégica (Explorar) */}
           <motion.div variants={itemVariants}>
             <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">
               Explorar
@@ -98,9 +112,9 @@ export default function Footer() {
                 <li key={link.href}>
                   <a 
                     href={link.href} 
-                    className="font-body text-sm text-gray-400 hover:text-blue-400 transition-all duration-300 flex items-center gap-2 group"
+                    className="font-body text-sm text-gray-400 hover:text-accent transition-all duration-300 flex items-center gap-2 group font-light"
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
                     {link.name}
                   </a>
                 </li>
@@ -108,7 +122,7 @@ export default function Footer() {
             </ul>
           </motion.div>
 
-          {/* Presencia Digital */}
+          {/* Presencia Digital (Redes Sociales) */}
           <motion.div variants={itemVariants}>
             <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">
               Síguenos
@@ -126,9 +140,9 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  whileHover={{ scale: 1.1, y: -3, backgroundColor: 'var(--color-blue-700)' }}
+                  whileHover={{ scale: 1.05, y: -2, backgroundColor: 'var(--color-primary)' }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg"
+                  className="w-10 h-10 bg-gray-800/80 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg"
                 >
                   <social.icon className="w-5 h-5 text-gray-100" />
                 </motion.a>
@@ -138,7 +152,7 @@ export default function Footer() {
         </motion.div>
 
         {/* Divisor de diseño minimalista */}
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-800 to-transparent my-10" />
+        <div className="h-px bg-gradient-to-r from-transparent via-gray-800/40 to-transparent my-10" />
 
         {/* Créditos y Autoría */}
         <motion.div
@@ -159,7 +173,7 @@ export default function Footer() {
               Estrategia & Código
             </span>
             <div className="hidden md:block h-4 w-px bg-gray-800" />
-            <span className="font-display text-xs text-gray-400 group-hover:text-blue-400 transition-all duration-500 tracking-wide text-center">
+            <span className="font-display text-xs text-gray-400 group-hover:text-accent transition-all duration-500 tracking-wide text-center">
               Raz Podestá - MetaShark Tech
             </span>
           </div>
