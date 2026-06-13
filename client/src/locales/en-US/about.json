@@ -1,0 +1,19 @@
+{
+  "badge": "Your Well-being",
+  "title": "The Essence of Rest",
+  "subtitle": "A haven designed to disconnect from the daily rhythm and reconnect with what matters, just steps from the sea.",
+  "features": {
+    "location": {
+      "title": "Serene Location",
+      "description": "On Avenida das Nações, the main avenue of Canasvieiras. Close to calm waters and the best local commercial spots."
+    },
+    "breakfast": {
+      "title": "House Breakfast",
+      "description": "Artisanal buffet prepared every morning with fresh options and homemade pastries to start your day without rush."
+    },
+    "warmth": {
+      "title": "Family Warmth",
+      "description": "Close, human attention. Our team speaks your language and is available 24/7 to make you feel truly at home."
+    }
+  }
+}

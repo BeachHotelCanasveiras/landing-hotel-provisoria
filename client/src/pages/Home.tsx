@@ -8,6 +8,7 @@
 
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import AboutSection from "@/components/AboutSection"; // Inyección de la Fase 2 del Embudo
 import Rooms from "@/components/Rooms";
 import Gallery from "@/components/Gallery";
 import Attractions from "@/components/Attractions";
@@ -24,7 +25,10 @@ export default function Home() {
         {/* Fase 1: Inspiración y Deseo */}
         <Hero />
         
-        {/* Fase 2 & 3: Configuración del Descanso e Interacción de Reserva */}
+        {/* Fase 2: Conexión y Propuesta de Confort (El Gancho) */}
+        <AboutSection />
+        
+        {/* Fase 3: Configuración del Descanso e Interacción de Reserva */}
         <Rooms />
         
         {/* Fase 4: Validación Visual Real */}

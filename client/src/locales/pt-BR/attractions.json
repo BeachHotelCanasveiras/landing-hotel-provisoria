@@ -1,0 +1,45 @@
+{
+  "badge": "Localização Estratégica",
+  "title": "Descubra Canasvieiras",
+  "subtitle": "Do nosso recanto na Avenida das Nações, você tem acesso privilegiado às melhores experiências de Florianópolis.",
+  "cta_button": "Consultar trajeto",
+  "whatsapp_query_template": "Olá! Gostaria de saber como chegar à {{name}} a partir do Hotel.",
+  "items": {
+    "brava": {
+      "name": "Praia Brava",
+      "description": "Um refúgio natural a poucos minutos da nossa casa, ideal para se conectar com o surf e com a serenidade da ilha.",
+      "distance": "9 km",
+      "time": "15 min de carro"
+    },
+    "jurere": {
+      "name": "Praia de Jurerê",
+      "description": "Tradição e frescor a curta distância. Uma excelente opção para compartilhar momentos inesquecíveis perto de nós.",
+      "distance": "4 km",
+      "time": "10 min de carro"
+    },
+    "aguashow": {
+      "name": "Parque Água Show",
+      "description": "Diversão garantida para desfrutar com as pessoas queridas. O parque aquático mais famoso da ilha a passos da sua hospedagem.",
+      "distance": "4 km",
+      "time": "10 min de carro"
+    },
+    "centro": {
+      "name": "Centro Histórico",
+      "description": "Um passeio pela arquitetura colonial e a essência de Florianópolis. Descubra a história que cerca a nossa localização.",
+      "distance": "27 km",
+      "time": "30 min de carro"
+    },
+    "frances": {
+      "name": "Ilha do Francês",
+      "description": "Conexão mágica com a fauna marinha e águas cristalinas. Passeios e saídas disponíveis bem perto da nossa recepção.",
+      "distance": "Saídas próximas",
+      "time": "Meio dia"
+    },
+    "fortaleza": {
+      "name": "Fortaleza de São José",
+      "description": "Vistas panorâmicas e uma viagem ao passado histórico. Um ponto de encontro com a cultura local de frente para o oceano.",
+      "distance": "15 km",
+      "time": "20 min de carro"
+    }
+  }
+}

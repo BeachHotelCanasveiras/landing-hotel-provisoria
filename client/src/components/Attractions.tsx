@@ -1,57 +1,50 @@
+/**
+ * @file Attractions.tsx
+ * @description Sección de Atracciones Turísticas (Fase 5 del Embudo: Viabilidad Logística).
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Traducciones totalmente desacopladas e integradas al namespace 'attractions'.
+ * - Validación defensiva de contratos de traducción con Zod en modo DEV.
+ * - Interpolación dinámica y localizada en tiempo de ejecución para el enlace de WhatsApp (CRO).
+ */
+
 import { motion, Variants } from 'framer-motion';
 import { MapPin, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { HOTEL_CONFIG } from '@/const';
+import { AttractionsTranslationSchema } from '@/locales/schemas/attractions.schema';
 
-// Fuente Única para Imágenes de Atracciones en Cloudinary
 const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/attractions/";
 
-const attractions = [
+// Metadata física inmutable de las atracciones locales
+const ATTRACTIONS_CONFIG = [
   {
     id: 1,
-    name: 'Praia Brava',
-    description: 'Un refugio natural a pocos minutos de nuestro hogar, ideal para conectar con el surf y la serenidad de la isla.',
-    distance: '9 km',
-    time: '15 min en auto',
+    key: 'brava' as const,
     image: `${CLOUDINARY_BASE}praia-brava.webp`,
   },
   {
     id: 2,
-    name: 'Playa Jurerê',
-    description: 'Tradición y frescura a corta distancia. Una opción excelente para compartir momentos inolvidables cerca de nosotros.',
-    distance: '4 km',
-    time: '10 min en auto',
+    key: 'jurere' as const,
     image: `${CLOUDINARY_BASE}jurere.webp`,
   },
   {
     id: 3,
-    name: 'Parque Água Show',
-    description: 'Diversión garantizada para disfrutar con los tuyos. El parque acuático más famoso de la isla a pasos de tu estadía.',
-    distance: '4 km',
-    time: '10 min en auto',
+    key: 'aguashow' as const,
     image: `${CLOUDINARY_BASE}agua-show.webp`,
   },
   {
     id: 4,
-    name: 'Centro Histórico',
-    description: 'Un paseo por la arquitectura colonial y la esencia de Florianópolis. Descubre la historia que rodea nuestra ubicación.',
-    distance: '27 km',
-    time: '30 min en auto',
+    key: 'centro' as const,
     image: `${CLOUDINARY_BASE}centro-historico.webp`,
   },
   {
     id: 5,
-    name: 'Isla del Francés',
-    description: 'Conexión mágica con la fauna marina y aguas cristalinas. Tours y salidas disponibles muy cerca de nuestra recepción.',
-    distance: 'Salidas cercanas',
-    time: 'Medio día',
+    key: 'frances' as const,
     image: `${CLOUDINARY_BASE}ilha-frances.webp`,
   },
   {
     id: 6,
-    name: 'Fortaleza São José',
-    description: 'Vistas panorámicas y un viaje al pasado histórico. Un punto de encuentro con la cultura local frente al océano.',
-    distance: '15 km',
-    time: '20 min en auto',
+    key: 'fortaleza' as const,
     image: `${CLOUDINARY_BASE}fortaleza.webp`,
   },
 ];
@@ -74,9 +67,42 @@ const itemVariants: Variants = {
 };
 
 export default function Attractions() {
+  const { t, i18n } = useTranslation('attractions');
+
+  // ============================================================================
+  // VALIDACIÓN DE INTEGRIDAD DEL ESQUEMA (ZOD)
+  // ============================================================================
+  if (import.meta.env.DEV) {
+    try {
+      const currentBundle = i18n.getResourceBundle(i18n.language, 'attractions') || {};
+      AttractionsTranslationSchema.parse(currentBundle);
+    } catch (error) {
+      console.error(`[Attractions Component] ❌ Error de integridad en diccionario '${i18n.language}':`, error);
+    }
+  }
+
+  /**
+   * Unificar configuración física de Cloudinary con los textos localizados dinámicamente.
+   * Agrega validación defensiva para evitar excepciones si las llaves no han sido compiladas.
+   */
+  const attractions = ATTRACTIONS_CONFIG.map((config) => {
+    const rawData = t(`items.${config.key}`, { returnObjects: true });
+    const isObject = typeof rawData === 'object' && rawData !== null;
+
+    return {
+      ...config,
+      name: isObject ? (rawData as any).name || '' : '',
+      description: isObject ? (rawData as any).description || '' : '',
+      distance: isObject ? (rawData as any).distance || '' : '',
+      time: isObject ? (rawData as any).time || '' : '',
+    };
+  });
+
   return (
     <section id="attractions" className="py-20 bg-gray-50">
       <div className="container px-4">
+        
+        {/* Cabecera de Sección */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -85,16 +111,17 @@ export default function Attractions() {
           className="text-center mb-16"
         >
           <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4 uppercase tracking-wider">
-            Ubicación Estratégica
+            {t('badge')}
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
-            Descubre Canasvieiras
+            {t('title')}
           </h2>
           <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg">
-            Desde nuestro rincón en la Avenida das Nações, tienes acceso privilegiado a las mejores experiencias de Florianópolis.
+            {t('subtitle')}
           </p>
         </motion.div>
 
+        {/* Grid de Atracciones */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -109,7 +136,7 @@ export default function Attractions() {
               whileHover={{ y: -8 }}
               className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col"
             >
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-56 overflow-hidden bg-gray-100">
                 <img
                   src={attraction.image}
                   alt={attraction.name}
@@ -135,15 +162,18 @@ export default function Attractions() {
                   </div>
                 </div>
 
+                {/* Enlace dinámico optimizado con interpolación localizada para el mensaje de WhatsApp */}
                 <motion.a
-                  href={`${HOTEL_CONFIG.whatsappUrl}?text=Hola!%20Me%20gustaría%20saber%20cómo%20llegar%20a%20${encodeURIComponent(attraction.name)}%20desde%20el%20Hotel.`}
+                  href={`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(
+                    t('whatsapp_query_template', { name: attraction.name })
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="block w-full text-center py-3 bg-blue-700 text-white rounded-xl font-body text-sm font-semibold hover:bg-blue-800 transition-colors shadow-md"
                 >
-                  Consultar trayecto
+                  {t('cta_button')}
                 </motion.a>
               </div>
             </motion.div>

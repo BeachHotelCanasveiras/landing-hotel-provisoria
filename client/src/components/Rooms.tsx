@@ -1,16 +1,20 @@
 /**
  * @file Rooms.tsx
- * @description Catálogo de Habitaciones (Fase 3: Decisión).
- * Refactorizado bajo las directrices del Minimalismo Ejecutivo Costero y Confort.
- * Adapta el diseño a la nueva paleta gris antracita (Quiet Luxury), mejora la jerarquía tipográfica 
- * (usando font-body para estados y etiquetas) y suaviza los CTAs a formato píldora (rounded-full).
- * Se han corregido las rutas de las imágenes para apuntar a los activos reales y al nuevo renderizado familiar.
+ * @description Catálogo de Habitaciones (Fase 3 del Embudo: Decisión).
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Textos mapeados dinámicamente desde el namespace 'rooms' de i18next.
+ * - Validación estructural estricta con Zod (RoomsTranslationSchema).
+ * - Protección defensiva (Safe Fallbacks) contra fallos de carga en tiempo de ejecución.
+ * - Tipado estricto libre de 'any' implícitos (TS7006).
+ * - Cero regresiones visuales.
  */
 
 import { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import BookingDialog from './BookingDialog';
+import { RoomsTranslationSchema } from '@/locales/schemas/rooms.schema';
 
 /**
  * CONFIGURACIÓN DE ACTIVOS - CLOUDINARY
@@ -18,55 +22,30 @@ import BookingDialog from './BookingDialog';
  */
 const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1781114927/beach-hotel/";
 
-interface Room {
-  id: number;
-  type: string;
-  name: string;
-  description: string;
-  image: string;
-  amenities: string[];
-}
-
-const rooms: Room[] = [
+// Metadata estructural inmutable de las habitaciones (Aislada de traducciones)
+const ROOMS_CONFIG = [
   {
     id: 1,
-    type: 'single',
-    name: 'Habitación Single',
-    description: 'Tu refugio personal de calma. Un espacio diseñado para el descanso absoluto tras un día de sol en la Avenida das Nações.',
+    type: 'single' as const,
     image: `${CLOUDINARY_BASE}suites/single.png`,
-    amenities: ['Desayuno Buffet', 'WiFi Alta Velocidad', 'Climatización', 'Minibar'],
   },
   {
     id: 2,
-    type: 'double',
-    name: 'Habitación Doble',
-    description: 'El escenario perfecto para compartir. Intimidad y confort en un ambiente acogedor a solo dos cuadras del mar.',
-    /* Rectificado: Ahora apunta a grupal.png, que es el activo de la suite doble twin */
-    image: `${CLOUDINARY_BASE}suites/grupal.png`, 
-    amenities: ['Cama Matrimonial', 'Desayuno Buffet', 'WiFi Gratis', 'Caja Fuerte'],
+    type: 'double' as const,
+    image: `${CLOUDINARY_BASE}suites/grupal.png`,
   },
   {
     id: 3,
-    type: 'triple',
-    name: 'Habitación Triple',
-    description: 'Espacio y calidez para disfrutar acompañados. La distribución ideal para quienes buscan comodidad y momentos compartidos.',
+    type: 'triple' as const,
     image: `${CLOUDINARY_BASE}suites/triple.png`,
-    amenities: ['3 Camas', 'Desayuno Incluido', 'WiFi Alta Velocidad', 'Aire Acondicionado'],
   },
   {
     id: 4,
-    type: 'grupal',
-    name: 'Plan Familiar & Grupos',
-    description: 'Atención dedicada para grandes grupos. Coordinamos cada detalle para que la logística sea simple y la experiencia, inolvidable.',
-    /* Rectificado: Ahora apunta al nuevo renderizado hiperrealista de viajeros en la playa */
+    type: 'grupal' as const,
     image: `${CLOUDINARY_BASE}suites/viajeros-grupo.png`,
-    amenities: ['Capacidad Extendida', 'Coordinación VIP', 'Desayuno Completo', 'WiFi'],
   },
 ];
 
-/**
- * Variantes para la entrada en cascada de las tarjetas.
- */
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -75,9 +54,6 @@ const containerVariants: Variants = {
   },
 };
 
-/**
- * Variantes para la animación individual de cada tarjeta (fade-up).
- */
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -91,13 +67,53 @@ const itemVariants: Variants = {
 };
 
 export default function Rooms() {
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [selectedRoom, setSelectedRoom] = useState<{ id: number; type: string; name: string } | null>(null);
+  const { t, i18n } = useTranslation('rooms');
+
+  // ============================================================================
+  // CONTRATO DE INTERFAZ (ZOD) - ISO 27001
+  // ============================================================================
+  if (import.meta.env.DEV) {
+    try {
+      const currentBundle = i18n.getResourceBundle(i18n.language, 'rooms') || {};
+      RoomsTranslationSchema.parse(currentBundle);
+    } catch (error) {
+      console.error(`[Rooms Component] ❌ Error de integridad en el diccionario '${i18n.language}': Faltan traducciones requeridas para las suites.`, error);
+    }
+  }
+
+  /**
+   * Combinar configuración de renderizado con los textos localizados dinámicamente.
+   * Agrega validación defensiva para evitar excepciones runtime de TypeScript si
+   * el diccionario tarda en responder o es devuelto como un string.
+   */
+  const rooms = ROOMS_CONFIG.map((config) => {
+    const rawData = t(`suites.${config.type}`, { returnObjects: true });
+    
+    // Verificación defensiva contra strings de llaves perdidas (i18next fallback string)
+    const isObject = typeof rawData === 'object' && rawData !== null;
+    
+    const name = isObject ? (rawData as any).name || '' : '';
+    const description = isObject ? (rawData as any).description || '' : '';
+    
+    // Forzamos el tipado estricto a string[] para resolver el error TS7006 de forma limpia
+    const amenities: string[] = isObject && Array.isArray((rawData as any).amenities) 
+      ? ((rawData as any).amenities as string[]) 
+      : [];
+
+    return {
+      ...config,
+      name,
+      description,
+      amenities,
+    };
+  });
 
   return (
     <section id="rooms" className="py-24 bg-gray-50/50">
       <div className="container px-4 sm:px-6">
         
-        {/* Cabecera de Sección - Transmite calma y calidez */}
+        {/* Cabecera de Sección */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -106,13 +122,13 @@ export default function Rooms() {
           className="text-center mb-16"
         >
           <span className="inline-block px-5 py-1.5 bg-gray-100 text-gray-800 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
-            Hospitalidad & Confort
+            {t('badge')}
           </span>
           <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-5 tracking-tight">
-            Nuestros Espacios de Descanso
+            {t('title')}
           </h2>
           <p className="font-body text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-            Descubre un rincón donde la cercanía del mar y la atención dedicada crean el escenario perfecto para tus días en Canasvieiras.
+            {t('subtitle')}
           </p>
         </motion.div>
 
@@ -144,7 +160,7 @@ export default function Rooms() {
                   />
                   <div className="absolute top-4 left-4">
                     <span className="bg-white/90 backdrop-blur-md text-gray-900 px-3 py-1 rounded-full text-[10px] font-body font-medium uppercase tracking-wider shadow-sm">
-                      {room.type === 'grupal' ? 'Especial' : '10% OFF'}
+                      {room.type === 'grupal' ? t('special_badge') : t('discount_badge')}
                     </span>
                   </div>
                 </div>
@@ -175,19 +191,19 @@ export default function Rooms() {
               {/* Pie de Tarjeta - Conversión Silenciosa */}
               <div className="p-8 pt-4 border-t border-gray-50 flex items-center justify-between mt-auto bg-gray-50/20">
                 <div className="flex flex-col">
-                  <span className="font-body text-[9px] font-bold text-gray-400 uppercase tracking-widest">Disponibilidad</span>
+                  <span className="font-body text-[9px] font-bold text-gray-400 uppercase tracking-widest">{t('availability_label')}</span>
                   <span className="font-body text-xs text-green-600 font-medium mt-1 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
-                    Activa
+                    {t('active_status')}
                   </span>
                 </div>
                 
-                {/* Botón Reservar: Adaptado a la nueva geometría de píldora */}
+                {/* Botón Reservar */}
                 <Button 
-                  onClick={() => setSelectedRoom(room)}
+                  onClick={() => setSelectedRoom({ id: room.id, type: room.type, name: room.name })}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 py-4 font-body text-xs font-semibold shadow-sm transition-all active:scale-95"
                 >
-                  Reservar
+                  {t('book_button')}
                 </Button>
               </div>
             </motion.div>
@@ -195,7 +211,7 @@ export default function Rooms() {
         </motion.div>
       </div>
 
-      {/* Portal de Reservas - Nivelación de Élite */}
+      {/* Portal de Reservas */}
       {selectedRoom && (
         <BookingDialog 
           isOpen={!!selectedRoom} 

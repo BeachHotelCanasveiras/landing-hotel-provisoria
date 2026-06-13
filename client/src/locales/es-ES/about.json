@@ -1,0 +1,19 @@
+{
+  "badge": "Tu Bienestar",
+  "title": "La Esencia del Descanso",
+  "subtitle": "Un refugio pensado para desconectarte del ritmo diario y reconectarte con lo esencial, a pasos del mar.",
+  "features": {
+    "location": {
+      "title": "Ubicación Serena",
+      "description": "Sobre la Avenida das Nações, la principal de Canasvieiras. Estás cerca de la playa de aguas calmas y de toda la oferta comercial."
+    },
+    "breakfast": {
+      "title": "Desayuno de la Casa",
+      "description": "Buffet artesanal preparado cada mañana con opciones frescas y repostería casera para empezar el día sin prisas."
+    },
+    "warmth": {
+      "title": "Calidez Familiar",
+      "description": "Atención humana y cercana. Nuestro equipo habla tu idioma y está disponible 24/7 para que te sientas verdaderamente bienvenido."
+    }
+  }
+}

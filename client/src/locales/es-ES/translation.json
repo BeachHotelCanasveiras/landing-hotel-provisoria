@@ -1,0 +1,88 @@
+{
+  "about": {
+    "badge": "Tu Bienestar",
+    "title": "La Esencia del Descanso",
+    "subtitle": "Un refugio pensado para desconectarte del ritmo diario y reconectarte con lo esencial, a pasos del mar.",
+    "features": {
+      "location": {
+        "title": "Ubicación Serena",
+        "description": "Sobre la Avenida das Nações, la principal de Canasvieiras. Estás cerca de la playa de aguas calmas y de toda la oferta comercial."
+      },
+      "breakfast": {
+        "title": "Desayuno de la Casa",
+        "description": "Buffet artesanal preparado cada mañana con opciones frescas y repostería casera para empezar el día sin prisas."
+      },
+      "warmth": {
+        "title": "Calidez Familiar",
+        "description": "Atención humana y cercana. Nuestro equipo habla tu idioma y está disponible 24/7 para que te sientas verdaderamente bienvenido."
+      }
+    }
+  },
+  "hero": {
+    "title_prefix": "Tu refugio en ",
+    "title_highlight": "Canasvieiras",
+    "subtitle": "Hospitalidad auténtica sobre la Avenida das Nações. Un rincón diseñado para tu descanso absoluto a pasos del mar.",
+    "cta_primary": "Consultar Disponibilidad",
+    "cta_secondary": "Ver Galería"
+  },
+  "nav": {
+    "home": "Inicio",
+    "rooms": "Habitaciones",
+    "gallery": "Galería",
+    "attractions": "Atracciones",
+    "contact": "Contacto",
+    "book_now": "Reservar"
+  },
+  "rooms": {
+    "badge": "Hospitalidad & Confort",
+    "title": "Nuestros Espacios de Descanso",
+    "subtitle": "Descubre un rincón donde la cercanía del mar y la atención dedicada crean el escenario perfecto para tus días en Canasvieiras.",
+    "discount_badge": "10% OFF",
+    "special_badge": "Especial",
+    "availability_label": "Disponibilidad",
+    "active_status": "Activa",
+    "book_button": "Reservar",
+    "suites": {
+      "single": {
+        "name": "Habitación Single",
+        "description": "Tu refugio personal de calma. Un espacio diseñado para el descanso absoluto tras un día de sol en la Avenida das Nações.",
+        "amenities": [
+          "Desayuno Buffet",
+          "WiFi Alta Velocidad",
+          "Climatización",
+          "Minibar"
+        ]
+      },
+      "double": {
+        "name": "Habitación Doble",
+        "description": "El escenario perfecto para compartir. Intimidad y confort en un ambiente acogedor a solo dos cuadras del mar.",
+        "amenities": [
+          "Cama Matrimonial",
+          "Desayuno Buffet",
+          "WiFi Gratis",
+          "Caja Fuerte"
+        ]
+      },
+      "triple": {
+        "name": "Habitación Triple",
+        "description": "Espacio y calidez para disfrutar acompañados. La distribución ideal para quienes buscan comodidad y momentos compartidos.",
+        "amenities": [
+          "3 Camas",
+          "Desayuno Incluido",
+          "WiFi Alta Velocidad",
+          "Aire Acondicionado"
+        ]
+      },
+      "grupal": {
+        "name": "Plan Familiar & Grupos",
+        "description": "Atención dedicada para grandes grupos. Coordinamos cada detalle para que la logística sea simple y la experiencia, inolvidable.",
+        "amenities": [
+          "Capacidad Extendida",
+          "Coordinación VIP",
+          "Desayuno Completo",
+          "WiFi"
+        ]
+      }
+    }
+  }
+}

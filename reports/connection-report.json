@@ -1,0 +1,5 @@
+{
+  "timestamp": "2026-06-13T14:22:18.002Z",
+  "status": "FAILED",
+  "message": "Could not find the table 'public.test_connection' in the schema cache"
+}

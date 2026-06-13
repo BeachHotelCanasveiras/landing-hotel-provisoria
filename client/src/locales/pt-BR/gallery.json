@@ -1,0 +1,30 @@
+{
+  "badge": "Nosso cantinho",
+  "title": "Galeria de Momentos",
+  "items": {
+    "reception": {
+      "title": "Recepção Principal",
+      "category": "Hotel"
+    },
+    "facade": {
+      "title": "Fachada Avenida das Nações",
+      "category": "Exterior"
+    },
+    "pool": {
+      "title": "Piscina na Cobertura",
+      "category": "Instalações"
+    },
+    "sunset": {
+      "title": "Pôr do Sol em Canasvieiras",
+      "category": "Vistas"
+    },
+    "suite": {
+      "title": "Conforto Suite",
+      "category": "Quartos"
+    },
+    "family": {
+      "title": "Espaços Familiares",
+      "category": "Quartos"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "badge": "Nuestro rincón",
+  "title": "Galería de Momentos",
+  "items": {
+    "reception": {
+      "title": "Recepción Principal",
+      "category": "Hotel"
+    },
+    "facade": {
+      "title": "Fachada Avenida das Nações",
+      "category": "Exterior"
+    },
+    "pool": {
+      "title": "Piscina en la Azotea",
+      "category": "Instalaciones"
+    },
+    "sunset": {
+      "title": "Atardecer en Canasvieiras",
+      "category": "Vistas"
+    },
+    "suite": {
+      "title": "Confort Suite",
+      "category": "Habitaciones"
+    },
+    "family": {
+      "title": "Espacios Familiares",
+      "category": "Habitaciones"
+    }
+  }
+}

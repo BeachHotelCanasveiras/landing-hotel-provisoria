@@ -1,0 +1,32 @@
+{
+  "badge": "Hospitalidad & Confort",
+  "title": "Nuestros Espacios de Descanso",
+  "subtitle": "Descubre un rincón donde la cercanía del mar y la atención dedicada crean el escenario perfecto para tus días en Canasvieiras.",
+  "discount_badge": "10% OFF",
+  "special_badge": "Especial",
+  "availability_label": "Disponibilidad",
+  "active_status": "Activa",
+  "book_button": "Reservar",
+  "suites": {
+    "single": {
+      "name": "Habitación Single",
+      "description": "Tu refugio personal de calma. Un espacio diseñado para el descanso absoluto tras un día de sol en la Avenida das Nações.",
+      "amenities": ["Desayuno Buffet", "WiFi Alta Velocidad", "Climatización", "Minibar"]
+    },
+    "double": {
+      "name": "Habitación Doble",
+      "description": "El escenario perfecto para compartir. Intimidad y confort en un ambiente acogedor a solo dos cuadras del mar.",
+      "amenities": ["Cama Matrimonial", "Desayuno Buffet", "WiFi Gratis", "Caja Fuerte"]
+    },
+    "triple": {
+      "name": "Habitación Triple",
+      "description": "Espacio y calidez para disfrutar acompañados. La distribución ideal para quienes buscan comodidad y momentos compartidos.",
+      "amenities": ["3 Camas", "Desayuno Incluido", "WiFi Alta Velocidad", "Aire Acondicionado"]
+    },
+    "grupal": {
+      "name": "Plan Familiar & Grupos",
+      "description": "Atención dedicada para grandes grupos. Coordinamos cada detalle para que la logística sea simple y la experiencia, inolvidable.",
+      "amenities": ["Capacidad Extendida", "Coordinación VIP", "Desayuno Completo", "WiFi"]
+    }
+  }
+}

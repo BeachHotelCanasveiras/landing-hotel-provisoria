@@ -1,15 +1,17 @@
 /**
  * @file Hero.tsx
- * @description Componente principal de cabecera (Hero Section).
- * Refactorizado bajo la filosofía "Confort y Calidez Costera".
- * Se ha eliminado el texto pretencioso para priorizar un mensaje directo y acogedor.
- * La animación de flotación vertical se sustituyó por un efecto "ola" (deriva horizontal lenta),
- * y los CTAs se han optimizado estratégicamente para guiar al usuario hacia las habitaciones y la galería.
+ * @description Componente principal de cabecera (Hero Section - Fase 1 del Embudo).
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Textos totalmente desacoplados e internacionalizados ('hero' namespace).
+ * - Validación estricta con Zod en tiempo de desarrollo.
+ * - Optimizado para CRO (Call To Action claros) y accesibilidad (ARIA).
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { HeroTranslationSchema } from '@/locales/schemas/hero.schema';
 
 /**
  * CONFIGURACIÓN DE ACTIVOS - CLOUDINARY
@@ -26,6 +28,19 @@ const backgroundImages = [
 
 export default function Hero() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { t, i18n } = useTranslation('hero');
+
+  // ============================================================================
+  // CONTRATO DE INTERFAZ (ZOD) - ISO 27001 / Prevención de Fallos en UI
+  // ============================================================================
+  if (import.meta.env.DEV) {
+    try {
+      const currentBundle = i18n.getResourceBundle(i18n.language, 'hero') || {};
+      HeroTranslationSchema.parse(currentBundle);
+    } catch (error) {
+      console.error(`[Hero Component] ❌ Error de integridad en el diccionario '${i18n.language}': Faltan traducciones requeridas.`, error);
+    }
+  }
 
   /**
    * Intervalo del carrusel de fondo cinemático.
@@ -55,7 +70,6 @@ export default function Hero() {
   /**
    * Efecto Marea / Ola (Wave Effect).
    * Un movimiento horizontal ultra-lento que emula la brisa marina o el vaivén del agua.
-   * Reemplaza el antiguo y mecánico rebote vertical.
    */
   const waveVariants: Variants = {
     animate: {
@@ -87,6 +101,7 @@ export default function Hero() {
     <section
       id="home"
       className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-gray-950"
+      aria-label={t('title_prefix') + t('title_highlight')}
     >
       {/* Carrusel de Fondo Dinámico */}
       <div className="absolute inset-0 z-0">
@@ -99,7 +114,7 @@ export default function Hero() {
             transition={{ duration: 2.5, ease: "easeInOut" }}
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              /* Gradiente ajustado para proteger la legibilidad sin oscurecer demasiado la imagen */
+              /* Gradiente ajustado para proteger la legibilidad de los textos (CRO) */
               backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.55)), url(${backgroundImages[currentImageIndex]})`,
             }}
           />
@@ -107,9 +122,9 @@ export default function Hero() {
       </div>
 
       {/* Overlay de Gradiente extra para integrar suavemente con la siguiente sección */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950/70 via-transparent to-transparent" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950/70 via-transparent to-transparent pointer-events-none" />
 
-      {/* Contenido Principal */}
+      {/* Contenido Principal (Embudo - Fase 1: Inspiración) */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -121,43 +136,44 @@ export default function Hero() {
           animate="animate"
           className="flex flex-col items-center pt-16 md:pt-0"
         >
-          {/* Título Principal: Legible, cálido y proporcionado */}
+          {/* Título Principal: Consumiendo diccionario i18n validado por Zod */}
           <motion.h1
             variants={itemVariants}
             className="font-display text-5xl sm:text-7xl md:text-[5.5rem] font-medium mb-6 leading-[1.15] tracking-tight drop-shadow-xl"
           >
-            Tu refugio en <br />
-            <span className="italic font-normal text-white">Canasvieiras</span>
+            {t('title_prefix')} <br className="hidden sm:block" />
+            <span className="italic font-normal text-white">{t('title_highlight')}</span>
           </motion.h1>
 
           <motion.p
             variants={itemVariants}
             className="font-body text-base sm:text-lg md:text-xl mb-10 max-w-2xl mx-auto text-white/95 font-light leading-relaxed drop-shadow-md"
           >
-            Hospitalidad auténtica sobre la Avenida das Nações. 
-            Un rincón diseñado para tu descanso absoluto a pasos del mar.
+            {t('subtitle')}
           </motion.p>
 
-          {/* Grupo de Botones: Accesibles y amigables (Confort) */}
+          {/* Grupo de Botones: Accesibles y amigables (CRO Triggers) */}
           <motion.div
             variants={itemVariants}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto"
           >
             <motion.a
               href="#rooms"
+              aria-label={t('cta_primary')}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-9 py-3.5 bg-primary text-primary-foreground rounded-full font-body text-sm font-medium shadow-2xl hover:bg-primary/90 transition-all"
+              className="w-full sm:w-auto px-9 py-3.5 bg-primary text-primary-foreground rounded-full font-body text-sm font-medium shadow-2xl hover:bg-primary/90 transition-all focus:ring-4 focus:ring-accent outline-none"
             >
-              Consultar Disponibilidad
+              {t('cta_primary')}
             </motion.a>
             <motion.a
               href="#gallery"
+              aria-label={t('cta_secondary')}
               whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.15)" }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-9 py-3.5 bg-white/10 backdrop-blur-md text-white rounded-full font-body text-sm font-medium border border-white/20 transition-all"
+              className="w-full sm:w-auto px-9 py-3.5 bg-white/10 backdrop-blur-md text-white rounded-full font-body text-sm font-medium border border-white/20 transition-all focus:ring-4 focus:ring-white/50 outline-none"
             >
-              Ver Galería
+              {t('cta_secondary')}
             </motion.a>
           </motion.div>
         </motion.div>

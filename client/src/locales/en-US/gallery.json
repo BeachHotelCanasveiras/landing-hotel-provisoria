@@ -1,0 +1,30 @@
+{
+  "badge": "Our corner",
+  "title": "Gallery of Moments",
+  "items": {
+    "reception": {
+      "title": "Main Lobby",
+      "category": "Hotel"
+    },
+    "facade": {
+      "title": "Avenida das Nações Facade",
+      "category": "Exterior"
+    },
+    "pool": {
+      "title": "Rooftop Pool",
+      "category": "Amenities"
+    },
+    "sunset": {
+      "title": "Canasvieiras Sunset",
+      "category": "Views"
+    },
+    "suite": {
+      "title": "Comfort Suite",
+      "category": "Rooms"
+    },
+    "family": {
+      "title": "Family Spaces",
+      "category": "Rooms"
+    }
+  }
+}

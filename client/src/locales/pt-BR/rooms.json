@@ -1,0 +1,32 @@
+{
+  "badge": "Hospitalidade & Conforto",
+  "title": "Nossos Espaços de Descanso",
+  "subtitle": "Descubra um recanto onde a proximidade com o mar e o atendimento dedicado criam o cenário perfeito para os seus dias em Canasvieiras.",
+  "discount_badge": "10% OFF",
+  "special_badge": "Especial",
+  "availability_label": "Disponibilidade",
+  "active_status": "Ativa",
+  "book_button": "Reservar",
+  "suites": {
+    "single": {
+      "name": "Quarto Single",
+      "description": "Seu refúgio pessoal de calma. Um espaço projetado para o descanso absoluto após um dia ensolarado na Avenida das Nações.",
+      "amenities": ["Café da Manhã Buffet", "WiFi de Alta Velocidade", "Climatização", "Minibar"]
+    },
+    "double": {
+      "name": "Quarto Duplo",
+      "description": "O cenário perfeito para compartilhar. Privacidade e conforto em um ambiente aconchegante a apenas duas quadras do mar.",
+      "amenities": ["Cama de Casal", "Café da Manhã Buffet", "WiFi Grátis", "Cofre"]
+    },
+    "triple": {
+      "name": "Quarto Triplo",
+      "description": "Espaço e aconchego para desfrutar juntos. A disposição ideal para quem busca conforto e momentos compartilhados.",
+      "amenities": ["3 Camas", "Café da Manhã Incluso", "WiFi de Alta Velocidade", "Ar Condicionado"]
+    },
+    "grupal": {
+      "name": "Plano Familiar & Grupos",
+      "description": "Atendimento dedicado para grandes grupos. Coordenamos cada detalhe para tornar a logística simples e a experiência inesquecível.",
+      "amenities": ["Capacidade Estendida", "Coordenação VIP", "Café da Manhã Completo", "WiFi"]
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "badge": "Hospitality & Comfort",
+  "title": "Our Rest Spaces",
+  "subtitle": "Discover a corner where proximity to the sea and dedicated attention create the perfect setting for your days in Canasvieiras.",
+  "discount_badge": "10% OFF",
+  "special_badge": "Special",
+  "availability_label": "Availability",
+  "active_status": "Active",
+  "book_button": "Book",
+  "suites": {
+    "single": {
+      "name": "Single Room",
+      "description": "Your personal haven of calm. A space designed for absolute rest after a sunny day on Avenida das Nações.",
+      "amenities": ["Buffet Breakfast", "High-Speed WiFi", "A/C", "Minibar"]
+    },
+    "double": {
+      "name": "Double Room",
+      "description": "The perfect setting to share. Privacy and comfort in a cozy environment just two blocks from the sea.",
+      "amenities": ["Double Bed", "Buffet Breakfast", "Free WiFi", "Safe Box"]
+    },
+    "triple": {
+      "name": "Triple Room",
+      "description": "Space and warmth to enjoy together. The ideal layout for those looking for comfort and shared moments.",
+      "amenities": ["3 Beds", "Breakfast Included", "High-Speed WiFi", "Air Conditioning"]
+    },
+    "grupal": {
+      "name": "Family & Groups Plan",
+      "description": "Dedicated attention for large groups. We coordinate every detail to make logistics simple and the experience unforgettable.",
+      "amenities": ["Extended Capacity", "VIP Coordination", "Full Breakfast", "WiFi"]
+    }
+  }
+}
