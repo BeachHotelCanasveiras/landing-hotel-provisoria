@@ -1,0 +1,17 @@
+{
+  "badge": "Contacto",
+  "title": "Escríbenos",
+  "subtitle": "Estamos aquí para asistirte. Completa el formulario y te responderemos a la brevedad.",
+  "name_label": "Nombre Completo",
+  "name_placeholder": "Tu nombre",
+  "email_label": "Correo Electrónico",
+  "email_placeholder": "tu@correo.com",
+  "message_label": "Mensaje o Consulta",
+  "message_placeholder": "¿En qué podemos ayudarte?",
+  "submit_button": "Enviar Mensaje",
+  "validation_name_required": "Por favor, escribe tu nombre.",
+  "validation_email_required": "El correo electrónico es requerido.",
+  "validation_email_invalid": "Ingresa un correo electrónico válido.",
+  "validation_message_required": "Por favor, escribe tu mensaje.",
+  "toast_success": "¡Mensaje preparado! Abriendo tu gestor de correo..."
+}

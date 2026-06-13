@@ -1,0 +1,17 @@
+{
+  "badge": "Contato",
+  "title": "Escreva para Nós",
+  "subtitle": "Estamos aqui para ajudar. Preencha o formulário e responderemos o mais rápido possível.",
+  "name_label": "Nome Completo",
+  "name_placeholder": "Seu nome",
+  "email_label": "E-mail",
+  "email_placeholder": "seu@email.com",
+  "message_label": "Mensagem ou Dúvida",
+  "message_placeholder": "Como podemos ajudar você?",
+  "submit_button": "Enviar Mensagem",
+  "validation_name_required": "Por favor, digite seu nome.",
+  "validation_email_required": "O e-mail é obrigatório.",
+  "validation_email_invalid": "Insira um e-mail válido.",
+  "validation_message_required": "Por favor, digite sua mensagem.",
+  "toast_success": "Mensagem preparada! Abrindo seu cliente de e-mail..."
+}

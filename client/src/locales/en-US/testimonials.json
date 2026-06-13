@@ -1,0 +1,27 @@
+{
+  "badge": "Our Guests' Reviews",
+  "title": "Real experiences at our home",
+  "fallback_reviews": [
+    {
+      "author_name": "Carlos Rodríguez",
+      "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-chile.webp",
+      "rating": 5,
+      "text": "The location is perfect, steps from everything, with a warmth that made us feel right at home at all times.",
+      "relative_time_description": "A month ago"
+    },
+    {
+      "author_name": "María López",
+      "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-argentina.webp",
+      "rating": 5,
+      "text": "Delicious breakfast and flawless service. It is the ideal place to disconnect with the family.",
+      "relative_time_description": "Two weeks ago"
+    },
+    {
+      "author_name": "Juan Martínez",
+      "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-uruguay.webp",
+      "rating": 5,
+      "text": "Excellent value for money. The service from the entire team was wonderful, we will be back soon.",
+      "relative_time_description": "Three months ago"
+    }
+  ]
+}

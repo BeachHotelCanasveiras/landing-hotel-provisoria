@@ -1,19 +1,20 @@
 /**
  * @file Footer.tsx
  * @description Pie de página institucional y cierre del embudo (Fase de Contacto).
- * Refactorizado bajo la estética "Confort y Lujo Silencioso". Integra el logotipo claro
- * en proporciones boutique simétricas, reestructura la paleta cromática eliminando los azules intensos
- * por tonos arena cálida (#D4A574) y gris carbono, y suaviza la geometría a formatos redondeados.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Textos específicos traducidos mediante el namespace 'footer'.
+ * - Reutilización asíncrona del namespace 'nav' para las rutas de navegación.
+ * - Validación estructural estricta con Zod (FooterTranslationSchema).
+ * - Cero regresiones visuales.
  */
 
 import { motion, Variants } from 'framer-motion';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { HOTEL_CONFIG } from '@/const';
 import { Logo } from '@/components/Logo';
+import { FooterTranslationSchema } from '@/locales/schemas/footer.schema';
 
-/**
- * Variantes de Framer Motion para la entrada escalonada de las columnas del Footer.
- */
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -25,9 +26,6 @@ const containerVariants: Variants = {
   },
 };
 
-/**
- * Variantes de Framer Motion para los items individuales.
- */
 const itemVariants: Variants = {
   hidden: { opacity: 0, y: 15 },
   visible: {
@@ -38,6 +36,31 @@ const itemVariants: Variants = {
 };
 
 export default function Footer() {
+  const { t: tNav } = useTranslation('nav'); // Reutilizamos el namespace de navegación
+  const { t: tFooter, i18n } = useTranslation('footer');
+
+  // ============================================================================
+  // CONTRATO DE INTERFAZ (ZOD)
+  // ============================================================================
+  if (import.meta.env.DEV) {
+    try {
+      const currentBundle = i18n.getResourceBundle(i18n.language, 'footer') || {};
+      FooterTranslationSchema.parse(currentBundle);
+    } catch (error) {
+      console.error(`[Footer Component] ❌ Error de integridad en diccionario '${i18n.language}':`, error);
+    }
+  }
+
+  /**
+   * Enlaces de navegación combinados de forma segura a partir del namespace 'nav'
+   */
+  const exploreLinks = [
+    { name: tNav('home'), href: '#home' },
+    { name: tNav('rooms'), href: '#rooms' },
+    { name: tNav('gallery'), href: '#gallery' },
+    { name: tNav('attractions'), href: '#attractions' }
+  ];
+
   return (
     <footer id="contact" className="bg-[#1A1D20] text-white selection:bg-accent/30 selection:text-white">
       <div className="container py-16 px-4 sm:px-6">
@@ -58,14 +81,14 @@ export default function Footer() {
               />
             </div>
             <p className="font-body text-gray-400 text-sm leading-relaxed max-w-xs font-light">
-              Siente la calidez de un espacio diseñado para tu bienestar. Tu refugio de hospitalidad auténtica en la principal Avenida das Nações.
+              {tFooter('tagline')}
             </p>
           </motion.div>
 
           {/* Bloque de Contacto Directo */}
           <motion.div variants={itemVariants}>
             <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">
-              Contacto
+              {tFooter('contact_title')}
             </h4>
             <div className="space-y-4">
               <div className="flex items-start gap-3 group cursor-default">
@@ -97,18 +120,13 @@ export default function Footer() {
             </div>
           </motion.div>
 
-          {/* Navegación Estratégica (Explorar) */}
+          {/* Navegación Estratégica */}
           <motion.div variants={itemVariants}>
             <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">
-              Explorar
+              {tFooter('explore_title')}
             </h4>
             <ul className="space-y-3">
-              {[
-                { name: 'Inicio', href: '#home' },
-                { name: 'Habitaciones', href: '#rooms' },
-                { name: 'Galería', href: '#gallery' },
-                { name: 'Atracciones', href: '#attractions' }
-              ].map((link) => (
+              {exploreLinks.map((link) => (
                 <li key={link.href}>
                   <a 
                     href={link.href} 
@@ -125,7 +143,7 @@ export default function Footer() {
           {/* Presencia Digital (Redes Sociales) */}
           <motion.div variants={itemVariants}>
             <h4 className="font-display text-lg mb-6 border-b border-gray-800 pb-2 w-fit">
-              Síguenos
+              {tFooter('social_title')}
             </h4>
             <div className="flex flex-wrap gap-4">
               {[
@@ -170,7 +188,7 @@ export default function Footer() {
           
           <div className="flex items-center gap-3 group cursor-pointer">
             <span className="font-body text-[10px] text-gray-600 uppercase tracking-[0.3em] font-medium text-center">
-              Estrategia & Código
+              {tFooter('strategy_credits_label')}
             </span>
             <div className="hidden md:block h-4 w-px bg-gray-800" />
             <span className="font-display text-xs text-gray-400 group-hover:text-accent transition-all duration-500 tracking-wide text-center">

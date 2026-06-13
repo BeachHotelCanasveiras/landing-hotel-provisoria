@@ -1,0 +1,24 @@
+{
+  "step1_title": "Fechas",
+  "step2_title": "Tu Reserva",
+  "check_in_label": "Entrada",
+  "check_out_label": "Salida",
+  "select_placeholder": "Seleccionar",
+  "continue_button": "Continuar",
+  "guest_name_label": "Nombre y Apellido",
+  "guest_name_placeholder": "Escribe tu nombre",
+  "guests_label": "Huéspedes",
+  "guests_suffix": "personas",
+  "trust_badge": "Confirmaremos tu reserva vía WhatsApp. Recibirás el detalle y los medios de pago disponibles.",
+  "whatsapp_button": "Confirmar en WhatsApp",
+  "whatsapp_template": {
+    "header": "*SOLICITUD DE RESERVA* 🏠",
+    "room": "*Habitación:*",
+    "check_in": "*Check-in:*",
+    "check_out": "*Check-out:*",
+    "nights": "*Noches:*",
+    "guests": "*Huéspedes:*",
+    "name": "*Nombre:*",
+    "footer": "_Enviado desde beachcanasvieiras.com_"
+  }
+}

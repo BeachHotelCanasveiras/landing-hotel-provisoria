@@ -11,6 +11,9 @@ export const HOTEL_CONFIG = {
   email: "reservas@beachcanasvieiras.com",
   websiteUrl: "https://beachcanasvieiras.com",
   
+  // Place ID oficial de Google para tu hotel (Sincronización de Reseñas)
+  googlePlaceId: "ChIJo6u7Zly_J5URP6yFhmGglAx", 
+  
   // Enlaces de Conversión Directa
   whatsappUrl: "https://wa.me/5548998126650",
   whatsappShortUrl: "https://w.app/hotelbeach", // Redirección corta alternativa

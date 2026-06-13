@@ -1,0 +1,24 @@
+{
+  "step1_title": "Dates",
+  "step2_title": "Your Booking",
+  "check_in_label": "Check-in",
+  "check_out_label": "Check-out",
+  "select_placeholder": "Select",
+  "continue_button": "Continue",
+  "guest_name_label": "First & Last Name",
+  "guest_name_placeholder": "Type your name",
+  "guests_label": "Guests",
+  "guests_suffix": "guests",
+  "trust_badge": "We will confirm your booking via WhatsApp. You will receive details and available payment methods.",
+  "whatsapp_button": "Confirm on WhatsApp",
+  "whatsapp_template": {
+    "header": "*BOOKING REQUEST* 🏠",
+    "room": "*Room:*",
+    "check_in": "*Check-in:*",
+    "check_out": "*Check-out:*",
+    "nights": "*Nights:*",
+    "guests": "*Guests:*",
+    "name": "*Name:*",
+    "footer": "_Sent from beachcanasvieiras.com_"
+  }
+}

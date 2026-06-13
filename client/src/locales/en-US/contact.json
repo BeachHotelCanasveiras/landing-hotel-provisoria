@@ -1,0 +1,17 @@
+{
+  "badge": "Contact",
+  "title": "Write to Us",
+  "subtitle": "We are here to assist you. Fill out the form and we will reply as soon as possible.",
+  "name_label": "Full Name",
+  "name_placeholder": "Your name",
+  "email_label": "Email Address",
+  "email_placeholder": "you@email.com",
+  "message_label": "Message or Inquiry",
+  "message_placeholder": "How can we help you?",
+  "submit_button": "Send Message",
+  "validation_name_required": "Please type your name.",
+  "validation_email_required": "Email address is required.",
+  "validation_email_invalid": "Enter a valid email address.",
+  "validation_message_required": "Please type your message.",
+  "toast_success": "Message prepared! Opening your mail client..."
+}

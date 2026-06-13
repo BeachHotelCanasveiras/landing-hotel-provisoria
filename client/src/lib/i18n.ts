@@ -17,7 +17,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources: {
-      'es-ES': esESTranslation, // Contiene dinámicamente nav, hero, rooms, about, attractions y futuros namespaces
+      'es-ES': esESTranslation, // Contiene dinámicamente nav, hero, rooms, about, attractions, contact y futuros namespaces
       'en-US': enUSTranslation,
       'pt-BR': ptBRTranslation
     },
