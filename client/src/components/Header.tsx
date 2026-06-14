@@ -3,7 +3,7 @@
  * @description Componente de navegación principal estilo "Píldora Flotante" (Floating Pill).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Se integra el nuevo enlace activo de "Excursiones" en móviles y escritorios.
- * - Doble canal de conversión (CTA Reservar lanza modal, CTA Contáctanos desplaza a formulario).
+ * - Doble canal de conversión (CTA dinámico de autenticación y CTA de contáctanos).
  * - Selector de idioma flotante visible en móviles (UX accesible de alta fidelidad).
  * - Textos traducidos dinámicamente y libres de hardcoding.
  */
@@ -12,8 +12,10 @@ import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { Menu, X, Globe, PhoneCall } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'wouter';
 import { Logo } from '@/components/Logo';
 import { StorageService } from '@/lib/storage';
+import { useAuth } from '@/contexts/AuthContext';
 import BookingDialog from './BookingDialog';
 
 export default function Header() {
@@ -22,6 +24,9 @@ export default function Header() {
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const { t, i18n } = useTranslation('nav');
   const langMenuRef = useRef<HTMLDivElement>(null);
+
+  const [, setLocation] = useLocation();
+  const { user, loading } = useAuth();
 
   /**
    * Manejador para el cambio de idioma.
@@ -110,7 +115,7 @@ export default function Header() {
             </motion.a>
           </div>
 
-          {/* Columna 2: Menú de Navegación Unificado (Solo Desktop: col-span-6 - espaciado equilibrado para 5 pestañas) */}
+          {/* Columna 2: Menú de Navegación Unificado (Solo Desktop: col-span-6) */}
           <div className="hidden lg:flex col-span-6 justify-center items-center gap-5 xl:gap-6">
             {navItems.map((item) => (
               <a
@@ -193,12 +198,13 @@ export default function Header() {
               {t('contact_us')}
             </a>
 
-            {/* Botón Reservar (Desktop & Mobile) */}
+            {/* Botón de Acceso Dinámico (Join or Sign In o Dashboard) */}
             <button
-              onClick={() => setIsBookingOpen(true)}
-              className="px-4 sm:px-5 py-2 bg-white text-gray-950 hover:bg-gray-100 rounded-full font-body text-xs font-semibold transition-all duration-300 shadow-sm hover:scale-[1.02] active:scale-95 whitespace-nowrap"
+              onClick={() => setLocation(user ? '/admin' : '/login')}
+              disabled={loading}
+              className="px-4 sm:px-5 py-2 bg-white text-gray-950 hover:bg-gray-100 rounded-full font-body text-xs font-semibold transition-all duration-300 shadow-sm hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50"
             >
-              {t('book_now')}
+              {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
             </button>
 
             {/* Mobile Hamburguer Trigger */}
@@ -251,11 +257,12 @@ export default function Header() {
                     custom={navItems.length + 1}
                     onClick={() => {
                       setIsOpen(false);
-                      setIsBookingOpen(true);
+                      setLocation(user ? '/admin' : '/login');
                     }}
+                    disabled={loading}
                     className="mt-4 px-4 py-4 bg-white text-gray-950 rounded-2xl font-body font-medium text-center text-base shadow-sm active:scale-95 transition-all"
                   >
-                    {t('book_now')}
+                    {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
                   </motion.button>
                 </div>
               </motion.div>
@@ -265,7 +272,7 @@ export default function Header() {
         </nav>
       </header>
 
-      {/* Portal de Reservas Global del Botón del Header */}
+      {/* Portal de Reservas Global (Disponible de fondo si es invocado por otras secciones) */}
       <BookingDialog 
         isOpen={isBookingOpen} 
         onClose={() => setIsBookingOpen(false)} 

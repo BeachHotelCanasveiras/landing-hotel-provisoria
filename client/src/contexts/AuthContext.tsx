@@ -1,6 +1,13 @@
 // client/src/contexts/AuthContext.tsx
+/**
+ * @file AuthContext.tsx
+ * @description Proveedor de estado global de autenticación y roles de usuario.
+ * - Satisface el tipado estricto (no-any-implícito) mediante anotación nativa de Supabase.
+ * - Expone el estado del usuario logueado y su rol (guest, agency, admin, developer).
+ */
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
+import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
 export type UserRole = 'guest' | 'agency' | 'admin' | 'developer';
@@ -20,8 +27,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Obtener la sesión activa al inicializar
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // 1. Obtener la sesión activa al inicializar (Tipado explícitamente de forma defensiva)
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session) {
         setUser(session.user);
         fetchUserRole(session.user.id);
@@ -30,9 +37,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // 2. Suscribirse a cambios en el estado de autenticación (Login, SignOut, etc.)
+    // 2. Suscribirse a cambios con anotaciones de tipo nativas
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: AuthChangeEvent, session: Session | null) => {
         if (session) {
           setUser(session.user);
           await fetchUserRole(session.user.id);
