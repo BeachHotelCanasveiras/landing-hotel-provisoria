@@ -4,6 +4,7 @@
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Traducciones totalmente desacopladas e integradas al namespace 'attractions'.
  * - Validación defensiva de contratos de traducción con Zod en modo DEV.
+ * - Enlaces temporales optimizados desde Unsplash para evitar enlaces rotos durante el desarrollo.
  * - Interpolación dinámica y localizada en tiempo de ejecución para el enlace de WhatsApp (CRO).
  */
 
@@ -13,39 +14,37 @@ import { useTranslation } from 'react-i18next';
 import { HOTEL_CONFIG } from '@/const';
 import { AttractionsTranslationSchema } from '@/locales/schemas/attractions.schema';
 
-const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/attractions/";
-
-// Metadata física inmutable de las atracciones locales
+// Metadata física de las atracciones con enlaces temporales de alta definición de Unsplash
 const ATTRACTIONS_CONFIG = [
   {
     id: 1,
     key: 'brava' as const,
-    image: `${CLOUDINARY_BASE}praia-brava.webp`,
+    image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80", // Playa salvaje y olas
   },
   {
     id: 2,
     key: 'jurere' as const,
-    image: `${CLOUDINARY_BASE}jurere.webp`,
+    image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80", // Playa exclusiva y muelle
   },
   {
     id: 3,
     key: 'aguashow' as const,
-    image: `${CLOUDINARY_BASE}agua-show.webp`,
+    image: "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=800&q=80", // Complejo de piscina y tobogán
   },
   {
     id: 4,
     key: 'centro' as const,
-    image: `${CLOUDINARY_BASE}centro-historico.webp`,
+    image: "https://images.unsplash.com/photo-1583037189850-1921ae7c6c22?auto=format&fit=crop&w=800&q=80", // Calles de arquitectura colonial
   },
   {
     id: 5,
     key: 'frances' as const,
-    image: `${CLOUDINARY_BASE}ilha-frances.webp`,
+    image: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=800&q=80", // Bahía de agua cristalina y verde
   },
   {
     id: 6,
     key: 'fortaleza' as const,
-    image: `${CLOUDINARY_BASE}fortaleza.webp`,
+    image: "https://images.unsplash.com/photo-1590073844006-33379778ae09?auto=format&fit=crop&w=800&q=80", // Fortaleza de piedra frente al mar
   },
 ];
 
@@ -82,7 +81,7 @@ export default function Attractions() {
   }
 
   /**
-   * Unificar configuración física de Cloudinary con los textos localizados dinámicamente.
+   * Unificar configuración física de Unsplash con los textos localizados dinámicamente.
    * Agrega validación defensiva para evitar excepciones si las llaves no han sido compiladas.
    */
   const attractions = ATTRACTIONS_CONFIG.map((config) => {
