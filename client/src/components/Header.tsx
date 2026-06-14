@@ -115,16 +115,16 @@ export default function Header() {
             </motion.a>
           </div>
 
-          {/* Columna 2: Menú de Navegación Unificado (Outfit Sans-Serif Limpio) */}
+          {/* Columna 2: Menú de Navegación Unificado (Outfit Fino, Compacto y Elegante) */}
           <div className="hidden lg:flex col-span-6 justify-center items-center gap-6 xl:gap-8">
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-white font-body text-[11px] uppercase tracking-[0.12em] font-semibold transition-all duration-300 ease-in-out hover:-translate-y-[1px] transform relative group whitespace-nowrap"
+                className="text-gray-300 hover:text-white font-body text-[11px] uppercase tracking-[0.08em] font-light transition-all duration-300 ease-in-out hover:-translate-y-[1px] transform relative group whitespace-nowrap"
               >
                 {item.label}
-                <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-accent group-hover:w-full transition-all duration-400 ease-out" />
+                <span className="absolute -bottom-1.5 left-0 w-0 h-[1.5px] bg-accent group-hover:w-full transition-all duration-400 ease-out" />
               </a>
             ))}
           </div>
@@ -132,11 +132,12 @@ export default function Header() {
           {/* Columna 3: Idioma + CTA */}
           <div className="col-span-6 lg:col-span-4 flex justify-end items-center gap-3 sm:gap-5">
             
-            {/* Selector de Idioma Desktop - Desplegable por Hover */}
+            {/* Selector de Idioma Desktop - Desplegable por Hover Estilizado */}
             <div 
-              className="relative hidden lg:block"
+              className="relative hidden lg:block text-left"
               onMouseEnter={() => setIsLangOpen(true)}
               onMouseLeave={() => setIsLangOpen(false)}
+              ref={langMenuRef}
             >
               <button
                 className="p-2.5 text-gray-400 hover:text-white rounded-full bg-white/5 border border-white/10 hover:border-white/20 flex items-center justify-center transition-all duration-300 cursor-pointer"
@@ -155,16 +156,16 @@ export default function Header() {
                     className="absolute right-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 flex flex-col gap-1 shadow-2xl z-50 min-w-[140px]"
                   >
                     {[
-                      { code: 'es-ES', label: t('lang_es') },
-                      { code: 'en-US', label: t('lang_en') },
-                      { code: 'pt-BR', label: t('lang_pt') }
+                      { code: 'es-ES', label: t('LANG_ES') },
+                      { code: 'en-US', label: t('LANG_EN') },
+                      { code: 'pt-BR', label: t('LANG_PT') }
                     ].map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang.code)}
-                        className={`px-3 py-2 text-left rounded-xl text-[11px] font-body font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                        className={`px-3.5 py-2.5 text-left rounded-xl font-body font-light text-[11px] uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer ${
                           i18n.language === lang.code 
-                            ? 'bg-accent text-accent-foreground font-bold' 
+                            ? 'bg-accent text-accent-foreground font-normal' 
                             : 'text-gray-400 hover:text-white hover:bg-white/5'
                         }`}
                       >
@@ -194,15 +195,15 @@ export default function Header() {
                     className="absolute right-0 mt-3 bg-black/95 border border-white/10 rounded-2xl p-2 flex flex-col gap-1 shadow-xl z-50 min-w-[140px]"
                   >
                     {[
-                      { code: 'es-ES', label: t('lang_es') },
-                      { code: 'en-US', label: t('lang_en') },
-                      { code: 'pt-BR', label: t('lang_pt') }
+                      { code: 'es-ES', label: t('LANG_ES') },
+                      { code: 'en-US', label: t('LANG_EN') },
+                      { code: 'pt-BR', label: t('LANG_PT') }
                     ].map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang.code)}
-                        className={`px-3 py-2.5 text-left rounded-xl text-[10px] font-body font-bold uppercase tracking-wider transition-colors ${
-                          i18n.language === lang.code ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'
+                        className={`px-3 py-2.5 text-left rounded-xl font-body font-light text-[10px] uppercase tracking-[0.08em] transition-colors ${
+                          i18n.language === lang.code ? 'bg-accent text-white font-normal' : 'text-gray-400 hover:text-white'
                         }`}
                       >
                         {lang.label}
@@ -213,11 +214,11 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Botón de Acceso Dinámico Estilizado */}
+            {/* Botón de Acceso Dinámico Estilizado (Fino y Elegante) */}
             <button
               onClick={() => setLocation(user ? '/admin' : '/login')}
               disabled={loading}
-              className="px-6 py-2.5 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-[11px] uppercase tracking-[0.15em] font-bold rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+              className="px-5 py-2.5 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-[11px] uppercase tracking-[0.08em] font-normal rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
             >
               {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
             </button>
@@ -250,7 +251,7 @@ export default function Header() {
                       custom={i}
                       variants={itemVariants}
                       onClick={() => setIsOpen(false)}
-                      className="text-gray-300 hover:text-white font-body text-xl font-medium py-3 border-b border-white/10 transition-colors text-center"
+                      className="text-gray-300 hover:text-white font-body text-lg font-light py-3 border-b border-white/10 transition-colors text-center"
                     >
                       {item.label}
                     </motion.a>
@@ -264,7 +265,7 @@ export default function Header() {
                       setLocation(user ? '/admin' : '/login');
                     }}
                     disabled={loading}
-                    className="mt-4 px-6 py-4 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-xs uppercase tracking-[0.15em] font-bold rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
+                    className="mt-4 px-6 py-4 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-[11px] uppercase tracking-[0.08em] font-normal rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
                   >
                     {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
                   </motion.button>
@@ -276,7 +277,7 @@ export default function Header() {
         </nav>
       </header>
 
-      {/* Portal de Reservas Global (Disponible de fondo si es invocado por otras secciones) */}
+      {/* Portal de Reservas Global */}
       <BookingDialog 
         isOpen={isBookingOpen} 
         onClose={() => setIsBookingOpen(false)} 
