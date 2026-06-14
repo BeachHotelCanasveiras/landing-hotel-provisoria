@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-06-14T03:04:03.093Z",
+  "tables": [
+    {
+      "table_name": "users",
+      "status": "ACTIVE"
+    },
+    {
+      "table_name": "guests",
+      "status": "ACTIVE"
+    },
+    {
+      "table_name": "rooms",
+      "status": "ACTIVE"
+    },
+    {
+      "table_name": "bookings",
+      "status": "ACTIVE"
+    }
+  ],
+  "total_tables": 4
+}

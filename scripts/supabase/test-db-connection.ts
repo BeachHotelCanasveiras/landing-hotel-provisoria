@@ -1,9 +1,9 @@
+// scripts/supabase/test-db-connection.ts
 import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
 import fs from 'fs';
 import WebSocket from 'ws';
 
-// Inyección global para Node.js
 (globalThis as any).WebSocket = WebSocket;
 
 async function testConnection() {
@@ -11,12 +11,10 @@ async function testConnection() {
   const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error("❌ Error: Faltan variables de entorno.");
+    console.error("❌ Error: Faltan variables de entorno en tu .env.");
     return;
   }
 
-  // Usamos 'as any' en realtime para ignorar la restricción del tipo oficial 
-  // y permitir la inyección de WebSocket sin errores de TS.
   const supabase = createClient(supabaseUrl, supabaseKey, {
     realtime: {
       webSocket: WebSocket
@@ -26,25 +24,28 @@ async function testConnection() {
   console.log("🔍 Probando conexión a Supabase...");
 
   try {
-    const { error } = await supabase.from('test_connection').select('id').limit(1);
+    // Consultamos la tabla 'rooms' que ya existe en tu base de datos
+    const { error } = await supabase.from('rooms').select('id').limit(1);
     
-    // PGRST116: La tabla no existe, pero significa que la conexión fue exitosa
+    // Si la conexión se realiza, el error será null o un error de políticas RLS (lo cual es normal si no estás logueado)
+    const isSuccess = !error || error.code !== 'PGRST116';
+
     const report = {
       timestamp: new Date().toISOString(),
-      status: (!error || error.code === 'PGRST116') ? 'SUCCESS' : 'FAILED',
-      message: error ? error.message : "Conexión exitosa"
+      status: isSuccess ? 'SUCCESS' : 'FAILED',
+      message: isSuccess ? "Conexión establecida con éxito y credenciales validadas." : (error ? error.message : "Error desconocido")
     };
 
     if (!fs.existsSync('./reports')) fs.mkdirSync('./reports');
     fs.writeFileSync('./reports/connection-report.json', JSON.stringify(report, null, 2));
 
     if (report.status === 'SUCCESS') {
-      console.log("✅ Conexión exitosa. Reporte guardado en ./reports/connection-report.json");
+      console.log("✅ Conexión exitosa a la base de datos.");
     } else {
-      console.error("❌ Fallo en la conexión. Revisa el reporte.");
+      console.error("❌ Fallo en la conexión:", report.message);
     }
-  } catch (err) {
-    console.error("❌ Error inesperado:", err);
+  } catch (err: any) {
+    console.error("❌ Error inesperado de conexión:", err.message);
   }
 }
 

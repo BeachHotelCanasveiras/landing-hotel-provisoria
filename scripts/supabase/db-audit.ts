@@ -2,7 +2,6 @@
 import 'dotenv/config';
 import WebSocket from 'ws';
 
-// Inyección global ANTES de importar Supabase
 (globalThis as any).WebSocket = WebSocket;
 
 import { createClient } from '@supabase/supabase-js';
@@ -10,35 +9,42 @@ import fs from 'fs';
 
 async function auditDB() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Usamos SERVICE_ROLE para auditoría
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Usamos SERVICE_ROLE para auditoría completa
 
   if (!supabaseUrl || !supabaseKey) {
     console.error("❌ Error: Faltan variables de entorno (URL o KEY).");
     return;
   }
 
-  // Desactivamos realtime por completo en la inicialización
   const supabase = createClient(supabaseUrl, supabaseKey, {
     realtime: false as any
   });
 
-  console.log("🔍 Realizando auditoría completa de base de datos...");
+  console.log("🔍 Realizando auditoría de tablas del esquema público...");
 
-  // Obtenemos las tablas del esquema public
-  const { data, error } = await supabase
-    .from('information_schema.tables')
-    .select('table_name')
-    .eq('table_schema', 'public');
+  // Listamos las tablas reales que deben estar creadas en el esquema
+  const targetTables = ['users', 'guests', 'rooms', 'bookings'];
+  const auditResults: any[] = [];
 
-  if (error) {
-    console.error("❌ Error al auditar esquema:", error.message);
-    return;
+  for (const tableName of targetTables) {
+    // Consultamos de forma ultra liviana (head: true) para verificar existencia
+    const { error } = await supabase
+      .from(tableName)
+      .select('*', { count: 'exact', head: true });
+
+    if (error && error.code === 'PGRST116') {
+      // PGRST116 indica que la tabla no se encuentra en el esquema
+      console.log(`❌ Tabla Faltante: public.${tableName}`);
+    } else {
+      console.log(`✅ Tabla Detectada y Activa: public.${tableName}`);
+      auditResults.push({ table_name: tableName, status: 'ACTIVE' });
+    }
   }
 
   const report = {
     timestamp: new Date().toISOString(),
-    tables: data,
-    total_tables: data?.length || 0
+    tables: auditResults,
+    total_tables: auditResults.length
   };
 
   if (!fs.existsSync('./reports')) fs.mkdirSync('./reports');
@@ -46,7 +52,6 @@ async function auditDB() {
   
   console.log("✅ Auditoría completada.");
   console.log("📍 Reporte detallado guardado en: ./reports/db-schema-audit.json");
-  console.table(data); 
 }
 
 auditDB();

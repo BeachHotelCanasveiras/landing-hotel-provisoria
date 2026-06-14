@@ -1,0 +1,34 @@
+{
+  "welcome_message": "Bem-vindo de volta,",
+  "logout_button": "Sair da Conta",
+  "role_badge": "Cargo de Acesso",
+  "views": {
+    "guest": {
+      "title": "Portal do Hóspede",
+      "my_bookings": "Minhas Reservas Ativas",
+      "no_bookings": "Você não possui reservas ativas no momento.",
+      "guide_title": "Guia de Check-In Digital",
+      "guide_desc": "A recepção funciona 24 horas na Avenida das Nações 375. Apresente seu documento de identidade e o código da reserva do WhatsApp."
+    },
+    "agency": {
+      "title": "Portal de Agências Parceiras",
+      "wholesale_rates": "Tarifas de Operadoras Vigentes",
+      "discount_label": "Desconto Especial Agente",
+      "priority_contact": "Contato Preferencial de Concierge"
+    },
+    "admin": {
+      "title": "Painel de Controle PMS",
+      "occupancy": "Taxa de Ocupação",
+      "monthly_revenue": "Receita Projetada",
+      "active_bookings": "Reservas Ativas",
+      "bookings_list": "Lista Geral de Reservas"
+    },
+    "developer": {
+      "title": "Console do Sistema (DevOps)",
+      "system_logs": "Métricas de Infraestrutura",
+      "db_connection": "Conexão de Banco de Dados (Supabase)",
+      "cloudinary_inventory": "Ecossistema de Ativos (Cloudinary)",
+      "status_healthy": "SISTEMA OPERATIVO E SAUDÁVEL"
+    }
+  }
+}

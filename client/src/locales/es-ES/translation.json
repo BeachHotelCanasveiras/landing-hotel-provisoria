@@ -63,6 +63,33 @@
       }
     }
   },
+  "auth": {
+    "title_login": "Iniciar Sesión",
+    "title_register": "Crear Cuenta",
+    "subtitle_login": "Ingresa tus credenciales para acceder al panel del hotel.",
+    "subtitle_register": "Regístrate en nuestro ecosistema de hospitalidad.",
+    "email_label": "Correo Electrónico",
+    "email_placeholder": "nombre@correo.com",
+    "password_label": "Contraseña",
+    "password_placeholder": "••••••••",
+    "role_label": "Tipo de Perfil / Rol",
+    "roles": {
+      "guest": "Huésped (Cliente)",
+      "agency": "Agencia / Mayorista",
+      "admin": "Administración del Hotel",
+      "developer": "Desarrollador (Técnico)"
+    },
+    "button_login": "Ingresar",
+    "button_register": "Registrarse",
+    "switch_to_register": "¿No tienes cuenta? Regístrate aquí",
+    "switch_to_login": "¿Ya tienes cuenta? Inicia sesión aquí",
+    "validation_email_required": "El correo electrónico es obligatorio.",
+    "validation_email_invalid": "Ingresa una dirección de correo válida.",
+    "validation_password_required": "La contraseña es obligatoria.",
+    "validation_password_min": "La contraseña debe tener al menos 6 caracteres.",
+    "toast_login_success": "¡Sesión iniciada con éxito!",
+    "toast_register_success": "¡Cuenta creada con éxito! Sincronizando rol..."
+  },
   "booking": {
     "step1_title": "Fechas",
     "step2_title": "Tu Reserva",
@@ -98,11 +125,92 @@
     "message_label": "Mensaje o Consulta",
     "message_placeholder": "¿En qué podemos ayudarte?",
     "submit_button": "Enviar Mensaje",
+    "whatsapp_message": "Hola, me gustaría consultar disponibilidad para hacer una reserva en Beach Canasvieiras.",
     "validation_name_required": "Por favor, escribe tu nombre.",
     "validation_email_required": "El correo electrónico es requerido.",
     "validation_email_invalid": "Ingresa un correo electrónico válido.",
     "validation_message_required": "Por favor, escribe tu mensaje.",
     "toast_success": "¡Mensaje preparado! Abriendo tu gestor de correo..."
+  },
+  "dashboard": {
+    "welcome_message": "Bienvenido de nuevo,",
+    "logout_button": "Cerrar Sesión",
+    "role_badge": "Rol de Acceso",
+    "views": {
+      "guest": {
+        "title": "Portal del Huésped",
+        "my_bookings": "Mis Reservas Activas",
+        "no_bookings": "No tienes reservas activas en este momento.",
+        "guide_title": "Guía de Check-In Digital",
+        "guide_desc": "La recepción está abierta las 24 horas en Avenida das Nações 375. Presenta tu documento de identidad y tu código de reserva de WhatsApp."
+      },
+      "agency": {
+        "title": "Portal de Agencias Aliadas",
+        "wholesale_rates": "Tarifas Mayoristas Vigentes",
+        "discount_label": "Descuento Especial Agente",
+        "priority_contact": "Contacto Preferencial de Concierge"
+      },
+      "admin": {
+        "title": "Panel de Control PMS",
+        "occupancy": "Tasa de Ocupación",
+        "monthly_revenue": "Ingresos Proyectados",
+        "active_bookings": "Reservas Activas",
+        "bookings_list": "Listado General de Reservas"
+      },
+      "developer": {
+        "title": "Consola del Sistema (DevOps)",
+        "system_logs": "Métricas de Infraestructura",
+        "db_connection": "Conexión a Base de Datos (Supabase)",
+        "cloudinary_inventory": "Ecosistema de Activos (Cloudinary)",
+        "status_healthy": "SISTEMA OPERATIVO Y SALUDABLE"
+      }
+    }
+  },
+  "excursions": {
+    "badge": "Experiencias Propias",
+    "title": "Excursiones del Hotel",
+    "subtitle": "Descubre las maravillas de Florianópolis con traslados y coordinación directa de nuestro hotel, sin intermediarios.",
+    "cta_whatsapp": "Consultar por WhatsApp",
+    "cta_maps": "Ver ubicación en mapa",
+    "whatsapp_template": "¡Hola! Me gustaría reservar la excursión corporativa del hotel: *{{name}}*.",
+    "items": {
+      "city_tour": {
+        "name": "City Tour Floripa",
+        "description": "Un paseo clásico y encantador por la isla. Descubre los principales puntos turísticos: Puente Hercílio Luz, Centro histórico, Mirador del Morro de la Cruz, Lagoa da Conceição, Playa Joaquina, Barra da Lagoa y Playa de los Ingleses.",
+        "duration": "Día Completo (8 horas)",
+        "includes": "Coordinación, traslado y guía oficial"
+      },
+      "beto_carrero": {
+        "name": "Beto Carrero World",
+        "description": "El mayor parque temático de América Latina. Con un área de 14 km² llena de atracciones de adrenalina, espectáculos en vivo y diversión para toda la familia.",
+        "duration": "Día Completo (12 horas)",
+        "includes": "Traslado ida y vuelta y entrada prioritaria"
+      },
+      "ilha_campeche": {
+        "name": "Ilha do Campeche",
+        "description": "Un verdadero paraíso de aguas turquesas y arenas cristalinas. Declarado Patrimonio Arqueológico y Paisajístico. Ideal para senderismo guiado y snorkel.",
+        "duration": "6 horas",
+        "includes": "Cruce en lancha, seguro de navegación y guía"
+      },
+      "bombinhas": {
+        "name": "Bombinhas e Quatro Ilhas",
+        "description": "Aguas cálidas, arenas blancas y hermosas piscinas naturales ideales para buceo recreativo y relajación familiar en una de las costas más bellas del sur.",
+        "duration": "Día Completo (9 horas)",
+        "includes": "Traslado climatizado y asistencia en playa"
+      },
+      "guarda_embau": {
+        "name": "Guarda do Embaú",
+        "description": "Elegida entre las 10 playas más bonitas de Brasil. Destaca por su místico cruce en canoa por el río de la Madre hasta llegar a la costa de surfistas.",
+        "duration": "Día Completo (10 horas)",
+        "includes": "Traslado, cruce en canoa tradicional y trekking guiado"
+      },
+      "joaquina": {
+        "name": "Joaquina e Barra da Lagoa",
+        "description": "Dos de las playas más icónicas de la isla. Incluye la visita a las famosas dunas de Joaquina (donde se practica sandboard) y la calidez del pueblo de pescadores de Barra.",
+        "duration": "7 horas",
+        "includes": "Traslado privado y guía de turismo"
+      }
+    }
   },
   "footer": {
     "tagline": "Siente la calidez de un espacio diseñado para tu bienestar. Tu refugio de hospitalidad auténtica en la principal Avenida das Nações.",
@@ -158,6 +266,7 @@
     "rooms": "Habitaciones",
     "gallery": "Galería",
     "attractions": "Atracciones",
+    "excursions": "Excursiones",
     "contact": "Contacto",
     "book_now": "Reservar",
     "contact_us": "Contáctanos"
