@@ -20,7 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 
-const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/excursiones/";
+// Se remueve la versión '/v1/' y se apunta al SSoT de la carpeta de excursiones
+const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/beach-hotel/excursiones/";
 
 interface ExcursionConfig {
   key: 'city_tour' | 'beto_carrero' | 'ilha_campeche' | 'bombinhas' | 'guarda_embau' | 'joaquina';
@@ -33,7 +34,7 @@ interface ExcursionConfig {
 const EXCURSIONS_CONFIG: ExcursionConfig[] = [
   { 
     key: 'city_tour', 
-    image: `${CLOUDINARY_BASE}city-tour.webp`, 
+    image: `${CLOUDINARY_BASE}city-tour.jpg`, 
     destinationName: "Centro Historico, Florianopolis, SC, Brasil", 
     mapMode: 'directions',
     altImages: [
@@ -43,7 +44,7 @@ const EXCURSIONS_CONFIG: ExcursionConfig[] = [
   },
   { 
     key: 'beto_carrero', 
-    image: `${CLOUDINARY_BASE}beto-carrero.webp`, 
+    image: `${CLOUDINARY_BASE}beto-carrero.jpg`, 
     destinationName: "Beto Carrero World, Penha, SC, Brasil", 
     mapMode: 'directions',
     altImages: [
@@ -53,7 +54,7 @@ const EXCURSIONS_CONFIG: ExcursionConfig[] = [
   },
   { 
     key: 'ilha_campeche', 
-    image: `${CLOUDINARY_BASE}ilha-campeche.webp`, 
+    image: `${CLOUDINARY_BASE}ilha-campeche.jpg`, 
     destinationName: "Ilha do Campeche, Florianopolis, SC, Brasil", 
     mapMode: 'satellite',
     altImages: [
@@ -63,7 +64,7 @@ const EXCURSIONS_CONFIG: ExcursionConfig[] = [
   },
   { 
     key: 'bombinhas', 
-    image: `${CLOUDINARY_BASE}bombinhas.webp`, 
+    image: `${CLOUDINARY_BASE}bombinhas.jpg`, 
     destinationName: "Praia de Bombinhas, Bombinhas, SC, Brasil", 
     mapMode: 'hybrid',
     altImages: [
@@ -73,7 +74,7 @@ const EXCURSIONS_CONFIG: ExcursionConfig[] = [
   },
   { 
     key: 'guarda_embau', 
-    image: `${CLOUDINARY_BASE}guarda-embau.webp`, 
+    image: `${CLOUDINARY_BASE}guarda-embau.jpg`, 
     destinationName: "Guarda do Embau, Palhoca, SC, Brasil", 
     mapMode: 'satellite',
     altImages: [
@@ -83,7 +84,7 @@ const EXCURSIONS_CONFIG: ExcursionConfig[] = [
   },
   { 
     key: 'joaquina', 
-    image: `${CLOUDINARY_BASE}joaquina.webp`, 
+    image: `${CLOUDINARY_BASE}joaquina.jpg`, 
     destinationName: "Praia da Joaquina, Florianopolis, SC, Brasil", 
     mapMode: 'hybrid',
     altImages: [
@@ -137,7 +138,7 @@ export default function Excursions() {
     setActiveTab('info');
     setMapLoading(true);
     setSelectedExcursion(excursion);
-    setActivePhoto(excursion.image); // Inicializa con la foto de portada generada por IA
+    setActivePhoto(excursion.image); // Inicializa con la foto de portada real en JPG
   };
 
   /**
@@ -343,7 +344,7 @@ export default function Excursions() {
                       </p>
                     </div>
 
-                    {/* GALERÍA DE IMÁGENES ALTERNATIVAS (Dúo cooperativo) */}
+                    {/* GALERÍA DE IMÁGENES ALTERNATIVAS */}
                     <div className="space-y-3">
                       <p className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
                         Más fotografías del destino
