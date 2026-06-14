@@ -8,5 +8,8 @@
   "book_now": "Book Now",
   "contact_us": "Contact Us",
   "join_or_signin": "Join or Sign In",
-  "dashboard": "Dashboard"
+  "dashboard": "Dashboard",
+  "lang_es": "es - Spanish",
+  "lang_en": "en - English",
+  "lang_pt": "pt - Portuguese"
 }

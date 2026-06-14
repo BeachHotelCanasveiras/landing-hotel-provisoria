@@ -3,13 +3,13 @@
  * @description Componente de navegación principal estilo "Píldora Flotante" (Floating Pill).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Se integra el nuevo enlace activo de "Excursiones" en móviles y escritorios.
- * - Doble canal de conversión (CTA dinámico de autenticación y CTA de contáctanos).
- * - Selector de idioma flotante visible en móviles (UX accesible de alta fidelidad).
+ * - Doble canal de conversión (CTA dinámico de autenticación y selector de idioma).
+ * - Selector de idioma flotante interactivo por Hover/Click de alta fidelidad.
  * - Textos traducidos dinámicamente y libres de hardcoding.
  */
 
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Menu, X, Globe, PhoneCall } from 'lucide-react';
+import { Menu, X, Globe } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
@@ -40,7 +40,7 @@ export default function Header() {
     setIsLangOpen(false);
   };
 
-  // Cerrar el mini-menú de idiomas al hacer clic fuera (Elegancia de Interacción)
+  // Cerrar el menú al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
@@ -98,7 +98,7 @@ export default function Header() {
       <header className="fixed top-4 md:top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
         <nav className="relative pointer-events-auto w-full max-w-5xl bg-black/85 backdrop-blur-lg border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.35)] rounded-full pl-5 pr-4 py-3 grid grid-cols-12 items-center transition-all duration-500">
           
-          {/* Columna 1: Logotipo (Desktop: col-span-3, Mobile: col-span-6) */}
+          {/* Columna 1: Logotipo */}
           <div className="col-span-6 lg:col-span-2 flex justify-start items-center">
             <motion.a
               href="#home"
@@ -115,13 +115,13 @@ export default function Header() {
             </motion.a>
           </div>
 
-          {/* Columna 2: Menú de Navegación Unificado (Solo Desktop: col-span-6) */}
-          <div className="hidden lg:flex col-span-6 justify-center items-center gap-5 xl:gap-6">
+          {/* Columna 2: Menú de Navegación Unificado (Outfit Sans-Serif Limpio) */}
+          <div className="hidden lg:flex col-span-6 justify-center items-center gap-6 xl:gap-8">
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-white font-display text-[13px] xl:text-[14px] font-medium tracking-wide transition-all duration-300 ease-in-out hover:-translate-y-[1.5px] transform relative group whitespace-nowrap"
+                className="text-gray-300 hover:text-white font-body text-[11px] uppercase tracking-[0.12em] font-semibold transition-all duration-300 ease-in-out hover:-translate-y-[1px] transform relative group whitespace-nowrap"
               >
                 {item.label}
                 <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-accent group-hover:w-full transition-all duration-400 ease-out" />
@@ -129,30 +129,54 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Columna 3: Idioma + CTA (Desktop: col-span-4, Mobile: col-span-6) */}
-          <div className="col-span-6 lg:col-span-4 flex justify-end items-center gap-2 sm:gap-3">
+          {/* Columna 3: Idioma + CTA */}
+          <div className="col-span-6 lg:col-span-4 flex justify-end items-center gap-3 sm:gap-5">
             
-            {/* Selector de Idioma Desktop - Códigos Regionales */}
-            <div className="hidden lg:flex items-center gap-2 border-r border-white/20 pr-4 mr-1">
-              <Globe size={14} className="text-gray-400" />
-              {[
-                { code: 'es-ES', label: 'es' },
-                { code: 'en-US', label: 'en' },
-                { code: 'pt-BR', label: 'pt' }
-              ].map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => handleLanguageChange(lang.code)}
-                  className={`text-[10px] font-body font-bold uppercase tracking-widest transition-colors ${
-                    i18n.language === lang.code ? 'text-white' : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
+            {/* Selector de Idioma Desktop - Desplegable por Hover */}
+            <div 
+              className="relative hidden lg:block"
+              onMouseEnter={() => setIsLangOpen(true)}
+              onMouseLeave={() => setIsLangOpen(false)}
+            >
+              <button
+                className="p-2.5 text-gray-400 hover:text-white rounded-full bg-white/5 border border-white/10 hover:border-white/20 flex items-center justify-center transition-all duration-300 cursor-pointer"
+                aria-label="Change language"
+              >
+                <Globe size={15} />
+              </button>
+
+              <AnimatePresence>
+                {isLangOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute right-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 flex flex-col gap-1 shadow-2xl z-50 min-w-[140px]"
+                  >
+                    {[
+                      { code: 'es-ES', label: t('lang_es') },
+                      { code: 'en-US', label: t('lang_en') },
+                      { code: 'pt-BR', label: t('lang_pt') }
+                    ].map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleLanguageChange(lang.code)}
+                        className={`px-3 py-2 text-left rounded-xl text-[11px] font-body font-semibold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                          i18n.language === lang.code 
+                            ? 'bg-accent text-accent-foreground font-bold' 
+                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {lang.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Selector de Idioma Flotante en Móviles (UX Peak) */}
+            {/* Selector de Idioma Móvil */}
             <div className="relative lg:hidden" ref={langMenuRef}>
               <button
                 onClick={() => setIsLangOpen(!isLangOpen)}
@@ -167,17 +191,17 @@ export default function Header() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-3 bg-black/95 border border-white/10 rounded-2xl p-2 flex flex-col gap-1 shadow-xl z-50 min-w-[100px]"
+                    className="absolute right-0 mt-3 bg-black/95 border border-white/10 rounded-2xl p-2 flex flex-col gap-1 shadow-xl z-50 min-w-[140px]"
                   >
                     {[
-                      { code: 'es-ES', label: 'ESP' },
-                      { code: 'en-US', label: 'ENG' },
-                      { code: 'pt-BR', label: 'POR' }
+                      { code: 'es-ES', label: t('lang_es') },
+                      { code: 'en-US', label: t('lang_en') },
+                      { code: 'pt-BR', label: t('lang_pt') }
                     ].map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => handleLanguageChange(lang.code)}
-                        className={`px-3 py-2 text-left rounded-xl text-xs font-body font-semibold uppercase tracking-wider transition-colors ${
+                        className={`px-3 py-2.5 text-left rounded-xl text-[10px] font-body font-bold uppercase tracking-wider transition-colors ${
                           i18n.language === lang.code ? 'bg-accent text-white' : 'text-gray-400 hover:text-white'
                         }`}
                       >
@@ -189,20 +213,11 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Botón Contáctanos (Desktop) */}
-            <a
-              href="#contact-form"
-              className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 border border-white/20 text-white hover:border-accent hover:text-accent rounded-full font-body text-xs font-semibold transition-all duration-300"
-            >
-              <PhoneCall size={12} />
-              {t('contact_us')}
-            </a>
-
-            {/* Botón de Acceso Dinámico (Join or Sign In o Dashboard) */}
+            {/* Botón de Acceso Dinámico Estilizado */}
             <button
               onClick={() => setLocation(user ? '/admin' : '/login')}
               disabled={loading}
-              className="px-4 sm:px-5 py-2 bg-white text-gray-950 hover:bg-gray-100 rounded-full font-body text-xs font-semibold transition-all duration-300 shadow-sm hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50"
+              className="px-6 py-2.5 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-[11px] uppercase tracking-[0.15em] font-bold rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
             >
               {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
             </button>
@@ -235,32 +250,21 @@ export default function Header() {
                       custom={i}
                       variants={itemVariants}
                       onClick={() => setIsOpen(false)}
-                      className="text-gray-300 hover:text-white font-display text-2xl font-medium py-3 border-b border-white/10 transition-colors text-center"
+                      className="text-gray-300 hover:text-white font-body text-xl font-medium py-3 border-b border-white/10 transition-colors text-center"
                     >
                       {item.label}
                     </motion.a>
                   ))}
 
-                  <motion.a
-                    variants={itemVariants}
-                    custom={navItems.length}
-                    href="#contact-form"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-center gap-2 text-gray-300 hover:text-white font-display text-2xl font-medium py-3 border-b border-white/10 transition-colors text-center"
-                  >
-                    <PhoneCall size={18} />
-                    {t('contact_us')}
-                  </motion.a>
-
                   <motion.button
                     variants={itemVariants}
-                    custom={navItems.length + 1}
+                    custom={navItems.length}
                     onClick={() => {
                       setIsOpen(false);
                       setLocation(user ? '/admin' : '/login');
                     }}
                     disabled={loading}
-                    className="mt-4 px-4 py-4 bg-white text-gray-950 rounded-2xl font-body font-medium text-center text-base shadow-sm active:scale-95 transition-all"
+                    className="mt-4 px-6 py-4 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-xs uppercase tracking-[0.15em] font-bold rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
                   >
                     {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
                   </motion.button>
