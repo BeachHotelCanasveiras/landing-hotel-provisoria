@@ -2,6 +2,7 @@
  * @file Rooms.tsx
  * @description Catálogo de Habitaciones (Fase 3 del Embudo: Decisión).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Implementa la TÁCTICA HÍBRIDA móvil (Snap-Scroll horizontal en celulares).
  * - Textos mapeados dinámicamente desde el namespace 'rooms' de i18next.
  * - Validación estructural estricta con Zod (RoomsTranslationSchema).
  * - Protección defensiva (Safe Fallbacks) contra fallos de carga en tiempo de ejecución.
@@ -86,7 +87,15 @@ export default function Rooms() {
   return (
     <section id="rooms" className="py-24 bg-gray-50/50">
       <div className="container px-4 sm:px-6">
-        <motion.div initial={{ opacity: 0, y: -20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-center mb-16">
+        
+        {/* Cabecera */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} 
+          whileInView={{ opacity: 1, y: 0 }} 
+          transition={{ duration: 0.8 }} 
+          viewport={{ once: true }} 
+          className="text-center mb-16"
+        >
           <span className="inline-block px-5 py-1.5 bg-gray-100 text-gray-800 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
             {t('badge')}
           </span>
@@ -94,12 +103,31 @@ export default function Rooms() {
           <p className="font-body text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">{t('subtitle')}</p>
         </motion.div>
 
-        <motion.div variants={containerVariants} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* CONTENEDOR HÍBRIDO ADAPTATIVO (Mobile: Snap-Scroll / Desktop: Grid de 4 columnas) */}
+        <motion.div 
+          variants={containerVariants} 
+          initial="hidden" 
+          whileInView="visible" 
+          viewport={{ once: true }} 
+          className="flex lg:grid lg:grid-cols-4 gap-8 overflow-x-auto lg:overflow-x-visible snap-x snap-mandatory scrollbar-none pb-6 lg:pb-0 px-4 -mx-4 sm:px-0 sm:mx-0"
+        >
           {rooms.map((room) => (
-            <motion.div key={room.id} variants={itemVariants} whileHover={{ y: -8 }} className="bg-white rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] transition-all duration-500 flex flex-col justify-between border border-gray-100">
+            <motion.div 
+              key={room.id} 
+              variants={itemVariants} 
+              whileHover={{ y: -8 }} 
+              className="min-w-[280px] sm:min-w-[320px] lg:min-w-0 snap-center bg-white rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] transition-all duration-500 flex flex-col justify-between border border-gray-100"
+            >
               <div>
                 <div className="relative h-60 overflow-hidden bg-gray-100">
-                  <motion.img src={room.image} alt={room.name} className="w-full h-full object-cover" loading="lazy" whileHover={{ scale: 1.06 }} transition={{ duration: 0.6 }} />
+                  <motion.img 
+                    src={room.image} 
+                    alt={room.name} 
+                    className="w-full h-full object-cover" 
+                    loading="lazy" 
+                    whileHover={{ scale: 1.06 }} 
+                    transition={{ duration: 0.6 }} 
+                  />
                   <div className="absolute top-4 left-4">
                     <span className="bg-white/90 backdrop-blur-md text-gray-900 px-3 py-1 rounded-full text-[10px] font-body font-medium uppercase tracking-wider shadow-sm">
                       {room.type === 'grupal' ? t('special_badge') : t('discount_badge')}
@@ -128,16 +156,34 @@ export default function Rooms() {
                     {t('active_status')}
                   </span>
                 </div>
-                <Button onClick={() => setSelectedRoom({ id: room.id, type: room.type, name: room.name })} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 py-4 font-body text-xs font-semibold shadow-sm transition-all active:scale-95">
+                <Button 
+                  onClick={() => setSelectedRoom({ id: room.id, type: room.type, name: room.name })} 
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 py-4 font-body text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                >
                   {t('book_button')}
                 </Button>
               </div>
             </motion.div>
           ))}
         </motion.div>
+
+        {/* Indicador de ayuda táctil para móviles */}
+        <div className="flex lg:hidden justify-center items-center gap-1.5 mt-4">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          <p className="font-body text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
+            Desliza para ver más habitaciones
+          </p>
+        </div>
+
       </div>
+
       {selectedRoom && (
-        <BookingDialog isOpen={!!selectedRoom} onClose={() => setSelectedRoom(null)} roomName={selectedRoom.name} roomType={selectedRoom.type} />
+        <BookingDialog 
+          isOpen={!!selectedRoom} 
+          onClose={() => setSelectedRoom(null)} 
+          roomName={selectedRoom.name} 
+          roomType={selectedRoom.type} 
+        />
       )}
     </section>
   );

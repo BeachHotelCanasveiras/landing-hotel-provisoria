@@ -1,0 +1,46 @@
+{
+  "badge": "Our Experiences",
+  "title": "Hotel Excursions",
+  "subtitle": "Discover the wonders of Florianópolis with direct transfers and coordination from our hotel, with no third-party agencies.",
+  "cta_whatsapp": "Inquire on WhatsApp",
+  "cta_maps": "View route on map",
+  "whatsapp_template": "Hello! I would like to book the hotel's in-house excursion: *{{name}}*.",
+  "items": {
+    "city_tour": {
+      "name": "City Tour Floripa",
+      "description": "A classic and charming tour around the island. Discover the main tourist sights: Hercílio Luz Bridge, Historical Center, Morro da Cruz Lookout, Lagoa da Conceição, Joaquina Beach, Barra da Lagoa, and Ingleses Beach.",
+      "duration": "Full Day (8 hours)",
+      "includes": "Coordination, transfers, and official tour guide"
+    },
+    "beto_carrero": {
+      "name": "Beto Carrero World",
+      "description": "The largest theme park in Latin America. Spanning a 14 km² area full of adrenaline rides, live shows, and fun for the entire family.",
+      "duration": "Full Day (12 hours)",
+      "includes": "Round-trip transfer and priority admission"
+    },
+    "ilha_campeche": {
+      "name": "Campeche Island",
+      "description": "A true natural paradise with turquoise waters and crystal-clear sands. Declared a National Archaeological and Scenic Heritage site. Perfect for guided hiking and snorkeling.",
+      "duration": "6 hours",
+      "includes": "Boat crossing, navigation insurance, and guide"
+    },
+    "bombinhas": {
+      "name": "Bombinhas & Quatro Ilhas",
+      "description": "Warm waters, white sands, and beautiful natural pools ideal for recreational diving and family relaxation on one of the most stunning shorelines in the south.",
+      "duration": "Full Day (9 hours)",
+      "includes": "Air-conditioned transfer and beach assistance"
+    },
+    "guarda_embau": {
+      "name": "Guarda do Embaú",
+      "description": "Chosen among the 10 most beautiful beaches in Brazil. Renowned for its mystical canoe crossing over the Madre River to reach the surfers' coast.",
+      "duration": "Full Day (10 hours)",
+      "includes": "Transfer, traditional canoe crossing, and guided trekking"
+    },
+    "joaquina": {
+      "name": "Joaquina & Barra da Lagoa",
+      "description": "Two of the island's most iconic beaches. Includes a visit to the famous Joaquina dunes (where sandboarding is practiced) and the warm atmosphere of the Barra fishing village.",
+      "duration": "7 hours",
+      "includes": "Private transfer and tourist guide"
+    }
+  }
+}

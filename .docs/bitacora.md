@@ -78,5 +78,20 @@ Este documento registra el historial de ingeniería y cambios estructurales.
 *Cualquier cambio estructural debe ser registrado aquí antes de proceder a la siguiente refactorización.*
 
 ---
+## Fase 2: Transaccionalidad y Experiencias Propias (Completada)
+- **Desacoplamiento Total de Terceros (Manus):**
+    - Se refactorizó el componente `Map.tsx` para eliminar la dependencia del proxy de Manus (`forge.manus.ai`).
+    - Implementación de un cargador dual en `Map.tsx` que detecta de forma segura `VITE_GOOGLE_MAPS_API_KEY` desde el entorno local. Si no existe, se degrada elegantemente a un fallback dinámico oficial de Google Maps basado en la dirección física, garantizando costo cero y disponibilidad del 100%.
+- **Módulo de Excursiones Propias (`Excursions.tsx`):**
+    - Creación de la sección de experiencias gestionadas por el hotel, integrando los contratos de traducción (Trinidad Atómica) para `es-ES`, `en-US` y `pt-BR`.
+    - Las excursiones del folleto físico (City Tour, Beto Carrero, Ilha do Campeche, etc.) están plenamente integradas con sus respectivas descripciones, duraciones, inclusiones, llamadas a la acción por WhatsApp y geolocalización.
+- **Optimización UX Móvil (Fatiga de Scroll):**
+    - Se modificaron las vistas móviles de `Rooms.tsx` y `Excursions.tsx`. Ahora, en lugar de apilar tarjetas verticalmente, se renderizan como carruseles de arrastre horizontal (*Snap-Scroll*) con aceleración por GPU.
+    - Se implementó la táctica híbrida: exploración rápida horizontal en la landing y visualización rica con aislamiento de conversión en modales/drawers de alta fidelidad.
+- **Sincronización de Enlaces:**
+    - Actualización simétrica de menús de navegación en `Header.tsx` y `Footer.tsx` para habilitar el enlace directo a `#excursions`.
 
+    ---
+
+    
 

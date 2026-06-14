@@ -2,6 +2,7 @@
  * @file Header.tsx
  * @description Componente de navegación principal estilo "Píldora Flotante" (Floating Pill).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Se integra el nuevo enlace activo de "Excursiones" en móviles y escritorios.
  * - Doble canal de conversión (CTA Reservar lanza modal, CTA Contáctanos desplaza a formulario).
  * - Selector de idioma flotante visible en móviles (UX accesible de alta fidelidad).
  * - Textos traducidos dinámicamente y libres de hardcoding.
@@ -53,6 +54,7 @@ export default function Header() {
     { label: t('rooms'), href: '#rooms' },
     { label: t('gallery'), href: '#gallery' },
     { label: t('attractions'), href: '#attractions' },
+    { label: t('excursions'), href: '#excursions' },
   ];
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function Header() {
         <nav className="relative pointer-events-auto w-full max-w-5xl bg-black/85 backdrop-blur-lg border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.35)] rounded-full pl-5 pr-4 py-3 grid grid-cols-12 items-center transition-all duration-500">
           
           {/* Columna 1: Logotipo (Desktop: col-span-3, Mobile: col-span-6) */}
-          <div className="col-span-6 lg:col-span-3 flex justify-start items-center">
+          <div className="col-span-6 lg:col-span-2 flex justify-start items-center">
             <motion.a
               href="#home"
               initial={{ opacity: 0, x: -10 }}
@@ -108,13 +110,13 @@ export default function Header() {
             </motion.a>
           </div>
 
-          {/* Columna 2: Menú de Navegación Unificado (Solo Desktop: col-span-5) */}
-          <div className="hidden lg:flex col-span-5 justify-center items-center gap-6 xl:gap-8">
+          {/* Columna 2: Menú de Navegación Unificado (Solo Desktop: col-span-6 - espaciado equilibrado para 5 pestañas) */}
+          <div className="hidden lg:flex col-span-6 justify-center items-center gap-5 xl:gap-6">
             {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-white font-display text-[14px] font-medium tracking-wide transition-all duration-300 ease-in-out hover:-translate-y-[1.5px] transform relative group whitespace-nowrap"
+                className="text-gray-300 hover:text-white font-display text-[13px] xl:text-[14px] font-medium tracking-wide transition-all duration-300 ease-in-out hover:-translate-y-[1.5px] transform relative group whitespace-nowrap"
               >
                 {item.label}
                 <span className="absolute -bottom-1.5 left-0 w-0 h-[2px] bg-accent group-hover:w-full transition-all duration-400 ease-out" />

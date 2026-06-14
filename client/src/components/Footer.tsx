@@ -2,6 +2,7 @@
  * @file Footer.tsx
  * @description Pie de página institucional y cierre del embudo (Fase de Contacto).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Se integra el nuevo enlace activo de "Excursiones" en la navegación estratégica.
  * - Textos específicos traducidos mediante el namespace 'footer'.
  * - Reutilización asíncrona del namespace 'nav' para las rutas de navegación.
  * - Validación estructural estricta con Zod (FooterTranslationSchema).
@@ -58,7 +59,8 @@ export default function Footer() {
     { name: tNav('home'), href: '#home' },
     { name: tNav('rooms'), href: '#rooms' },
     { name: tNav('gallery'), href: '#gallery' },
-    { name: tNav('attractions'), href: '#attractions' }
+    { name: tNav('attractions'), href: '#attractions' },
+    { name: tNav('excursions'), href: '#excursions' }
   ];
 
   return (

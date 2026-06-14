@@ -1,0 +1,46 @@
+{
+  "badge": "Experiencias Propias",
+  "title": "Excursiones del Hotel",
+  "subtitle": "Descubre las maravillas de Florianópolis con traslados y coordinación directa de nuestro hotel, sin intermediarios.",
+  "cta_whatsapp": "Consultar por WhatsApp",
+  "cta_maps": "Ver ubicación en mapa",
+  "whatsapp_template": "¡Hola! Me gustaría reservar la excursión corporativa del hotel: *{{name}}*.",
+  "items": {
+    "city_tour": {
+      "name": "City Tour Floripa",
+      "description": "Un paseo clásico y encantador por la isla. Descubre los principales puntos turísticos: Puente Hercílio Luz, Centro histórico, Mirador del Morro de la Cruz, Lagoa da Conceição, Playa Joaquina, Barra da Lagoa y Playa de los Ingleses.",
+      "duration": "Día Completo (8 horas)",
+      "includes": "Coordinación, traslado y guía oficial"
+    },
+    "beto_carrero": {
+      "name": "Beto Carrero World",
+      "description": "El mayor parque temático de América Latina. Con un área de 14 km² llena de atracciones de adrenalina, espectáculos en vivo y diversión para toda la familia.",
+      "duration": "Día Completo (12 horas)",
+      "includes": "Traslado ida y vuelta y entrada prioritaria"
+    },
+    "ilha_campeche": {
+      "name": "Ilha do Campeche",
+      "description": "Un verdadero paraíso de aguas turquesas y arenas cristalinas. Declarado Patrimonio Arqueológico y Paisajístico. Ideal para senderismo guiado y snorkel.",
+      "duration": "6 horas",
+      "includes": "Cruce en lancha, seguro de navegación y guía"
+    },
+    "bombinhas": {
+      "name": "Bombinhas e Quatro Ilhas",
+      "description": "Aguas cálidas, arenas blancas y hermosas piscinas naturales ideales para buceo recreativo y relajación familiar en una de las costas más bellas del sur.",
+      "duration": "Día Completo (9 horas)",
+      "includes": "Traslado climatizado y asistencia en playa"
+    },
+    "guarda_embau": {
+      "name": "Guarda do Embaú",
+      "description": "Elegida entre las 10 playas más bonitas de Brasil. Destaca por su místico cruce en canoa por el río de la Madre hasta llegar a la costa de surfistas.",
+      "duration": "Día Completo (10 horas)",
+      "includes": "Traslado, cruce en canoa tradicional y trekking guiado"
+    },
+    "joaquina": {
+      "name": "Joaquina e Barra da Lagoa",
+      "description": "Dos de las playas más icónicas de la isla. Incluye la visita a las famosas dunas de Joaquina (donde se practica sandboard) y la calidez del pueblo de pescadores de Barra.",
+      "duration": "7 horas",
+      "includes": "Traslado privado y guía de turismo"
+    }
+  }
+}

@@ -4,6 +4,7 @@
  * Estructurada bajo el "Plan de Viaje y Conversión Real" para optimizar el embudo (CRO).
  * Integra de forma nativa la sección de Geolocalización Interactiva (MapView) para dotar al viajero
  * de control geográfico y mitigar riesgos (Fase 5), validando la cercanía del hotel a la playa.
+ * Inyecta el nuevo componente de Excursiones Propias como potenciador de reserva de alta gama.
  */
 
 import { useTranslation } from 'react-i18next';
@@ -13,6 +14,7 @@ import AboutSection from "@/components/AboutSection"; // Inyección de la Fase 2
 import Rooms from "@/components/Rooms";
 import Gallery from "@/components/Gallery";
 import Attractions from "@/components/Attractions";
+import Excursions from "@/components/Excursions"; // Inyección de la Fase 5: Experiencias Propias
 import { MapView } from "@/components/Map"; // Integración del aparato geográfico previamente huérfano
 import ContactSection from "@/components/ContactSection"; // Inyección de la sección de contacto
 import Testimonials from "@/components/Testimonials";
@@ -45,7 +47,7 @@ export default function Home() {
         {/* Fase 2: Conexión y Propuesta de Confort (El Gancho) */}
         <AboutSection />
         
-        {/* Fase 3: Configuración del Descanso e Interacción de Reserva */}
+        {/* Fase 3: Configuración del Descanso e Interacción de Reserva (Carrusel responsivo) */}
         <Rooms />
         
         {/* Fase 4: Validación Visual Real */}
@@ -53,6 +55,9 @@ export default function Home() {
         
         {/* Fase 5: Viabilidad Logística e Integración Geográfica */}
         <Attractions />
+
+        {/* Fase 5 (B): Excursiones organizadas del Hotel (Carrusel responsivo) */}
+        <Excursions />
         
         {/* Bloque de Geolocalización Interactiva */}
         <section className="py-20 bg-white border-t border-gray-100">
@@ -72,7 +77,7 @@ export default function Home() {
             {/* 
               Aparato MapView:
               Estilo Soft-UI con bordes de 2.5rem para transmitir confort y accesibilidad.
-              Usa el API Key a través del Manus Proxy seguro.
+              Usa la API Key de Google Maps protegida desde variables de entorno locales.
             */}
             <div className="max-w-4xl mx-auto">
               <MapView className="w-full h-[400px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100" />
