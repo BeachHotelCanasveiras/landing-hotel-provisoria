@@ -2,13 +2,15 @@
  * @file App.tsx
  * @description Enrutador principal de la SPA Beach Hotel Canasvieiras.
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Inyecta el QueryClientProvider para cacheo avanzado de peticiones de disponibilidad y pagos.
  * - Integra el proveedor global de autenticación y roles de Supabase (AuthProvider).
  * - Implementa el guardián de rutas protegidas (ProtectedRoute) con redirección automatizada.
- * - Registro de rutas para portal de acceso (/login) y panel multi-rol (/admin).
+ * - Registro de rutas para portal de acceso (/login), éxito de Stripe (/success) y panel multi-rol (/admin).
  */
 
 import { useEffect } from "react";
 import { useLocation, Route, Switch } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
@@ -18,8 +20,24 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard"; // Se creará en el siguiente paso
+import AdminDashboard from "./pages/AdminDashboard"; 
+import Success from "./pages/Success"; // Aparato de Conversión y Retorno de Stripe
 import { useAppMiddleware } from "./hooks/useAppMiddleware";
+
+/**
+ * Inicialización del cliente global de consultas (TanStack Query).
+ * Brinda resiliencia a la red limitando los reintentos automáticos
+ * y cacheando disponibilidades por 5 minutos.
+ */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 1000 * 60 * 5, 
+    },
+  },
+});
 
 /**
  * Componente de Utilidad: ScrollToTop
@@ -68,9 +86,10 @@ function Router() {
     <>
       <ScrollToTop />
       <Switch>
-        {/* Rutas Públicas */}
+        {/* Rutas Públicas y Transaccionales */}
         <Route path="/" component={Home} />
         <Route path="/login" component={Login} />
+        <Route path="/success" component={Success} />
         
         {/* Rutas Protegidas (Garantía de Rol y Seguridad) */}
         <Route path="/admin">
@@ -109,20 +128,22 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
-        <AuthProvider>
-          <TooltipProvider delayDuration={0}>
-            <AppInitializer>
-              <Toaster 
-                position="top-center" 
-                richColors 
-                closeButton
-              />
-              <Router />
-            </AppInitializer>
-          </TooltipProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider defaultTheme="light">
+          <AuthProvider>
+            <TooltipProvider delayDuration={0}>
+              <AppInitializer>
+                <Toaster 
+                  position="top-center" 
+                  richColors 
+                  closeButton
+                />
+                <Router />
+              </AppInitializer>
+            </TooltipProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

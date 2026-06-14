@@ -2,21 +2,21 @@
  * @file BookingDialog.tsx
  * @description Diálogo interactivo de reservas de 2 pasos (Fase 6 del Embudo: Transacción).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Textos traducidos dinámicamente desde el namespace 'booking'.
- * - Validación estructural estricta con Zod (BookingTranslationSchema).
- * - Calendario interactivo (react-day-picker) localizado en tiempo de ejecución de forma simétrica (es-ES, en-US, pt-BR).
- * - Mensaje de WhatsApp de salida estructurado y traducido al idioma del cliente.
+ * - Se remueve la lógica e icono de WhatsApp de cierre de ventas.
+ * - Integra la llamada e inicio de sesión segura con la pasarela de pagos Stripe (PCI-DSS).
+ * - Control de carga interactivo asíncrono para evitar solicitudes duplicadas de cobro.
+ * - Calendario interactivo (react-day-picker) localizado de forma simétrica.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { format, differenceInDays, startOfDay } from 'date-fns';
-import { es, enUS, ptBR } from 'date-fns/locale'; // 'es' es el código interno de la librería de terceros
-import { CheckCircle2, MessageCircle, ChevronLeft, X, Users } from 'lucide-react';
+import { es, enUS, ptBR } from 'date-fns/locale'; 
+import { CheckCircle2, CreditCard, ChevronLeft, X, Users } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
-import { HOTEL_CONFIG } from '@/const';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { BookingTranslationSchema } from '@/locales/schemas/booking.schema';
 import {
   Dialog,
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Spinner } from "@/components/ui/spinner";
 
 interface BookingDialogProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const [guestName, setGuestName] = useState('');
   const [guestsCount, setGuestsCount] = useState('2');
   const [blockedDates, setBlockedDates] = useState<Date[]>([]);
+  const [paymentLoading, setPaymentLoading] = useState(false); // Estado de carga para conexión a Stripe
 
   // ============================================================================
   // VALIDACIÓN DE INTEGRIDAD DEL ESQUEMA (ZOD) - ISO 27001
@@ -61,7 +63,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const getDateLocale = () => {
     if (i18n.language === 'en-US') return enUS;
     if (i18n.language === 'pt-BR') return ptBR;
-    return es; // Mapeo explícito y seguro para el fallback de 'es-ES'
+    return es; 
   };
 
   const currentLocale = getDateLocale();
@@ -71,30 +73,53 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
       setStep(1);
       setRange(undefined);
       setBlockedDates([]); 
+      setPaymentLoading(false);
     }
   }, [isOpen]);
 
   /**
-   * Genera el mensaje estructurado de reserva y abre WhatsApp.
+   * Conecta de forma segura con el backend serverless para generar e iniciar la
+   * sesión de pago transaccional en la pasarela de Stripe.
    */
-  const handleSendWhatsApp = () => {
+  const handleStripePayment = async () => {
     if (!range?.from || !range?.to) return;
-    const nights = differenceInDays(range.to, range.from);
     
-    const message = 
-      `${t('whatsapp_template.header')}\n` +
-      `--------------------------\n` +
-      `${t('whatsapp_template.room')} ${roomName}\n` +
-      `${t('whatsapp_template.check_in')} ${format(range.from, 'dd/MM/yyyy')}\n` +
-      `${t('whatsapp_template.check_out')} ${format(range.to, 'dd/MM/yyyy')}\n` +
-      `${t('whatsapp_template.nights')} ${nights}\n` +
-      `${t('whatsapp_template.guests')} ${guestsCount}\n` +
-      `${t('whatsapp_template.name')} ${guestName}\n` +
-      `--------------------------\n` +
-      `${t('whatsapp_template.footer')}`;
+    setPaymentLoading(true);
 
-    window.open(`${HOTEL_CONFIG.whatsappUrl}?text=${encodeURIComponent(message)}`, '_blank');
-    onClose();
+    try {
+      const response = await fetch('/api/checkout/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          roomType,
+          roomName,
+          checkIn: format(range.from, 'yyyy-MM-dd'),
+          checkOut: format(range.to, 'yyyy-MM-dd'),
+          guestName,
+          guestsCount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error de red al inicializar la pasarela.');
+      }
+
+      if (data.url) {
+        // Redirección segura a los servidores de Stripe de forma instantánea (Cumple con PCI-DSS)
+        window.location.href = data.url;
+      } else {
+        throw new Error('La sesión de pago no devolvió una URL válida.');
+      }
+    } catch (error: any) {
+      console.error('[Stripe Integration Error]:', error);
+      toast.error(error.message || 'No se pudo conectar con el motor de pagos.');
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   const today = startOfDay(new Date());
@@ -128,7 +153,8 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
               {step === 2 && (
                 <button 
                   onClick={() => setStep(1)} 
-                  className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-all active:scale-90"
+                  disabled={paymentLoading}
+                  className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50"
                 >
                   <ChevronLeft size={22} className="text-gray-900" />
                 </button>
@@ -149,7 +175,8 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
             <div className="w-10 flex justify-end">
               <button 
                 onClick={onClose} 
-                className="p-2 -mr-2 hover:bg-gray-100 rounded-full transition-all active:scale-90"
+                disabled={paymentLoading}
+                className="p-2 -mr-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50"
               >
                 <X size={20} className="text-gray-400" />
               </button>
@@ -232,7 +259,8 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                     value={guestName}
                     onChange={(e) => setGuestName(e.target.value)}
                     placeholder={t('guest_name_placeholder')}
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-base text-gray-900 placeholder:text-gray-300 outline-none"
+                    disabled={paymentLoading}
+                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-base text-gray-900 placeholder:text-gray-300 outline-none disabled:opacity-50"
                   />
                 </div>
 
@@ -252,8 +280,9 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                       <button
                         key={num}
                         onClick={() => setGuestsCount(num)}
+                        disabled={paymentLoading}
                         className={cn(
-                          "flex-1 h-12 rounded-full border-2 font-body font-semibold transition-all text-sm cursor-pointer",
+                          "flex-1 h-12 rounded-full border-2 font-body font-semibold transition-all text-sm cursor-pointer disabled:opacity-50",
                           guestsCount === num 
                             ? "bg-primary border-primary text-primary-foreground shadow-sm" 
                             : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
@@ -265,24 +294,30 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   </div>
                 </div>
 
-                {/* Badge de Seguridad y Confianza (CRO) */}
-                <div className="bg-green-50/50 p-4 rounded-2xl flex items-start gap-3 border border-green-100/50">
-                  <div className="bg-green-500 p-1 rounded-full text-white shrink-0 mt-0.5">
+                {/* Badge de Seguridad y Confianza (Stripe / SSL) */}
+                <div className="bg-blue-50/50 p-4 rounded-2xl flex items-start gap-3 border border-blue-100/50">
+                  <div className="bg-blue-500 p-1 rounded-full text-white shrink-0 mt-0.5">
                     <CheckCircle2 size={14} />
                   </div>
-                  <p className="text-[11px] text-green-800 leading-relaxed font-body font-medium">
-                    {t('trust_badge')}
+                  <p className="text-[11px] text-blue-800 leading-relaxed font-body font-medium">
+                    {t('trust_badge_stripe')}
                   </p>
                 </div>
 
-                {/* Botón de Transacción Final (WhatsApp) */}
+                {/* Botón de Transacción Final (Stripe Redirection) */}
                 <Button 
-                  disabled={!guestName}
-                  onClick={handleSendWhatsApp}
-                  className="w-full h-14 bg-green-600 hover:bg-green-700 text-white rounded-full text-base font-body font-semibold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer"
+                  disabled={!guestName || paymentLoading}
+                  onClick={handleStripePayment}
+                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-base font-body font-semibold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
                 >
-                  <MessageCircle size={22} />
-                  {t('whatsapp_button')}
+                  {paymentLoading ? (
+                    <Spinner className="h-5 w-5 text-white" />
+                  ) : (
+                    <>
+                      <CreditCard size={20} />
+                      {t('pay_now_button')}
+                    </>
+                  )}
                 </Button>
               </motion.div>
             )}
