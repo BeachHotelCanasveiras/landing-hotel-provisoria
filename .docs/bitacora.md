@@ -54,3 +54,29 @@ SEO Audit: Verificar el renderizado del Schema JSON-LD en la herramienta de resu
 
 ---
 
+# Bitácora Evolutiva: Beach Hotel Canasvieiras
+Este documento registra el historial de ingeniería y cambios estructurales.
+
+## Fase 1: Cimientos de Élite (Completada)
+- **Internacionalización:**
+    - Implementación de motor i18next con soporte para `es-ES`, `en-US`, `pt-BR`.
+    - Creación de compilador de diccionarios unificados (`scripts/compile-i18n.js`).
+    - Integración en el ciclo de build de `package.json`.
+- **Infraestructura de Datos:**
+    - Configuración de `StorageService` para persistencia (Cookies y LocalStorage con TTL).
+    - Middleware de detección de idioma (`useAppMiddleware.ts`) con Circuit Breaker para prevenir bloqueos de renderizado.
+- **Saneamiento de Componentes:**
+    - Refactorización de `Header`, `Hero`, `Rooms`, `Gallery`, `Attractions`, `ContactSection`, `Footer` bajo el patrón de **Trinidad Atómica (UI + JSON + Zod)**.
+    - Integración segura de la API de Google Maps a través del Proxy de Manus.
+
+## Fase 2: Transaccionalidad (En Curso)
+- **Objetivo:** Implementar sistema de reservas inmutable.
+- **Estado:** Estructura de tablas SQL definida (`rooms`, `bookings`, `guests`, `users`) con RLS habilitado.
+- **Pendiente:** Integración de lógica transaccional en `BookingDialog.tsx` y creación de `BookingSchema.ts`.
+
+---
+*Cualquier cambio estructural debe ser registrado aquí antes de proceder a la siguiente refactorización.*
+
+---
+
+

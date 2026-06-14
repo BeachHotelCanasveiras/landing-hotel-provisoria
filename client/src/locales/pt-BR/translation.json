@@ -18,6 +18,129 @@
       }
     }
   },
+  "attractions": {
+    "badge": "Localização Estratégica",
+    "title": "Descubra Canasvieiras",
+    "subtitle": "Do nosso recanto na Avenida das Nações, você tem acesso privilegiado às melhores experiências de Florianópolis.",
+    "cta_button": "Consultar trajeto",
+    "whatsapp_query_template": "Olá! Gostaria de saber como chegar à {{name}} a partir do Hotel.",
+    "items": {
+      "brava": {
+        "name": "Praia Brava",
+        "description": "Um refúgio natural a poucos minutos da nossa casa, ideal para se conectar com o surf e com a serenidade da ilha.",
+        "distance": "9 km",
+        "time": "15 min de carro"
+      },
+      "jurere": {
+        "name": "Praia de Jurerê",
+        "description": "Tradição e frescor a curta distância. Uma excelente opção para compartilhar momentos inesquecíveis perto de nós.",
+        "distance": "4 km",
+        "time": "10 min de carro"
+      },
+      "aguashow": {
+        "name": "Parque Água Show",
+        "description": "Diversão garantida para desfrutar com as pessoas queridas. O parque aquático mais famoso da ilha a passos da sua hospedagem.",
+        "distance": "4 km",
+        "time": "10 min de carro"
+      },
+      "centro": {
+        "name": "Centro Histórico",
+        "description": "Um passeio pela arquitetura colonial e a essência de Florianópolis. Descubra a história que cerca a nossa localização.",
+        "distance": "27 km",
+        "time": "30 min de carro"
+      },
+      "frances": {
+        "name": "Ilha do Francês",
+        "description": "Conexão mágica com a fauna marinha e águas cristalinas. Passeios e saídas disponíveis bem perto da nossa recepção.",
+        "distance": "Saídas próximas",
+        "time": "Meio dia"
+      },
+      "fortaleza": {
+        "name": "Fortaleza de São José",
+        "description": "Vistas panorâmicas e uma viagem ao passado histórico. Um ponto de encontro com a cultura local de frente para o oceano.",
+        "distance": "15 km",
+        "time": "20 min de carro"
+      }
+    }
+  },
+  "booking": {
+    "step1_title": "Datas",
+    "step2_title": "Sua Reserva",
+    "check_in_label": "Check-in",
+    "check_out_label": "Check-out",
+    "select_placeholder": "Selecionar",
+    "continue_button": "Continuar",
+    "guest_name_label": "Nome e Sobrenome",
+    "guest_name_placeholder": "Digite seu nome",
+    "guests_label": "Hóspedes",
+    "guests_suffix": "pessoas",
+    "trust_badge": "Confirmaremos sua reserva via WhatsApp. Você receberá os detalhes e as formas de pagamento disponíveis.",
+    "whatsapp_button": "Confirmar no WhatsApp",
+    "whatsapp_template": {
+      "header": "*SOLICITAÇÃO DE RESERVA* 🏠",
+      "room": "*Quarto:*",
+      "check_in": "*Check-in:*",
+      "check_out": "*Check-out:*",
+      "nights": "*Noites:*",
+      "guests": "*Hóspedes:*",
+      "name": "*Nome:*",
+      "footer": "_Enviado de beachcanasvieiras.com_"
+    }
+  },
+  "contact": {
+    "badge": "Contato",
+    "title": "Escreva para Nós",
+    "subtitle": "Estamos aqui para ajudar. Preencha o formulário e responderemos o mais rápido possível.",
+    "name_label": "Nome Completo",
+    "name_placeholder": "Seu nome",
+    "email_label": "E-mail",
+    "email_placeholder": "seu@email.com",
+    "message_label": "Mensagem ou Dúvida",
+    "message_placeholder": "Como podemos ajudar você?",
+    "submit_button": "Enviar Mensagem",
+    "validation_name_required": "Por favor, digite seu nome.",
+    "validation_email_required": "O e-mail é obrigatório.",
+    "validation_email_invalid": "Insira um e-mail válido.",
+    "validation_message_required": "Por favor, digite sua mensagem.",
+    "toast_success": "Mensagem preparada! Abrindo seu cliente de e-mail..."
+  },
+  "footer": {
+    "tagline": "Sinta o aconchego de um espaço projetado para o seu bem-estar. Seu refúgio de hospitalidade autêntica na principal Avenida das Nações.",
+    "contact_title": "Contato",
+    "explore_title": "Explorar",
+    "social_title": "Siga-nos",
+    "strategy_credits_label": "Estratégia & Código"
+  },
+  "gallery": {
+    "badge": "Nosso cantinho",
+    "title": "Galeria de Momentos",
+    "items": {
+      "reception": {
+        "title": "Recepção Principal",
+        "category": "Hotel"
+      },
+      "facade": {
+        "title": "Fachada Avenida das Nações",
+        "category": "Exterior"
+      },
+      "pool": {
+        "title": "Piscina na Cobertura",
+        "category": "Instalações"
+      },
+      "sunset": {
+        "title": "Pôr do Sol em Canasvieiras",
+        "category": "Vistas"
+      },
+      "suite": {
+        "title": "Conforto Suite",
+        "category": "Quartos"
+      },
+      "family": {
+        "title": "Espaços Familiares",
+        "category": "Quartos"
+      }
+    }
+  },
   "hero": {
     "title_prefix": "Seu refúgio em ",
     "title_highlight": "Canasvieiras",
@@ -25,13 +148,19 @@
     "cta_primary": "Consultar Disponibilidade",
     "cta_secondary": "Ver Galeria"
   },
+  "home": {
+    "map_badge": "Localização Real",
+    "map_title": "No Coração de Canasvieiras",
+    "map_subtitle": "Localizado estrategicamente na Avenida das Nações, a principal via do balneário. Verifique nossa proximidade a poucos passos da praia de águas tranquilas."
+  },
   "nav": {
     "home": "Início",
     "rooms": "Quartos",
     "gallery": "Galeria",
     "attractions": "Atrações",
     "contact": "Contato",
-    "book_now": "Reservar"
+    "book_now": "Reservar",
+    "contact_us": "Contate-nos"
   },
   "rooms": {
     "badge": "Hospitalidade & Conforto",
@@ -84,5 +213,32 @@
         ]
       }
     }
+  },
+  "testimonials": {
+    "badge": "Depoimentos dos Hóspedes",
+    "title": "Experiências reais em nossa casa",
+    "fallback_reviews": [
+      {
+        "author_name": "Carlos Rodríguez",
+        "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-chile.webp",
+        "rating": 5,
+        "text": "A localização é perfeita, a poucos passos de tudo e com um acolhimento que nos fez sentir em casa o tempo todo.",
+        "relative_time_description": "Há um mês"
+      },
+      {
+        "author_name": "María López",
+        "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-argentina.webp",
+        "rating": 5,
+        "text": "Café da manhã maravilhoso e serviço impecável. É o lugar perfeito para relaxar com a família.",
+        "relative_time_description": "Há duas semanas"
+      },
+      {
+        "author_name": "Juan Martínez",
+        "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-uruguay.webp",
+        "rating": 5,
+        "text": "Excelente custo-benefício. O atendimento de toda a equipe foi maravilhoso, voltaremos em breve.",
+        "relative_time_description": "Há três meses"
+      }
+    ]
   }
 }

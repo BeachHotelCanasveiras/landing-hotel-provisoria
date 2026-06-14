@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "type": "module",
   "license": "UNLICENSED",
-  "scripts": {
+ "scripts": {
     "dev": "node scripts/compile-i18n.js && vite --host",
     "dev:all": "concurrently \"pnpm dev\" \"pnpm --filter backend-core dev\"",
     "build": "node scripts/compile-i18n.js && vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "node scripts/compile-i18n.js && tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:status": "tsx scripts/supabase/db-status.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

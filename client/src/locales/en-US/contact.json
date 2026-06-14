@@ -9,6 +9,7 @@
   "message_label": "Message or Inquiry",
   "message_placeholder": "How can we help you?",
   "submit_button": "Send Message",
+  "whatsapp_message": "Hello, I would like to check availability for a booking at Beach Canasvieiras.",
   "validation_name_required": "Please type your name.",
   "validation_email_required": "Email address is required.",
   "validation_email_invalid": "Enter a valid email address.",

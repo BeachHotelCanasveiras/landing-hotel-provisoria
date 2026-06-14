@@ -1,106 +1,84 @@
 /// <reference types="@types/google.maps" />
 
-import { useEffect, useRef } from "react";
-import { usePersistFn } from "@/hooks/usePersistFn";
+/**
+ * @file Map.tsx
+ * @description Aparato de Geolocalización Interactiva Premium.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Desacoplado al 100% de proxies de terceros (Manus).
+ * - Cero Hardcoding: Lee credenciales de forma segura desde las variables de entorno.
+ * - Sistema Dual: Utiliza la API de Google Maps Embed oficial si se provee la clave;
+ *   de lo contrario, se degrada a un fallback nativo basado en la dirección física (SSoT).
+ * - UX Fluida: Transiciones suaves que ocultan el parpadeo de carga del iframe.
+ */
+
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { HOTEL_CONFIG } from "@/const";
-
-declare global {
-  interface Window {
-    google?: typeof google;
-  }
-}
-
-// Configuración de infraestructura (Proxy de seguridad Manus)
-const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
-const FORGE_BASE_URL = import.meta.env.VITE_FRONTEND_FORGE_API_URL || "https://forge.manus.ai";
-const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
-
-function loadMapScript() {
-  return new Promise((resolve, reject) => {
-    if (window.google) {
-      resolve(null);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker`;
-    script.async = true;
-    script.crossOrigin = "anonymous";
-    script.onload = () => resolve(null);
-    script.onerror = () => reject(new Error("Error al cargar Google Maps"));
-    document.head.appendChild(script);
-  });
-}
+import { Spinner } from "@/components/ui/spinner";
 
 interface MapViewProps {
   className?: string;
-  // Coordenadas exactas para Avenida das Nações 375, Canasvieiras
-  initialCenter?: google.maps.LatLngLiteral;
+  initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
-  onMapReady?: (map: google.maps.Map) => void;
+  onMapReady?: (map: any) => void;
 }
 
 export function MapView({
   className,
-  initialCenter = { lat: -27.4266, lng: -48.4518 }, // Ubicación rectificada
-  initialZoom = 17, // Zoom de nivel calle
+  initialZoom = 17,
   onMapReady,
 }: MapViewProps) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
+  const [iframeLoading, setIframeLoading] = useState(true);
 
-  const init = usePersistFn(async () => {
-    try {
-      await loadMapScript();
-      
-      if (!mapContainer.current || !window.google) return;
+  // 1. Recuperar variables de entorno de forma segura
+  const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const PLACE_ID = HOTEL_CONFIG.googlePlaceId;
+  const addressQuery = encodeURIComponent(HOTEL_CONFIG.address);
 
-      // Inicialización del Mapa
-      mapRef.current = new window.google.maps.Map(mapContainer.current, {
-        zoom: initialZoom,
-        center: initialCenter,
-        mapId: "HOTEL_LOCATION_MAP", // Requerido para marcadores avanzados
-        disableDefaultUI: false,
-        zoomControl: true,
-        streetViewControl: true,
-        gestureHandling: "cooperative", // Mejor UX en móvil para no "atrapar" el scroll
-      });
+  // 2. Construcción de la URL del Iframe de Google Maps
+  // Si existe API Key, cargamos la API oficial de Embed, de lo contrario usamos el buscador libre.
+  const iframeUrl = API_KEY 
+    ? `https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=place_id:${PLACE_ID}&zoom=${initialZoom}`
+    : `https://maps.google.com/maps?q=${addressQuery}&t=&z=${initialZoom}&ie=UTF8&iwloc=&output=embed`;
 
-      // Agregar Marcador del Hotel
-      const { AdvancedMarkerElement, PinElement } = await window.google.maps.importLibrary("marker") as google.maps.MarkerLibrary;
-      
-      const pin = new PinElement({
-        background: "#0F3B66", // Azul corporativo del hotel
-        borderColor: "#FFFFFF",
-        glyphColor: "#FFFFFF",
-      });
-
-      new AdvancedMarkerElement({
-        map: mapRef.current,
-        position: initialCenter,
-        title: HOTEL_CONFIG.fullName,
-        content: pin.element,
-      });
-
-      if (onMapReady) {
-        onMapReady(mapRef.current);
-      }
-    } catch (error) {
-      console.error("Error inicializando el mapa:", error);
+  const handleOnLoad = () => {
+    setIframeLoading(false);
+    // Callback de compatibilidad en caso de ser requerido por el orquestador
+    if (onMapReady) {
+      onMapReady(null);
     }
-  });
-
-  useEffect(() => {
-    init();
-  }, [init]);
+  };
 
   return (
     <div 
-      ref={mapContainer} 
       className={cn(
-        "w-full h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-inner border border-gray-100", 
+        "relative w-full h-full overflow-hidden bg-gray-50 transition-all duration-500",
         className
-      )} 
-    />
+      )}
+    >
+      {/* 3. Pantalla de carga inteligente (Evita el fondo blanco mientras Google renderiza) */}
+      {iframeLoading && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/90 backdrop-blur-xs z-10 transition-all duration-300">
+          <Spinner className="text-primary w-8 h-8 mb-3" />
+          <p className="font-body text-xs text-gray-400 tracking-widest uppercase">
+            Cargando mapa...
+          </p>
+        </div>
+      )}
+
+      {/* 4. Google Maps Embed Iframe con fade-in controlado */}
+      <iframe
+        title="Ubicación de Hotel Beach Canasvieiras"
+        src={iframeUrl}
+        className={cn(
+          "w-full h-full border-0 transition-opacity duration-700 ease-in-out",
+          iframeLoading ? "opacity-0" : "opacity-100"
+        )}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        onLoad={handleOnLoad}
+      />
+    </div>
   );
 }

@@ -18,6 +18,129 @@
       }
     }
   },
+  "attractions": {
+    "badge": "Strategic Location",
+    "title": "Discover Canasvieiras",
+    "subtitle": "From our corner on Avenida das Nações, you have privileged access to the best experiences in Florianópolis.",
+    "cta_button": "Check route",
+    "whatsapp_query_template": "Hello! I would like to know how to get to {{name}} from the Hotel.",
+    "items": {
+      "brava": {
+        "name": "Praia Brava",
+        "description": "A natural haven a few minutes from our home, ideal for connecting with surfing and the island's serenity.",
+        "distance": "9 km",
+        "time": "15 min drive"
+      },
+      "jurere": {
+        "name": "Jurerê Beach",
+        "description": "Tradition and freshness at a short distance. An excellent option to share unforgettable moments near us.",
+        "distance": "4 km",
+        "time": "10 min drive"
+      },
+      "aguashow": {
+        "name": "Água Show Park",
+        "description": "Guaranteed fun to enjoy with your loved ones. The most famous water park on the island is just steps from your stay.",
+        "distance": "4 km",
+        "time": "10 min drive"
+      },
+      "centro": {
+        "name": "Historical Center",
+        "description": "A walk through the colonial architecture and the essence of Florianópolis. Discover the history surrounding our location.",
+        "distance": "27 km",
+        "time": "30 min drive"
+      },
+      "frances": {
+        "name": "Frenchman Island",
+        "description": "Magical connection with marine wildlife and crystal clear waters. Tours and departures available very close to our reception.",
+        "distance": "Nearby departures",
+        "time": "Half day"
+      },
+      "fortaleza": {
+        "name": "São José Fortress",
+        "description": "Panoramic views and a trip to the historical past. A meeting point with the local culture facing the ocean.",
+        "distance": "15 km",
+        "time": "20 min drive"
+      }
+    }
+  },
+  "booking": {
+    "step1_title": "Dates",
+    "step2_title": "Your Booking",
+    "check_in_label": "Check-in",
+    "check_out_label": "Check-out",
+    "select_placeholder": "Select",
+    "continue_button": "Continue",
+    "guest_name_label": "First & Last Name",
+    "guest_name_placeholder": "Type your name",
+    "guests_label": "Guests",
+    "guests_suffix": "guests",
+    "trust_badge": "We will confirm your booking via WhatsApp. You will receive details and available payment methods.",
+    "whatsapp_button": "Confirm on WhatsApp",
+    "whatsapp_template": {
+      "header": "*BOOKING REQUEST* 🏠",
+      "room": "*Room:*",
+      "check_in": "*Check-in:*",
+      "check_out": "*Check-out:*",
+      "nights": "*Nights:*",
+      "guests": "*Guests:*",
+      "name": "*Name:*",
+      "footer": "_Sent from beachcanasvieiras.com_"
+    }
+  },
+  "contact": {
+    "badge": "Contact",
+    "title": "Write to Us",
+    "subtitle": "We are here to assist you. Fill out the form and we will reply as soon as possible.",
+    "name_label": "Full Name",
+    "name_placeholder": "Your name",
+    "email_label": "Email Address",
+    "email_placeholder": "you@email.com",
+    "message_label": "Message or Inquiry",
+    "message_placeholder": "How can we help you?",
+    "submit_button": "Send Message",
+    "validation_name_required": "Please type your name.",
+    "validation_email_required": "Email address is required.",
+    "validation_email_invalid": "Enter a valid email address.",
+    "validation_message_required": "Please type your message.",
+    "toast_success": "Message prepared! Opening your mail client..."
+  },
+  "footer": {
+    "tagline": "Feel the warmth of a space designed for your well-being. Your refuge of authentic hospitality on the main Avenida das Nações.",
+    "contact_title": "Contact",
+    "explore_title": "Explore",
+    "social_title": "Follow Us",
+    "strategy_credits_label": "Strategy & Code"
+  },
+  "gallery": {
+    "badge": "Our corner",
+    "title": "Gallery of Moments",
+    "items": {
+      "reception": {
+        "title": "Main Lobby",
+        "category": "Hotel"
+      },
+      "facade": {
+        "title": "Avenida das Nações Facade",
+        "category": "Exterior"
+      },
+      "pool": {
+        "title": "Rooftop Pool",
+        "category": "Amenities"
+      },
+      "sunset": {
+        "title": "Canasvieiras Sunset",
+        "category": "Views"
+      },
+      "suite": {
+        "title": "Comfort Suite",
+        "category": "Rooms"
+      },
+      "family": {
+        "title": "Family Spaces",
+        "category": "Rooms"
+      }
+    }
+  },
   "hero": {
     "title_prefix": "Your haven in ",
     "title_highlight": "Canasvieiras",
@@ -25,13 +148,19 @@
     "cta_primary": "Check Availability",
     "cta_secondary": "View Gallery"
   },
+  "home": {
+    "map_badge": "Real Location",
+    "map_title": "In the Heart of Canasvieiras",
+    "map_subtitle": "Strategically located on Avenida das Nações, the main avenue of the resort. Verify our proximity, just steps from the calm waters beach."
+  },
   "nav": {
     "home": "Home",
     "rooms": "Rooms",
     "gallery": "Gallery",
     "attractions": "Attractions",
     "contact": "Contact",
-    "book_now": "Book Now"
+    "book_now": "Book Now",
+    "contact_us": "Contact Us"
   },
   "rooms": {
     "badge": "Hospitality & Comfort",
@@ -84,5 +213,32 @@
         ]
       }
     }
+  },
+  "testimonials": {
+    "badge": "Our Guests' Reviews",
+    "title": "Real experiences at our home",
+    "fallback_reviews": [
+      {
+        "author_name": "Carlos Rodríguez",
+        "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-chile.webp",
+        "rating": 5,
+        "text": "The location is perfect, steps from everything, with a warmth that made us feel right at home at all times.",
+        "relative_time_description": "A month ago"
+      },
+      {
+        "author_name": "María López",
+        "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-argentina.webp",
+        "rating": 5,
+        "text": "Delicious breakfast and flawless service. It is the ideal place to disconnect with the family.",
+        "relative_time_description": "Two weeks ago"
+      },
+      {
+        "author_name": "Juan Martínez",
+        "profile_photo_url": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-uruguay.webp",
+        "rating": 5,
+        "text": "Excellent value for money. The service from the entire team was wonderful, we will be back soon.",
+        "relative_time_description": "Three months ago"
+      }
+    ]
   }
 }
