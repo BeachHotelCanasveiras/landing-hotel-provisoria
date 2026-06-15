@@ -1,10 +1,11 @@
 /**
  * @file stripe.ts
  * @description Webhook de seguridad e idempotencia para conciliar pagos exitosos en Supabase.
+ * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse) y libre de 'any' para ESLint v9.
  * - ISO 27001: Deduplicación a nivel lógico y lectura segura de firmas criptográficas.
  * - PCI-DSS: Manejo inmutable de transacciones sin exposición de PII.
  */
-import { Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,7 +18,7 @@ export const config = {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
   apiVersion: '2026-05-27.dahlia' 
-});
+ });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!, 
@@ -27,10 +28,10 @@ const supabase = createClient(
 /**
  * @function getRawBody
  * @description Lee asíncronamente el flujo (stream) del request para reconstruir el Buffer original.
- * @param {any} readable - Objeto Request de entrada.
+ * @param {VercelRequest} readable - Objeto Request de entrada.
  * @returns {Promise<Buffer>} Buffer sin procesar para Stripe.
  */
-async function getRawBody(readable: any): Promise<Buffer> {
+async function getRawBody(readable: VercelRequest): Promise<Buffer> {
   const chunks = [];
   for await (const chunk of readable) {
     chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
@@ -42,7 +43,7 @@ async function getRawBody(readable: any): Promise<Buffer> {
  * @function handler
  * @description Orquestador del Webhook de Stripe.
  */
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const signature = req.headers['stripe-signature'] as string;
   
   if (!signature) {
@@ -61,9 +62,10 @@ export default async function handler(req: Request, res: Response) {
       signature, 
       process.env.STRIPE_WEBHOOK_SECRET!
     );
-  } catch (err: any) {
-    console.error(`[Webhook Error] Fallo en constructEvent: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+    console.error(`[Webhook Error] Fallo en constructEvent: ${errorMessage}`);
+    return res.status(400).send(`Webhook Error: ${errorMessage}`);
   }
 
   // Conciliación del Checkout Completado
@@ -115,8 +117,9 @@ export default async function handler(req: Request, res: Response) {
       }
 
       console.log(`[Webhook Success] Pago e inserción de reserva procesados correctamente.`);
-    } catch (dbError: any) {
-      console.error('[Webhook DB Error Critical]:', dbError.message);
+    } catch (dbError: unknown) {
+      const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Error de BD desconocido';
+      console.error('[Webhook DB Error Critical]:', dbErrorMessage);
       return res.status(500).send('Error interno de base de datos durante la conciliación');
     }
   }

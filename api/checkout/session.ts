@@ -1,10 +1,9 @@
 /**
  * @file session.ts
  * @description Endpoint para inicializar sesiones de pago en Stripe.
- * - ISO 27001: Validación de fronteras temporales, mitigación de desajustes horários y sanitización de errores.
- * - PCI-DSS: Delegación inmutable de cobros.
+ * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse), libre de 'any' para ESLint v9 y protección inmutable.
  */
-import { Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
@@ -18,7 +17,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -99,8 +98,8 @@ export default async function handler(req: Request, res: Response) {
     });
 
     return res.status(200).json({ url: session.url });
-  } catch (error: any) {
-    // Auditamos el error internamente con toda la traza de sistema
+  } catch (error: unknown) {
+    // Auditamos el error internamente con toda la traza de sistema sin usar explicit 'any'
     console.error('[Checkout Session Error Critical]:', error);
     
     // Respondemos con un mensaje sanitizado para el cliente final (ISO 27001 Compliance)

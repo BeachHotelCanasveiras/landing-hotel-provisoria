@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-06-15T04:21:48.300Z",
+  "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
+  "data": {
+    "users": [
+      {
+        "id": "7415c180-8fe8-4c85-875d-e04c7997741a",
+        "email": "test.guest.1781495127231@beachcanasvieiras.com",
+        "role": "agency",
+        "created_at": "2026-06-15T03:45:28.562453+00:00"
+      },
+      {
+        "id": "c8f84be4-a489-42e9-92ec-2fbe57cf5705",
+        "email": "razpodesta@gmail.com",
+        "role": "developer",
+        "created_at": "2026-06-15T03:49:26.357194+00:00"
+      }
+    ],
+    "guests": [],
+    "rooms": [],
+    "bookings": []
+  }
+}

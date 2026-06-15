@@ -1,17 +1,17 @@
 /**
  * @file retrieve.ts
  * @description Recupera datos de una sesión de Stripe para pre-llenar formularios post-pago.
- * Refactorizado para Express y coherencia de versiones API.
+ * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse) y libre de 'any' para ESLint v9.
  */
-import { Request, Response } from 'express';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
-// Inicialización coherente con el resto del proyecto
+// Inicialización de Stripe sincronizada con la API exacta del proyecto
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
   apiVersion: '2026-05-27.dahlia' 
 });
 
-export default async function handler(req: Request, res: Response) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
@@ -29,8 +29,10 @@ export default async function handler(req: Request, res: Response) {
       customer_email: session.customer_details?.email,
       customer_name: session.customer_details?.name || session.metadata?.guest_name || 'Huésped',
     });
-  } catch (error: any) {
-    console.error('[Retrieve Session Error]:', error);
-    return res.status(500).json({ message: error.message });
+  } catch (error: unknown) {
+    // Saneamiento de error para ESLint v9 (no-explicit-any resuelto)
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[Retrieve Session Error]:', errorMessage);
+    return res.status(500).json({ message: errorMessage });
   }
 }
