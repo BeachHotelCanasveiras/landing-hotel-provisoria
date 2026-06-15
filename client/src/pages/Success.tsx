@@ -2,9 +2,6 @@
  * @file Success.tsx
  * @description Página de retorno de Stripe (Fase 6 Post-Venta).
  * Implementa la arquitectura "Venta Primero, Registro Después".
- * - Recupera la sesión asíncrona de Stripe.
- * - Despliega un formulario de fricción mínima para capturar la contraseña.
- * - Crea el usuario en Supabase Auth y lo asocia silenciosamente a su reserva.
  */
 
 import { useState, useEffect } from 'react';
@@ -15,64 +12,47 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { StorageService } from '@/lib/storage';
 
 export default function Success() {
   const { t } = useTranslation('booking');
   const [, setLocation] = useLocation();
 
-  // Estados de recuperación y autenticación
   const [loadingSession, setLoadingSession] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
-  
-  // Datos recuperados de Stripe
   const [guestEmail, setGuestEmail] = useState('');
   const [guestName, setGuestName] = useState('');
-  
-  // Datos de entrada del usuario
   const [password, setPassword] = useState('');
 
   useEffect(() => {
-    /**
-     * Recupera el ID de sesión de Stripe de la URL (Ej: ?session_id=cs_test_...)
-     * y consulta al backend para obtener el correo del huésped.
-     */
     const fetchStripeSession = async () => {
       const params = new URLSearchParams(window.location.search);
       const sessionId = params.get('session_id');
 
       if (!sessionId) {
         setLoadingSession(false);
+        setLocation('/');
         return;
       }
 
       try {
-        // Esta llamada a la API la construiremos en el siguiente paso del backend
         const response = await fetch(`/api/checkout/retrieve?session_id=${sessionId}`);
-        if (response.ok) {
-          const data = await response.json();
-          // Pre-cargamos los datos del cliente para que no tenga que volver a escribirlos
-          setGuestEmail(data.customer_email || '');
-          setGuestName(data.customer_name || 'Huésped');
-          
-          // Persistimos el estado en cookie de 1 año (Manifiesto de Ingeniería)
-          StorageService.setCookie('beach_hotel_pending_registration', 'true');
-        }
+        if (!response.ok) throw new Error('No se pudo recuperar la sesión.');
+        
+        const data = await response.json();
+        setGuestEmail(data.customer_email || '');
+        setGuestName(data.customer_name || 'Huésped');
       } catch (error) {
-        console.error('Error al recuperar sesión de Stripe:', error);
+        console.error('Error al recuperar sesión:', error);
+        toast.error('Error al validar tu reserva.');
       } finally {
         setLoadingSession(false);
       }
     };
 
     fetchStripeSession();
-  }, []);
+  }, [setLocation]);
 
-  /**
-   * Registra al usuario en Supabase Auth y lo redirige a su Dashboard.
-   * El correo se enlaza de forma automática con la tabla 'guests' mediante triggers SQL.
-   */
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password || password.length < 6) {
@@ -88,8 +68,8 @@ export default function Success() {
         password: password,
         options: {
           data: {
-            role: 'guest',
             full_name: guestName,
+            role: 'guest',
           },
         },
       });
@@ -97,10 +77,7 @@ export default function Success() {
       if (error) throw error;
 
       toast.success(t('success_toast_ok'));
-      // Limpiamos la cookie ya que el registro se concretó
       StorageService.setCookie('beach_hotel_pending_registration', 'false');
-      
-      // Redirección inmediata al PMS del huésped
       setLocation('/admin');
     } catch (error: any) {
       toast.error(error.message || 'Error al crear la cuenta.');
@@ -125,7 +102,6 @@ export default function Success() {
           </div>
         ) : (
           <>
-            {/* Animación de Éxito Lujosa */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -142,20 +118,14 @@ export default function Success() {
               {t('success_subtitle')}
             </p>
 
-            {/* Formulario de Alta Conversión */}
             <form onSubmit={handleCreateAccount} className="space-y-4 text-left">
-              
-              {/* Correo Recuperado (Solo lectura) */}
-              {guestEmail && (
-                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/50 flex items-center justify-between">
-                  <span className="font-body text-xs text-gray-400 font-semibold uppercase tracking-wider">Email</span>
-                  <span className="font-body text-sm text-gray-700 font-medium truncate ml-2">
-                    {guestEmail}
-                  </span>
-                </div>
-              )}
+              <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/50 flex items-center justify-between">
+                <span className="font-body text-xs text-gray-400 font-semibold uppercase tracking-wider">Email</span>
+                <span className="font-body text-sm text-gray-700 font-medium truncate ml-2">
+                  {guestEmail}
+                </span>
+              </div>
 
-              {/* Captura de Contraseña */}
               <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-4 focus-within:ring-accent/10 transition-all flex items-center gap-3">
                 <Lock size={18} className="text-gray-400" />
                 <div className="flex-1">
@@ -174,7 +144,6 @@ export default function Success() {
                 </div>
               </div>
 
-              {/* Botón de Creación */}
               <Button
                 type="submit"
                 disabled={isRegistering || !password}

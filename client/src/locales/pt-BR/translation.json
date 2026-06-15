@@ -266,10 +266,18 @@
     "rooms": "Quartos",
     "gallery": "Galeria",
     "attractions": "Atrações",
-    "excursions": "Excursões",
+    "excursions": "Exclusões",
     "contact": "Contato",
     "book_now": "Reservar",
-    "contact_us": "Contate-nos"
+    "contact_us": "Contate-nos",
+    "join_or_signin": "Entrar ou Cadastrar",
+    "dashboard": "Meu Painel",
+    "LANG_ES": "es - Espanhol",
+    "LANG_EN": "en - Inglês",
+    "LANG_PT": "pt - Português",
+    "lang_es": "es - Espanhol",
+    "lang_en": "en - Inglês",
+    "lang_pt": "pt - Português"
   },
   "rooms": {
     "badge": "Hospitalidade & Conforto",

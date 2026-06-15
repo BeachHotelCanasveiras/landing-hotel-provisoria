@@ -11,7 +11,10 @@
     "preview": "vite preview --host",
     "check": "node scripts/compile-i18n.js && tsc --noEmit",
     "format": "prettier --write .",
-    "db:status": "tsx scripts/supabase/db-status.ts"
+    "db:status": "tsx scripts/supabase/db-status.ts",
+    "stripe:diagnostics": "tsx scripts/stripe/test-keys.ts && tsx scripts/stripe/test-endpoints.ts",
+  "stripe:sync": "tsx scripts/stripe/sync-stats.ts",
+  "stripe:all": "pnpm run stripe:diagnostics && pnpm run stripe:sync"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
