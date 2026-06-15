@@ -16,6 +16,8 @@ export const BookingTranslationSchema = z.object({
   guests_label: z.string().min(1),
   guests_suffix: z.string().min(1),
   trust_badge: z.string().min(1),
+  trust_badge_stripe: z.string().min(1), // Validando llave de Stripe
+  pay_now_button: z.string().min(1),      // Validando botón de procesamiento de pago
   whatsapp_button: z.string().min(1),
   whatsapp_template: z.object({
     header: z.string().min(1),

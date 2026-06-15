@@ -1,24 +1,28 @@
 /**
  * @file AdminDashboard.tsx
- * @description Panel de control multi-rol con estética de diseño de Vercel.
- * - Soporte adaptativo para los 4 roles (guest, agency, admin, developer).
- * - Cabecera con menú de perfil y avatar intuitivo.
- * - Integrado con i18next, Supabase Auth y Framer Motion para transiciones fluidas.
- * - Rendimiento optimizado mediante modularidad interna.
+ * @description Orquestador principal del panel de control multi-rol.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Código atómico: Delega la UI compleja a submódulos aislados.
+ * - Enrutamiento protegido y gestión de sesión global con Supabase Auth.
+ * - Estética Vercel: Cabecera minimalista y transiciones fluidas.
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
+import { LogOut } from 'lucide-react';
+
 import { useAuth } from '@/contexts/AuthContext';
-import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+
+// Importación limpia desde el archivo barril del módulo Dashboard
 import { 
-  LogOut, Database, Layers, TrendingUp, Calendar, DollarSign, 
-  Wifi, CheckCircle2, FileText, User, Compass, Tag, ShieldCheck 
-} from 'lucide-react';
+  GuestPortal, 
+  AgencyPortal, 
+  AdminPMS, 
+  DeveloperConsole 
+} from '@/components/dashboard';
 
 export default function AdminDashboard() {
   const { t } = useTranslation('dashboard');
@@ -26,7 +30,7 @@ export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // Redirigir si no hay sesión activa
+  // Redirigir si no hay sesión activa (Failsafe de seguridad)
   if (!user) {
     setLocation('/login');
     return null;
@@ -103,14 +107,14 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* 2. AREA DE CONTENIDO PRINCIPAL (Renderizado condicional por Rol) */}
+      {/* 2. ÁREA DE CONTENIDO PRINCIPAL (Orquestación Delegada por Rol) */}
       <main className="flex-1 container px-6 py-12 max-w-5xl">
         <div className="mb-10">
           <p className="text-xs font-bold text-accent uppercase tracking-[0.25em] mb-2">
             {t('role_badge')}: {role}
           </p>
           <h2 className="font-display text-4xl text-gray-900 tracking-tight">
-            {t('welcome_message')} {user.email?.split('@')[0]}
+            {t('welcome_message')} {user.user_metadata?.full_name || user.email?.split('@')[0]}
           </h2>
         </div>
 
@@ -122,196 +126,14 @@ export default function AdminDashboard() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4 }}
           >
-            {role === 'developer' && <DeveloperDashboardView t={t} />}
-            {role === 'admin' && <AdminDashboardView t={t} />}
-            {role === 'agency' && <AgencyDashboardView t={t} />}
-            {role === 'guest' && <GuestDashboardView t={t} />}
+            {role === 'developer' && <DeveloperConsole t={t} />}
+            {role === 'admin'      && <AdminPMS t={t} />}
+            {role === 'agency'     && <AgencyPortal userEmail={user.email || ''} t={t} />}
+            {role === 'guest'      && <GuestPortal userEmail={user.email || ''} t={t} />}
           </motion.div>
         </AnimatePresence>
       </main>
 
-    </div>
-  );
-}
-
-// ============================================================================
-// SUB-DASHBOARD 1: HUÉSPED (GUEST)
-// ============================================================================
-function GuestDashboardView({ t }: { t: any }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-8 shadow-xs space-y-6">
-        <h3 className="font-display text-2xl text-gray-900 tracking-tight">
-          {t('views.guest.my_bookings')}
-        </h3>
-        <div className="h-40 border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center p-6 bg-gray-50/50">
-          <Calendar className="w-8 h-8 text-gray-300 mb-2" />
-          <p className="font-body text-sm text-gray-400 font-light">
-            {t('views.guest.no_bookings')}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-gray-50 rounded-3xl border border-gray-100 p-8 space-y-4">
-        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-          <Compass size={20} />
-        </div>
-        <h4 className="font-display text-lg text-gray-900 tracking-tight">
-          {t('views.guest.guide_title')}
-        </h4>
-        <p className="font-body text-xs text-gray-500 leading-relaxed font-light">
-          {t('views.guest.guide_desc')}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// SUB-DASHBOARD 2: AGENCIA (AGENCY)
-// ============================================================================
-function AgencyDashboardView({ t }: { t: any }) {
-  const mockRates = [
-    { type: 'Habitación Single', rate: 'R$ 180' },
-    { type: 'Habitación Doble', rate: 'R$ 252' },
-    { type: 'Habitación Triple', rate: 'R$ 306' },
-  ];
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-8 shadow-xs space-y-6">
-        <h3 className="font-display text-2xl text-gray-900 tracking-tight">
-          {t('views.agency.wholesale_rates')}
-        </h3>
-        
-        <div className="border border-gray-100 rounded-2xl overflow-hidden">
-          {mockRates.map((rate, i) => (
-            <div key={i} className="flex justify-between items-center p-4 border-b border-gray-50 last:border-b-0">
-              <span className="font-body text-sm font-semibold text-gray-800">{rate.type}</span>
-              <span className="font-body text-sm text-green-600 font-bold">{rate.rate} / noche</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-gray-50 rounded-3xl border border-gray-100 p-8 space-y-4">
-        <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center text-accent">
-          <Tag size={20} />
-        </div>
-        <h4 className="font-display text-lg text-gray-900 tracking-tight">
-          {t('views.agency.discount_label')}
-        </h4>
-        <p className="font-body text-xs text-gray-500 leading-relaxed font-light">
-          Usa tu código preferencial de operador para aplicar descuentos automáticos en cotizaciones grupales.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// SUB-DASHBOARD 3: ADMINISTRADOR (ADMIN)
-// ============================================================================
-function AdminDashboardView({ t }: { t: any }) {
-  const stats = [
-    { label: t('views.admin.occupancy'), value: '84%', change: '+2.4%', icon: TrendingUp },
-    { label: t('views.admin.monthly_revenue'), value: 'R$ 48,200', change: '+12%', icon: DollarSign },
-    { label: t('views.admin.active_bookings'), value: '18', change: 'Estable', icon: Calendar },
-  ];
-
-  return (
-    <div className="space-y-6">
-      {/* Grid de Métricas de Vercel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <div key={i} className="bg-white rounded-3xl border border-gray-100 p-6 shadow-xs flex items-center justify-between">
-              <div>
-                <p className="font-body text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  {stat.label}
-                </p>
-                <p className="font-body text-3xl font-semibold text-gray-900">
-                  {stat.value}
-                </p>
-                <span className="inline-block text-[10px] text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-md mt-2">
-                  {stat.change}
-                </span>
-              </div>
-              <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400">
-                <Icon size={22} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Listado de Reservas Activas */}
-      <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-xs space-y-6">
-        <h3 className="font-display text-2xl text-gray-900 tracking-tight">
-          {t('views.admin.bookings_list')}
-        </h3>
-        <div className="h-40 border border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-center p-6 bg-gray-50/50">
-          <FileText className="w-8 h-8 text-gray-300 mb-2" />
-          <p className="font-body text-sm text-gray-400 font-light">
-            No hay solicitudes de reserva pendientes para procesar.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// SUB-DASHBOARD 4: DESARROLLADOR (DEVELOPER)
-// ============================================================================
-function DeveloperDashboardView({ t }: { t: any }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 bg-white rounded-3xl border border-gray-100 p-8 shadow-xs space-y-6">
-        <h3 className="font-display text-2xl text-gray-900 tracking-tight">
-          {t('views.developer.system_logs')}
-        </h3>
-        
-        {/* Consola DevOps de Sistema */}
-        <div className="p-4 bg-gray-950 text-green-400 rounded-2xl font-mono text-xs overflow-x-auto space-y-2 border border-gray-900">
-          <p className="text-gray-500">[2026-06-14 03:04:12] INFO: Supabase Auth SDK initialized.</p>
-          <p className="text-gray-500">[2026-06-14 03:04:18] INFO: Connection success to 'public.users'.</p>
-          <p className="text-gray-500">[2026-06-14 03:04:22] INFO: Cloudinary asset lookup ok (total 7 assets cached).</p>
-          <p className="text-green-500 animate-pulse">&gt; {t('views.developer.status_healthy')}</p>
-        </div>
-      </div>
-
-      <div className="bg-gray-50 rounded-3xl border border-gray-100 p-8 space-y-6 flex flex-col justify-between">
-        <div className="space-y-4">
-          <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-600">
-            <ShieldCheck size={20} />
-          </div>
-          <h4 className="font-display text-lg text-gray-900 tracking-tight">
-            Métricas de Salud
-          </h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-400">Database Engine:</span>
-              <span className="text-green-600 font-bold flex items-center gap-1">
-                <Database size={12} /> Connected
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-400">Cloud Storage:</span>
-              <span className="text-green-600 font-bold flex items-center gap-1">
-                <Layers size={12} /> Cloudinary OK
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-gray-400">Vercel Cache:</span>
-              <span className="text-green-600 font-bold flex items-center gap-1">
-                <Wifi size={12} /> Active & Clean
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

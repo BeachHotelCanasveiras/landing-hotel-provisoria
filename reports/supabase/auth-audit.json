@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-06-15T04:13:39.225Z",
+  "status": "FAILED",
+  "steps": [
+    {
+      "step": "SignIn",
+      "status": "SUCCESS",
+      "userId": "c8f84be4-a489-42e9-92ec-2fbe57cf5705",
+      "session": true
+    },
+    {
+      "step": "Error",
+      "status": "FAILED",
+      "message": "El usuario no existe en la base de datos pública 'public.users'."
+    }
+  ]
+}

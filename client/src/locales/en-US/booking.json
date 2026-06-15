@@ -10,6 +10,8 @@
   "guests_label": "Guests",
   "guests_suffix": "guests",
   "trust_badge": "We will confirm your booking via WhatsApp. You will receive details and available payment methods.",
+  "trust_badge_stripe": "100% secure payment through Stripe with bank-grade SSL encryption.",
+  "pay_now_button": "Proceed to Payment",
   "whatsapp_button": "Confirm on WhatsApp",
   "whatsapp_template": {
     "header": "*BOOKING REQUEST* 🏠",

@@ -10,6 +10,8 @@
   "guests_label": "Hóspedes",
   "guests_suffix": "pessoas",
   "trust_badge": "Confirmaremos sua reserva via WhatsApp. Você receberá os detalhes e as formas de pagamento disponíveis.",
+  "trust_badge_stripe": "Pagamento 100% seguro via Stripe com criptografia SSL de nível bancário.",
+  "pay_now_button": "Proceder ao Pagamento",
   "whatsapp_button": "Confirmar no WhatsApp",
   "whatsapp_template": {
     "header": "*SOLICITAÇÃO DE RESERVA* 🏠",
