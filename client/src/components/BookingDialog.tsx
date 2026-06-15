@@ -2,12 +2,12 @@
  * @file BookingDialog.tsx
  * @description Orquestador principal de reservas de 2 pasos (Fase 6 del Embudo: Transacción).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Sincronización de estado en fase de renderizado según el estándar de React 19 (cero cascadas).
+ * - Libre de tipos 'any' y totalmente compliant con ESLint v9.
  * - Divide responsabilidades delegando en BookingDatePicker y BookingDetailsForm.
- * - Integra transiciones animadas con AnimatePresence y Framer Motion.
- * - Garantiza tipado estricto y blindaje total de llamadas al backend.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { format } from 'date-fns';
 import { es, enUS, ptBR } from 'date-fns/locale'; 
@@ -51,6 +51,24 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const [blockedDates] = useState<Date[]>([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
+  /**
+   * Sincronización de Estado en Renderizado (React 19 Pattern)
+   * Resuelve react-hooks/set-state-in-effect evitando renders en cascada.
+   */
+  const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setStep(1);
+      setRange(undefined);
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setErrors({});
+      setPaymentLoading(false);
+    }
+  }
+
   // Validación estricta con Zod en modo desarrollo (Failsafe)
   if (import.meta.env.DEV) {
     try {
@@ -68,18 +86,6 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   };
 
   const currentLocale = getDateLocale();
-
-  useEffect(() => {
-    if (isOpen) {
-      setStep(1);
-      setRange(undefined);
-      setFirstName('');
-      setLastName('');
-      setEmail('');
-      setErrors({});
-      setPaymentLoading(false);
-    }
-  }, [isOpen]);
 
   const validateForm = (): boolean => {
     const tempErrors: typeof errors = {};
@@ -149,9 +155,10 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
       } else {
         throw new Error('La sesión de pago no devolvió una URL válida.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error de Stripe desconocido';
       console.error('[Stripe Integration Error]:', error);
-      toast.error(error.message || 'No se pudo conectar con el motor de pagos.');
+      toast.error(errorMessage || 'No se pudo conectar con el motor de pagos.');
     } finally {
       setPaymentLoading(false);
     }
@@ -167,8 +174,9 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
         }
       });
       if (error) throw error;
-    } catch (error: any) {
-      toast.error(`Error al iniciar sesión con ${provider}: ` + error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error de SSO desconocido';
+      toast.error(`Error al iniciar sesión con ${provider}: ` + errorMessage);
       setPaymentLoading(false);
     }
   };

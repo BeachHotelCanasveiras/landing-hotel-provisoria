@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Tag, Briefcase, Percent, PhoneCall, ChevronRight } from 'lucide-react';
+import { Tag, Briefcase, Percent, PhoneCall} from 'lucide-react';
 
 interface AgencyPortalProps {
   /** Email del agente de viajes autenticado */
@@ -15,7 +15,7 @@ interface AgencyPortalProps {
   t: (key: string) => string;
 }
 
-export const AgencyPortal: React.FC<AgencyPortalProps> = ({ userEmail, t }) => {
+export const AgencyPortal: React.FC<AgencyPortalProps> = ({  t }) => {
   // Mock de tarifas netas para agencias (En futuras iteraciones, vendrán de TanStack Query/Supabase)
   const mockRates = [
     { type: 'Habitación Single', rate: 'R$ 180', margin: '10%' },

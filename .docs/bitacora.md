@@ -195,5 +195,27 @@ En esta fase dimos el salto de una "Landing Page Informativa" a un "Motor PMS Tr
 
 ---
 
+Fase 3: Transaccionalidad, Saneamiento de Tipos y Auth (v2026-06-15)
+1. Arquitectura Serverless e Integración de Tipos (Vercel)
+Decisión: Se removieron los tipos genéricos de express de los archivos dentro de la carpeta /api/ para resolver errores de compilación (TS2339) en Vercel.
+Solución: Se inyectó la dependencia @vercel/node y se refactorizaron los endpoints (retrieve.ts, session.ts, stripe.ts) para utilizar de forma nativa VercelRequest y VercelResponse. Esto garantiza que Vercel exponga correctamente los parámetros de cuerpo, consulta y cabeceras sin necesidad de montar un servidor de Express completo en cada función.
+2. Saneamiento de Autenticación, Triggers y RLS (Supabase)
+Fisura Resuelta (Deduplicación de Registros): Se instaló una validación lógica a nivel de webhook (stripe.ts) para verificar si la reserva ya existía con estado confirmed antes de re-insertarla, evitando filas duplicadas en caso de reintentos de Stripe.
+Fisura Resuelta (Bypass de RLS en SDK): Se identificó que al autenticar el cliente de Supabase con credenciales de usuario, este deja de actuar como service_role y pasa a enviar el token JWT del usuario, bloqueando la consulta a public.users debido a la falta de políticas de lectura.
+Solución: Se aplicó la política RLS "Permitir lectura individual de perfiles" para autorizar a los usuarios logueados a leer únicamente su propia fila, resolviendo el crash silencioso del linter de pruebas y garantizando que el AuthContext del frontend recupere el rol del usuario de forma segura.
+Sincronización Retroactiva: Se creó un script administrativo (create-super-admin.ts) que crea y auto-confirma usuarios directamente mediante la API de administración (bypasseando el flujo SMTP), y se ejecutó un query de backfill SQL para sincronizar retroactivamente el rol developer de la cuenta razpodesta@gmail.com.
+3. Estándar de Calidad y Pureza de Código (ESLint v9 & React 19)
+eslint.config.js (Flat Config): Se instaló ESLint v9 en modo ESM (apuntando a nuestro proyecto "type": "module") para automatizar el análisis estático de dependencias.
+Framer Motion & Purity: Se resolvió la advertencia react-hooks/purity en DeveloperConsole.tsx al remover llamadas directas e impuras a Date.now() en la fase de renderizado. Los logs e históricos simulados ahora se definen como constantes estáticas del módulo fuera de la función de render.
+Sincronización de Estado sin Efectos: Se resolvió la advertencia react-hooks/set-state-in-effect en BookingDialog.tsx reemplazando los efectos síncronos de post-renderizado por la sincronización de estado de React 19 durante la fase de renderizado (usando el patrón prevIsOpen).
+4. Atomización de Responsabilidades (UI)
+BookingDialog: Se dividió el componente monolítico delegando el Calendario a BookingDatePicker.tsx y el formulario con SSO (Google / Facebook) a BookingDetailsForm.tsx, centralizándolo en el orquestador principal.
+Header: Se integró el menú de perfil premium con avatar, nombre desplegable y opciones de control (UserProfileMenu.tsx), y se implementó un header inteligente (Smart Scroll) que se oculta al bajar y reaparece al subir usando transiciones de framer-motion.
+
+---
+
+
+
+
 
 

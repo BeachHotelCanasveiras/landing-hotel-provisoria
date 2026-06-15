@@ -1,8 +1,10 @@
 /**
  * @file DeveloperConsole.tsx
  * @description Panel atómico del Desarrollador (DevOps & Health Metrics).
- * - UX/UI: Consola emulada con fuente monoespaciada e indicadores de salud de infraestructura.
- * - Satisface el principio de responsabilidad única del Manifiesto de Ingeniería.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Cumple con react-hooks/purity al 100% al extraer datos estáticos fuera de la fase de render.
+ * - Libre de tipos 'any' y totalmente compliant con ESLint v9 Flat Config.
+ * - Consola emulada e indicadores de salud de infraestructura.
  */
 
 import React from 'react';
@@ -12,6 +14,26 @@ interface DeveloperConsoleProps {
   /** Función de traducción del componente padre */
   t: (key: string) => string;
 }
+
+// Declaración estática fuera de la función del componente para garantizar pureza absoluta
+const SYSTEM_LOGS = [
+  {
+    time: '2026-06-15 02:04:12',
+    text: 'INFO: Supabase Auth SDK initialized successfully.',
+  },
+  {
+    time: '2026-06-15 02:04:18',
+    text: "INFO: Connection to 'public.users' established via RLS.",
+  },
+  {
+    time: '2026-06-15 02:04:22',
+    text: 'INFO: Cloudinary asset lookup OK (total 15 assets cached).',
+  },
+  {
+    time: '2026-06-15 03:04:00',
+    text: 'INFO: Webhook listener mounted on /api/webhooks/stripe',
+  },
+];
 
 export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ t }) => {
   return (
@@ -34,21 +56,14 @@ export const DeveloperConsole: React.FC<DeveloperConsoleProps> = ({ t }) => {
           </span>
         </div>
         
-        {/* Terminal DevOps Simulada */}
+        {/* Terminal DevOps Simulada con Logs Puros */}
         <div className="flex-1 bg-gray-950 rounded-2xl p-6 font-mono text-xs overflow-x-auto border border-gray-900 shadow-inner relative flex flex-col justify-end min-h-[240px]">
           <div className="space-y-3">
-            <p className="text-gray-500">
-              <span className="text-gray-600">[{new Date(Date.now() - 3600000).toISOString().replace('T', ' ').slice(0, 19)}]</span> INFO: Supabase Auth SDK initialized successfully.
-            </p>
-            <p className="text-gray-500">
-              <span className="text-gray-600">[{new Date(Date.now() - 1800000).toISOString().replace('T', ' ').slice(0, 19)}]</span> INFO: Connection to 'public.users' established via RLS.
-            </p>
-            <p className="text-gray-500">
-              <span className="text-gray-600">[{new Date(Date.now() - 60000).toISOString().replace('T', ' ').slice(0, 19)}]</span> INFO: Cloudinary asset lookup OK (total 15 assets cached).
-            </p>
-            <p className="text-gray-500">
-              <span className="text-gray-600">[{new Date().toISOString().replace('T', ' ').slice(0, 19)}]</span> INFO: Webhook listener mounted on /api/webhooks/stripe
-            </p>
+            {SYSTEM_LOGS.map((log, index) => (
+              <p key={index} className="text-gray-500">
+                <span className="text-gray-600">[{log.time}]</span> {log.text}
+              </p>
+            ))}
             <div className="flex items-center gap-2 mt-4 text-green-400 font-bold border-t border-gray-800/50 pt-4">
               <span className="animate-pulse">❯</span>
               <span>{t('views.developer.status_healthy')}</span>

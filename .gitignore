@@ -8,6 +8,8 @@ build/
 *.dist
 clasificar
 super-admin.md
+update-user-role.ts
+
 
 # Environment variables
 .env

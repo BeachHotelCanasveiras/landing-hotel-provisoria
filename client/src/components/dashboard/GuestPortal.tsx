@@ -15,7 +15,7 @@ interface GuestPortalProps {
   t: (key: string) => string;
 }
 
-export const GuestPortal: React.FC<GuestPortalProps> = ({ userEmail, t }) => {
+export const GuestPortal: React.FC<GuestPortalProps> = ({ t }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
       

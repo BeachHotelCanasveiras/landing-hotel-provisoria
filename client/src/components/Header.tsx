@@ -1,59 +1,76 @@
 /**
  * @file Header.tsx
- * @description Componente de navegación principal estilo "Píldora Flotante" (Floating Pill).
+ * @description Orquestador principal de la cabecera estilo "Píldora Flotante" (Floating Pill).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Se integra el nuevo enlace activo de "Excursiones" en móviles y escritorios.
- * - Doble canal de conversión (CTA dinámico de autenticación y selector de idioma).
- * - Selector de idioma flotante interactivo por Hover/Click de alta fidelidad.
- * - Textos traducidos dinámicamente y libres de hardcoding.
+ * - Smart Scroll: Ocultamiento automático al bajar, aparición de inmediato al subir.
+ * - Saneamiento ESLint: Actualización de idioma delegada a un useEffect reactivo.
+ * - Saneamiento TS: Eliminación de estados redundantes encapsulados en sub-componentes.
  */
 
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { Menu, X, Globe } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { Logo } from '@/components/Logo';
 import { StorageService } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import BookingDialog from './BookingDialog';
+import BookingDialog from './BookingDialog'; // Importación recuperada de forma segura
+
+// Importaciones atómicas de sub-componentes (Aparato E.1 y E.2)
+import { LanguageSelector } from './header/LanguageSelector';
+import { UserProfileMenu } from './header/UserProfileMenu';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isLangOpen, setIsLangOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const { t, i18n } = useTranslation('nav');
-  const langMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Estados para el comportamiento Smart Header (Ocultarse al scroll)
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
+  const { t, i18n } = useTranslation('nav');
   const [, setLocation] = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   /**
-   * Manejador para el cambio de idioma.
-   * Cambia el estado de i18n, actualiza el tag HTML y guarda en Cookie.
+   * Saneamiento de ESLint (react-hooks/immutability):
+   * La mutación del DOM global se realiza de forma reactiva y segura dentro del ciclo de vida.
    */
-  const handleLanguageChange = (lang: string) => {
-    i18n.changeLanguage(lang);
-    document.documentElement.lang = lang;
-    StorageService.setCookie('beach_hotel_lang', lang);
-    setIsOpen(false);
-    setIsLangOpen(false);
-  };
-
-  // Cerrar el menú al hacer clic fuera
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (langMenuRef.current && !langMenuRef.current.contains(event.target as Node)) {
-        setIsLangOpen(false);
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  /**
+   * Smart Scroll: Detecta la dirección de desplazamiento de forma no bloqueante.
+   */
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY < 80) {
+        // En la cabecera del sitio se mantiene siempre visible
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current) {
+        // Desplazamiento hacia abajo: ocultar
+        setIsVisible(false);
+      } else {
+        // Desplazamiento hacia arriba: mostrar
+        setIsVisible(true);
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /**
-   * Rutas de navegación consumiendo traducciones dinámicas.
-   */
+  const handleLanguageChange = (lang: string) => {
+    i18n.changeLanguage(lang);
+    StorageService.setCookie('beach_hotel_lang', lang);
+    setIsOpen(false);
+  };
+
   const navItems = [
     { label: t('home'), href: '#home' },
     { label: t('rooms'), href: '#rooms' },
@@ -66,6 +83,20 @@ export default function Header() {
     document.body.style.overflow = isOpen ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
+
+  // Animaciones de ocultamiento/aparición inteligente de la cabecera
+  const headerVariants: Variants = {
+    visible: { 
+      y: 0, 
+      opacity: 1, 
+      transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } 
+    },
+    hidden: { 
+      y: -110, 
+      opacity: 0, 
+      transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } 
+    }
+  };
 
   const menuVariants: Variants = {
     closed: { 
@@ -95,7 +126,11 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-4 md:top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+      <motion.header 
+        variants={headerVariants}
+        animate={isVisible ? 'visible' : 'hidden'}
+        className="fixed top-4 md:top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+      >
         <nav className="relative pointer-events-auto w-full max-w-5xl bg-black/85 backdrop-blur-lg border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.35)] rounded-full pl-5 pr-4 py-3 grid grid-cols-12 items-center transition-all duration-500">
           
           {/* Columna 1: Logotipo */}
@@ -115,7 +150,7 @@ export default function Header() {
             </motion.a>
           </div>
 
-          {/* Columna 2: Menú de Navegación Unificado (Outfit Fino, Compacto y Elegante) */}
+          {/* Columna 2: Menú de Navegación Unificado (Estilo Minimalista) */}
           <div className="hidden lg:flex col-span-6 justify-center items-center gap-6 xl:gap-8">
             {navItems.map((item) => (
               <a
@@ -129,99 +164,29 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Columna 3: Idioma + CTA */}
-          <div className="col-span-6 lg:col-span-4 flex justify-end items-center gap-3 sm:gap-5">
+          {/* Columna 3: Idioma + Perfil/Ingreso */}
+          <div className="col-span-6 lg:col-span-4 flex justify-end items-center gap-3 sm:gap-4">
             
-            {/* Selector de Idioma Desktop - Desplegable por Hover Estilizado */}
-            <div 
-              className="relative hidden lg:block text-left"
-              onMouseEnter={() => setIsLangOpen(true)}
-              onMouseLeave={() => setIsLangOpen(false)}
-              ref={langMenuRef}
-            >
+            {/* Selector de Idioma Desktop Atómico (Aparato E.1) */}
+            <LanguageSelector onLanguageChange={handleLanguageChange} />
+
+            {/* Canal de Conversión Dinámico (Aparato E.2 / CTA Fino) */}
+            {user ? (
+              <UserProfileMenu 
+                user={user} 
+                onSignOut={signOut} 
+                onNavigate={setLocation} 
+                t={t} 
+              />
+            ) : (
               <button
-                className="p-2.5 text-gray-400 hover:text-white rounded-full bg-white/5 border border-white/10 hover:border-white/20 flex items-center justify-center transition-all duration-300 cursor-pointer"
-                aria-label="Change language"
+                onClick={() => setLocation('/login')}
+                disabled={loading}
+                className="px-5 py-2.5 bg-transparent text-gray-200 border border-white/10 hover:border-accent hover:bg-accent hover:text-accent-foreground font-body text-[10px] uppercase tracking-[0.1em] font-semibold rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
               >
-                <Globe size={15} />
+                {loading ? '...' : t('join_or_signin')}
               </button>
-
-              <AnimatePresence>
-                {isLangOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute right-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 flex flex-col gap-1 shadow-2xl z-50 min-w-[140px]"
-                  >
-                    {[
-                      { code: 'es-ES', label: t('LANG_ES') },
-                      { code: 'en-US', label: t('LANG_EN') },
-                      { code: 'pt-BR', label: t('LANG_PT') }
-                    ].map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang.code)}
-                        className={`px-3.5 py-2.5 text-left rounded-xl font-body font-light text-[11px] uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer ${
-                          i18n.language === lang.code 
-                            ? 'bg-accent text-accent-foreground font-normal' 
-                            : 'text-gray-400 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {lang.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Selector de Idioma Móvil */}
-            <div className="relative lg:hidden" ref={langMenuRef}>
-              <button
-                onClick={() => setIsLangOpen(!isLangOpen)}
-                className="p-2 text-white rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all active:scale-95"
-                aria-label="Cambiar idioma"
-              >
-                <Globe size={16} />
-              </button>
-              <AnimatePresence>
-                {isLangOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-3 bg-black/95 border border-white/10 rounded-2xl p-2 flex flex-col gap-1 shadow-xl z-50 min-w-[140px]"
-                  >
-                    {[
-                      { code: 'es-ES', label: t('LANG_ES') },
-                      { code: 'en-US', label: t('LANG_EN') },
-                      { code: 'pt-BR', label: t('LANG_PT') }
-                    ].map((lang) => (
-                      <button
-                        key={lang.code}
-                        onClick={() => handleLanguageChange(lang.code)}
-                        className={`px-3 py-2.5 text-left rounded-xl font-body font-light text-[10px] uppercase tracking-[0.08em] transition-colors ${
-                          i18n.language === lang.code ? 'bg-accent text-white font-normal' : 'text-gray-400 hover:text-white'
-                        }`}
-                      >
-                        {lang.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Botón de Acceso Dinámico Estilizado (Fino y Elegante) */}
-            <button
-              onClick={() => setLocation(user ? '/admin' : '/login')}
-              disabled={loading}
-              className="px-5 py-2.5 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-[11px] uppercase tracking-[0.08em] font-normal rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
-            >
-              {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
-            </button>
+            )}
 
             {/* Mobile Hamburguer Trigger */}
             <button
@@ -257,31 +222,33 @@ export default function Header() {
                     </motion.a>
                   ))}
 
-                  <motion.button
-                    variants={itemVariants}
-                    custom={navItems.length}
-                    onClick={() => {
-                      setIsOpen(false);
-                      setLocation(user ? '/admin' : '/login');
-                    }}
-                    disabled={loading}
-                    className="mt-4 px-6 py-4 bg-white text-gray-950 border border-transparent hover:bg-transparent hover:text-white hover:border-accent font-body text-[11px] uppercase tracking-[0.08em] font-normal rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
-                  >
-                    {loading ? '...' : (user ? t('dashboard') : t('join_or_signin'))}
-                  </motion.button>
+                  {!user && (
+                    <motion.button
+                      variants={itemVariants}
+                      custom={navItems.length}
+                      onClick={() => {
+                        setIsOpen(false);
+                        setLocation('/login');
+                      }}
+                      disabled={loading}
+                      className="mt-4 px-6 py-4 bg-transparent text-gray-200 border border-white/10 hover:border-accent hover:bg-accent hover:text-accent-foreground font-body text-[10px] uppercase tracking-[0.1em] font-semibold rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
+                    >
+                      {loading ? '...' : t('join_or_signin')}
+                    </motion.button>
+                  )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
         </nav>
-      </header>
+      </motion.header>
 
       {/* Portal de Reservas Global */}
       <BookingDialog 
         isOpen={isBookingOpen} 
         onClose={() => setIsBookingOpen(false)} 
-        roomName="Suite Standard" // Default
+        roomName="Suite Standard"
         roomType="standard"
       />
     </>
