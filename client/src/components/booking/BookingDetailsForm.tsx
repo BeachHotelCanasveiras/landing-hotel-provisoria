@@ -1,6 +1,7 @@
 /**
  * @file BookingDetailsForm.tsx
  * @description Sub-componente atómico para capturar datos de huésped, inicio de sesión rápido (SSO) y pago seguro.
+ * Refactorizado para resolución precisa de namespaces i18n (auth:email_label).
  * - ISO 27001: Validación reactiva y segregación de responsabilidades.
  * - PCI-DSS: Integración con distintivos de seguridad Stripe.
  */
@@ -96,18 +97,18 @@ export const BookingDetailsForm: React.FC<BookingDetailsFormProps> = ({
         </div>
       </div>
 
-      {/* Campo: Correo Electrónico */}
+      {/* Campo: Correo Electrónico (Prefijado con namespace de auth) */}
       <div className="p-3.5 rounded-2xl border border-gray-200 bg-gray-50 focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/10 transition-all flex items-center gap-2">
         <Mail size={16} className="text-gray-400 shrink-0" />
         <div className="flex-1">
           <label className="block text-[9px] font-body font-bold text-gray-400 uppercase tracking-widest mb-0.5">
-            {t('email_label') || 'Correo Electrónico'}
+            {t('auth:email_label') || 'Correo Electrónico'}
           </label>
           <input 
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder={t('email_placeholder') || 'ejemplo@correo.com'}
+            placeholder={t('auth:email_placeholder') || 'ejemplo@correo.com'}
             disabled={paymentLoading}
             className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-sm text-gray-900 placeholder:text-gray-300 outline-none"
           />
