@@ -64,4 +64,18 @@ Este módulo desacopla la creación de reservas de la entrega de notificaciones 
 
   ---
 
+  ## 🔒 Infraestructura y Seguridad (Vercel Prod-Ready)
+- [ ] **Saneamiento de Seguridad Transaccional (PCI-DSS):**
+  - Inyectar cabeceras HTTP de protección contra ataques en `vercel.json`:
+    - `X-Frame-Options: DENY` (Evita secuestro de clic/clickjacking en pasarela de pagos).
+    - `X-Content-Type-Options: nosniff`.
+    - `Strict-Transport-Security` (HSTS) para forzar túneles HTTPS de grado bancario.
+- [ ] **Automatización de Cola de Mensajería (Resend Outbox):**
+  - Activar el Worker asíncrono `/api/cron/process-mails` en producción.
+  - Si se utiliza cuenta Vercel Hobby (Gratuita), configurar un disparador externo de alta frecuencia (ej. `cron-job.org`) cada 5 minutos enviando la cabecera `Authorization: Bearer [CRON_SECRET]`.
+- [ ] **Sincronización Multicanal iCal (OTAs):**
+  - Activar el cron de importación `/api/cron/ical-sync` cada 15 minutos utilizando un disparador externo para eludir las restricciones diarias del plan gratuito de Vercel.
+
+  ---
+
   

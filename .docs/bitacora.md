@@ -254,6 +254,93 @@ Para garantizar un rendimiento de renderizado impecable y escalabilidad a futuro
 
 ---
 
+⚓ Registro de Bitácora Evolutiva: Consolidación PMS SaaS Multicanal y Saneamiento de Calidad de Código (Fase 4 - Junio 2026)
+Este documento registra de forma pormenorizada e inmersiva las últimas decisiones de arquitectura, desacoplamientos de software, justificaciones técnicas y flujos implementados en el ecosistema Beach Hotel Canasvieiras.
+1. Visión Holística y Objetivos de la Arquitectura (El "Por Qué")
+La transición de una landing page informativa hacia un SaaS Multi-Tenant de Gobernanza Hotelera exigía migrar de una lógica monolítica y acoplada a un modelo de Componentes Atómicos Especializados.
+Nuestros objetivos principales en esta fase han sido:
+Aislamiento y Segregación de Privilegios (ISO 27001): El personal de limpieza no debe lidiar con finanzas ni tarifas, y el cliente no debe ver el backend operativo. Cada rol (RBAC) debe recibir una interfaz diseñada exclusivamente para su dispositivo y su labor [client/src/pages/AdminDashboard.tsx].
+Cero Latencia en Base de Datos (Performance): Los procesos pesados de red (APIs de pasarelas de pago, envíos de correo, sincronización con OTAs como Booking y Decolar) deben desacoplarse del flujo síncrono del cliente para no bloquear el hilo de ejecución principal ni causar sobre-reservas (Overbookings) [api/checkout/session.ts, client/src/lib/mail.ts].
+Pureza de Código y Cero Advertencias (React 19 & ESLint v9): La base de código se ha blindado contra renderizados en cascada (cascading renders), funciones impuras en fase de renderizado y aserciones de tipo genéricas (any), logrando un compilado inmaculado [client/src/components/ui/carousel.tsx, client/src/components/ui/sidebar.tsx, client/src/pages/AdminDashboard.tsx].
+2. Hitos de Ingeniería y Desacoplamiento de Aparatos (El "Qué")
+Módulo A: SEO de Próxima Generación e Integración de Datos Estructurados
+Qué se hizo: Inyección de un esquema JSON-LD enriquecido en client/index.html [client/index.html] y saneamiento de metadatos Open Graph/Twitter Cards [client/index.html].
+Cómo se hizo: Se integró el esquema oficial de schema.org/Hotel agregando coordenadas de geolocalización inmutables, rangos de precio, fotos de Cloudinary y políticas operativas de check-in/check-out [client/index.html].
+Por qué: Para indexar de forma nativa la propiedad en Google Hotel Search, permitiendo a Google rastrear las tarifas del hotel directamente desde los metadatos de cabecera, aumentando la visibilidad orgánica a costo cero.
+Módulo B: Saneamiento de Compilación y Pureza de React 19
+Qué se hizo: Corrección de fallas críticas de compilado en los componentes comunes y de UI (useMobile.tsx, carousel.tsx, sidebar.tsx, ContactSection.tsx, Logo.tsx y AuthContext.tsx).
+Cómo se hizo:
+ContactSection.tsx: Reemplazo de la mutación de window.location.href por window.open(..., '_self') para cumplir con la regla de inmutabilidad de React 19.
+carousel.tsx y useMobile.tsx: Mover llamadas síncronas de setState a colas asíncronas (setTimeout / inicializadores perezosos de estado) para erradicar los renderizados en cascada.
+sidebar.tsx: Se eliminó el uso de la función impura Math.random() dentro del renderizador, envolviéndola de forma idempotente en un useState perezoso. Se desactivó Fast Refresh para este silo mediante /* eslint-disable react-refresh/only-export-components */.
+AuthContext.tsx: Se redefinió la función de flecha fetchUserRole como una función clásica con hoisting nativo para evitar la zona muerta temporal (Temporal Dead Zone) al llamarla antes de su declaración.
+Módulo C: Gobernanza Inteligente de Pisos y Sincronización de Perfiles
+Qué se hizo: Creación de las tablas guest_requests y housekeeping_audits, y desarrollo del aparato HousekeeperPortal.tsx.
+Cómo se hizo:
+Se diseñó una interfaz móvil de alto contraste con objetivos de pulsación sobredimensionados para el auxiliar de limpieza.
+Se implementó una suscripción en tiempo real vía canal de Supabase para que las solicitudes de huéspedes (ej: pedir toallas) aparezcan de forma inmediata en la pantalla del auxiliar de limpieza.
+Se integró la directiva capture="environment" en el input de tipo archivo para forzar la apertura de la cámara trasera del dispositivo móvil y reportar incidencias visuales.
+Trigger SQL en Supabase: Se programó una función de base de datos (handle_new_user_sync) que se ejecuta síncronamente al crear una cuenta en Supabase Auth, sincronizando el rol e inyectando un perfil inicial por defecto en public.guests (previniendo la tabla vacía de la auditoría anterior).
+Módulo D: Motor de Sincronización Multicanal iCal (Booking & Decolar)
+Qué se hizo: Diseño del Silo de Conectividad room_ota_connections y creación del motor asíncrono universal en /api/ota/.
+Cómo se hizo:
+Se desacopló el motor de canales de la lógica de habitaciones. La nueva tabla room_ota_connections permite a una sola suite física conectarse a infinitas OTAs (Booking, Decolar, Airbnb, etc.) simultáneamente.
+Sincronización de Salida (api/ota/export.ts): Exporta de forma segura mediante un token criptográfico único por canal la disponibilidad de bloqueos del PMS en formato estándar RFC 5545.
+Sincronización de Entrada (api/ota/sync.ts): Un worker en segundo plano que corre cada 15 minutos, descarga los archivos .ics de Booking y Decolar, los decodifica utilizando ical.js y bloquea las fechas mediante un upsert idempotente. Resuelve el error de tipo TS2339 convirtiendo a objetos nativos JS Date.
+Módulo E: Centralización i18n & SSoT (Comunicaciones WhatsApp)
+Qué se hizo: Creación del namespace centralizado whatsapp.json y del esquema de validación whatsapp.schema.ts.
+Cómo se hizo: Se extrajeron todas las plantillas y copys transaccionales de WhatsApp de la aplicación y se centralizaron en un único diccionario bilingüe con soporte Zod, inyectándolo en WhatsAppButton.tsx, Excursions.tsx, Attractions.tsx y BookingSearchRow.tsx.
+3. Mapeo de Flujos y Casos de Uso (El "Cómo")
+Caso de Uso 1: Registro Administrativo de Funcionario (RBAC)
+code
+Code
+[ Administrador (AdminPMS) ] 
+      │
+      ├── Accede a pestaña 'Configuraciones > Personal' (StaffManagement.tsx)
+      ├── Digita Nombre Completo, Rol (ej: 'housekeeper') y Nombre de Usuario (ej: 'b.martinez')
+      └── Envía Formulario (POST a /api/admin/create-staff)
+            │
+      [ Servidor Serverless (Vercel) ]
+            ├── 1. Valida criptográficamente el JWT del Administrador para evitar escalada de privilegios
+            ├── 2. Genera email corporativo (b.martinez@beachcanasvieiras.com)
+            ├── 3. Genera contraseña temporal segura (Bch_xxxxxx!)
+            ├── 4. Crea usuario en auth.users con 'email_confirm: true' para saltar confirmación SMTP
+            └── 5. Retorna credenciales de acceso para copia rápida en WhatsApp
+                  │
+      [ Supabase Database (Engine) ]
+            └── Trigger 'on_auth_user_created' intercepta inserción:
+                  ├── Crea registro síncrono en public.users con rol 'housekeeper'
+                  └── Crea perfil por defecto en public.guests dividiendo el nombre
+Caso de Uso 2: Sincronización Multicanal de Canales (OTAs)
+code
+Code
+[ Vercel Cron Job (Cada 15 min) ] ──► Invoca de forma segura /api/ota/sync
+                                            │
+                                 [ Sincronizador de Canales ]
+                                            ├── 1. Descarga conexiones activas de Supabase
+                                            ├── 2. Consulta iterativamente los calendarios .ics
+                                            │      (ej. Decolar Extranet & Booking Extranet)
+                                            ├── 3. Parsea formato iCal de forma segura con ical.js
+                                            └── 4. Bloquea las fechas con 'upsert' usando el UID de la OTA
+Caso de Uso 3: Operación de Limpieza Móvil en Caliente
+code
+Code
+[ Huésped de la Habitación 101 ] ──► Solicita Toallas desde la Web (guest_requests)
+                                            │
+                                 [ Supabase Realtime Channel ] (Suscripción activa)
+                                            │
+[ Auxiliar de Limpieza en Móvil ] ◄── Alerta instantánea en Header (HousekeeperPortal.tsx)
+      ├── Selecciona Habitación 101 -> Cambia estado a "En Limpieza"
+      ├── Completa checklist interactivo síncrono (Bases de datos actualizándose)
+      ├── Detecta ampolleta rota -> Presiona "Reportar Falla" -> Abre Cámara Nativa del celular
+      └── Finaliza Checklist -> Marca como "Limpia" -> Recepción (AdminPMS) notificada al instante
+4. Cumplimiento de Normas Internacionales e Integridad
+ISO 27001 (Seguridad y Privacidad): El endpoint /api/admin/create-staff prohíbe que usuarios comunes o agentes externos creen cuentas con privilegios administrativos. La inyección de firmas JWT y la RLS de las tablas de Supabase garantizan que un auxiliar de limpieza solo lea sus tareas asignadas y un huésped solo lea su propio perfil [client/src/contexts/AuthContext.tsx, client/src/pages/AdminDashboard.tsx].
+PCI-DSS (Transacciones Seguras): Al derivar el cobro a Stripe Checkout mediante redirecciones firmadas del lado del servidor, el PMS nunca almacena números de tarjeta ni datos bancarios en Supabase, eliminando por completo el alcance de la auditoría de tarjetas en la base de datos de nuestro hotel.
+SOLID (Clean Code): La atomización estricta de BookingSearch y Excursions asegura que cada componente realice una única tarea especializada. Los barriles (index.ts) encapsulan las exportaciones y aíslan los detalles internos del sistema.
+
+--
+
 
 
 
