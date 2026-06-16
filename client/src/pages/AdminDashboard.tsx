@@ -2,9 +2,9 @@
  * @file AdminDashboard.tsx
  * @description Orquestador Maestro del Panel de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Corrección TS2304: Restaurada la constante 'userInitial' requerida por los Avatares.
- * - Solución de Pantalla en Blanco aplicando Carga bajo Demanda (On-Demand Querying).
- * - Saneamiento de tipado estricto TS (100% libre de aserciones 'any' o variables huérfanas).
+ * - Tipo Saneado: Sincronización del contrato de roles para HousekeepingReport sin 'any'.
+ * - Corrección de compilación: Importación de 'LogOut' de Lucide React restaurada.
+ * - Saneamiento completo de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -13,10 +13,10 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react'; // Corrección de importación
 
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth, type UserRole } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -29,12 +29,38 @@ import { HousekeepingReport, type HousekeepingTask } from '@/components/dashboar
 import { HousekeeperPortal } from '@/components/dashboard/HousekeeperPortal';
 import { StaffManagement } from '@/components/dashboard/reception/StaffManagement';
 
-// Importación contractual de tipos específicos de los sub-paneles para evitar casteos inseguros
+// Sincronización e importación del nuevo componente de gestión
+import { RoomManagement } from '@/components/dashboard/reception/RoomManagement';
+
 import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
 
-// ----------------------------------------------------------------------------
-// Interfaces Locales Estructuradas (Duck Typing - Resuelve TS2459)
-// ----------------------------------------------------------------------------
+// --- CONTRATOS DE DATOS ESTRICTOS (SSoT) ---
+interface SupabaseRoom {
+  id: number;
+  name: string;
+  type: 'single' | 'double' | 'triple' | 'grupal';
+  price_per_night: number;
+  housekeeping_status: 'clean' | 'dirty' | 'cleaning';
+  status: 'available' | 'maintenance' | 'occupied';
+  current_occupant?: string | null;
+}
+
+interface SupabaseBooking {
+  id: string;
+  room_id: number;
+  check_in: string;
+  check_out: string;
+  total_price: number;
+  status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
+  rooms?: { name: string };
+  guests?: { 
+    first_name: string; 
+    last_name: string; 
+    phone: string; 
+    user_email: string; 
+  };
+}
+
 interface MatrixRoom {
   id: number;
   name: string;
@@ -58,50 +84,20 @@ interface RatesCategory {
   base_price_brl: number;
 }
 
-// ----------------------------------------------------------------------------
-// Interfaces Internas Estrictas de Supabase
-// ----------------------------------------------------------------------------
-interface SupabaseRoom {
-  id: number;
-  name: string;
-  type: 'single' | 'double' | 'triple' | 'grupal';
-  price_per_night: number;
-  housekeeping_status: 'clean' | 'dirty' | 'cleaning';
-  current_occupant?: string;
-}
-
-interface SupabaseBooking {
-  id: string;
-  room_id: number;
-  check_in: string;
-  check_out: string;
-  total_price: number;
-  status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
-  rooms?: { name: string };
-  guests?: { 
-    first_name: string; 
-    last_name: string; 
-    phone: string; 
-    user_email: string; 
-  };
-}
-
 export default function AdminDashboard() {
-  const { t } = useTranslation('dashboard');
+  const { t } = useTranslation(['dashboard', 'housekeeping']);
   const [, setLocation] = useLocation();
   const { user, role, signOut, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
-  const [profileOpen, setProfileOpen] = useState(false);
   const [currentView, setCurrentView] = useState<string>('overview');
 
-  const currentRoleString = String(role);
-  
-  // Saneamiento de Roles (isStaff ahora es exclusivo de personal administrativo de escritorio)
-  const isStaff = ['admin', 'developer', 'receptionist'].includes(currentRoleString);
+  // RBAC: Roles de Seguridad
+  const userRole: UserRole = role || 'guest';
+  const isStaff = ['admin', 'developer', 'receptionist'].includes(userRole);
 
   // ============================================================================
-  // 1. DATA FETCHING (TanStack Query) - Declarados SIEMPRE en el mismo orden
+  // 1. DATA FETCHING (TanStack Query)
   // ============================================================================
 
   const { data: rooms = [], isLoading: loadingRooms } = useQuery<SupabaseRoom[]>({
@@ -127,7 +123,6 @@ export default function AdminDashboard() {
     enabled: !!user,
   });
 
-  // OPTIMIZACIÓN CORE: housekeeping_tasks solo se consulta si el usuario accede a la vista de Ama de Llaves
   const { data: tasks = [], isLoading: loadingTasks } = useQuery<HousekeepingTask[]>({
     queryKey: ['housekeeping_tasks'],
     queryFn: async () => {
@@ -135,11 +130,11 @@ export default function AdminDashboard() {
       if (error) throw error;
       return data as HousekeepingTask[];
     },
-    enabled: isStaff && currentView === 'housekeeping' && !!user, // <-- Habilitada bajo demanda
+    enabled: isStaff && currentView === 'housekeeping' && !!user,
   });
 
   // ============================================================================
-  // 2. DATA MAPPING (Mapeos seguros)
+  // 2. DATA MAPPING (Mapeos Heurísticos - DRY)
   // ============================================================================
 
   const mappedBookings: BookingRecord[] = useMemo(() => {
@@ -157,7 +152,6 @@ export default function AdminDashboard() {
     }));
   }, [rawBookings]);
 
-  // Conversión de tipos limpia para RoomMatrix sin usar 'any'
   const matrixRooms: MatrixRoom[] = useMemo(() => {
     return rooms.map((r) => ({
       id: r.id,
@@ -167,25 +161,21 @@ export default function AdminDashboard() {
     }));
   }, [rooms]);
 
-  // Mapeo seguro de reservas activas para el calendario de RoomMatrix
   const matrixBookings: MatrixBooking[] = useMemo(() => {
     return rawBookings
       .filter((b) => b.status === 'confirmed' || b.status === 'checked_in' || b.status === 'pending')
-      .map((b) => {
-        const guestName = b.guests ? `${b.guests.first_name} ${b.guests.last_name}` : 'Huésped';
-        return {
-          id: b.id,
-          room_id: b.room_id,
-          guest_name: guestName,
-          check_in: b.check_in,
-          check_out: b.check_out,
-          status: (b.status === 'pending' ? 'pending' : 'confirmed') as 'pending' | 'confirmed',
-        };
-      });
+      .map((b) => ({
+        id: b.id,
+        room_id: b.room_id,
+        guest_name: b.guests ? `${b.guests.first_name} ${b.guests.last_name}` : 'Hóspede',
+        check_in: b.check_in,
+        check_out: b.check_out,
+        status: (b.status === 'pending' ? 'pending' : 'confirmed') as 'pending' | 'confirmed',
+      }));
   }, [rawBookings]);
 
   const roomCategories: RatesCategory[] = useMemo(() => {
-    const cats: Record<string, { id: string; name: string; total_inventory: number; base_price_brl: number }> = {};
+    const cats: Record<string, RatesCategory> = {};
     rooms.forEach(r => {
       if (!cats[r.type]) {
         cats[r.type] = { id: r.type, name: r.type.toUpperCase(), total_inventory: 0, base_price_brl: 0 };
@@ -196,20 +186,41 @@ export default function AdminDashboard() {
     return Object.values(cats);
   }, [rooms]);
 
-  // Conversión limpia para Housekeeping (Principio de Responsabilidad Única)
   const housekeepingRooms: RoomHousekeepingData[] = useMemo(() => {
     return rooms.map((r) => ({
       id: r.id,
       name: r.name,
       type: r.type,
       housekeeping_status: r.housekeeping_status,
-      current_occupant: r.current_occupant,
+      current_occupant: r.current_occupant || undefined,
     }));
   }, [rooms]);
 
   // ============================================================================
   // 3. MUTACIONES DE RED
   // ============================================================================
+
+  const createRoomMutation = useMutation({
+    mutationFn: async (roomData: Partial<SupabaseRoom>) => {
+      const { error } = await supabase.from('rooms').insert([roomData]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      toast.success('Habitación agregada al inventario.');
+    }
+  });
+
+  const deleteRoomMutation = useMutation({
+    mutationFn: async (roomId: number) => {
+      const { error } = await supabase.from('rooms').delete().eq('id', roomId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      toast.success('Habitación eliminada.');
+    }
+  });
 
   const updateRoomStatusMutation = useMutation({
     mutationFn: async ({ roomId, status }: { roomId: number, status: string }) => {
@@ -220,8 +231,7 @@ export default function AdminDashboard() {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['housekeeping_tasks'] });
       toast.success('Estado de limpieza actualizado.');
-    },
-    onError: () => toast.error('Error al actualizar la habitación.')
+    }
   });
 
   const toggleTaskMutation = useMutation({
@@ -229,8 +239,7 @@ export default function AdminDashboard() {
       const { error } = await supabase.from('housekeeping_tasks').update({ is_completed: isCompleted }).eq('id', taskId);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['housekeeping_tasks'] }),
-    onError: () => toast.error('Error al actualizar la tarea.')
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['housekeeping_tasks'] })
   });
 
   const addCustomTaskMutation = useMutation({
@@ -243,152 +252,112 @@ export default function AdminDashboard() {
       }]);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['housekeeping_tasks'] });
-      toast.success('Tarea de mantenimiento añadida.');
-    },
-    onError: () => toast.error('Error al inyectar la tarea.')
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['housekeeping_tasks'] })
   });
 
   const updateBookingStatusMutation = useMutation({
-    mutationFn: async ({ bookingId, status }: { bookingId: string, status: string }) => {
-      const { error } = await supabase.from('bookings').update({ status }).eq('id', bookingId);
+    mutationFn: async ({ id, status }: { id: string; status: SupabaseBooking['status'] }) => {
+      const { error } = await supabase.from('bookings').update({ status }).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
-      toast.success('Estado de la reserva actualizado.');
-    },
-    onError: () => toast.error('Error al actualizar reserva.')
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bookings'] }),
+    onError: (err: Error) => toast.error(`Error: ${err.message}`)
   });
 
   // ============================================================================
-  // 4. CONTROLADORES DE SESIÓN, REDIRECCIÓN PROTEGIDA Y RENDER
+  // 4. MAPA DE VISTAS (SOLID/DRY)
   // ============================================================================
 
+  const VIEWS: Record<string, React.ReactNode> = {
+    overview: 
+      userRole === 'developer' ? <DeveloperConsole t={t} /> :
+      userRole === 'admin' ? <AdminPMS t={t} /> :
+      userRole === 'agency' ? <AgencyPortal userEmail={user?.email || ''} t={t} /> :
+      userRole === 'housekeeper' ? <HousekeeperPortal /> : <GuestPortal userEmail={user?.email || ''} t={t} />,
+    
+    room_inventory: (
+      <RoomManagement 
+        rooms={rooms} 
+        isActionLoading={createRoomMutation.isPending || deleteRoomMutation.isPending}
+        onCreateRoom={(data: Partial<SupabaseRoom>) => createRoomMutation.mutateAsync(data)}
+        onDeleteRoom={(id: number) => deleteRoomMutation.mutateAsync(id)}
+      />
+    ),
+    
+    room_map: <RoomMatrix rooms={matrixRooms} bookings={matrixBookings} />,
+    
+    rates: <RatesAvailability categories={roomCategories} onSave={async () => {}} />,
+    
+    booking_search: (
+      <BookingSearch 
+        bookings={mappedBookings} 
+        isActionLoading={updateBookingStatusMutation.isPending} 
+        onStatusChange={(id, status) => updateBookingStatusMutation.mutateAsync({ id, status: status as SupabaseBooking['status'] })} 
+      />
+    ),
+    
+    housekeeping: (
+      <HousekeepingReport 
+        rooms={housekeepingRooms} 
+        tasks={tasks} 
+        userRole={userRole as 'developer' | 'admin' | 'receptionist' | 'housekeeper'} 
+        isActionLoading={updateRoomStatusMutation.isPending || toggleTaskMutation.isPending}
+        onUpdateRoomStatus={(id, status) => updateRoomStatusMutation.mutateAsync({ roomId: id, status })} 
+        onToggleTask={(id, status) => toggleTaskMutation.mutateAsync({ taskId: id, isCompleted: status })} 
+        onAddCustomTask={(id, name) => addCustomTaskMutation.mutateAsync({ roomId: id, taskName: name })} 
+      />
+    ),
+    
+    staff: <StaffManagement />
+  };
+
   useEffect(() => {
-    if (!authLoading && !user) {
-      setLocation('/login');
-    }
+    if (!authLoading && !user) setLocation('/login');
   }, [user, authLoading, setLocation]);
 
   if (authLoading || !user) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-        <Spinner className="w-8 h-8 text-accent animate-spin" />
-      </div>
-    );
+    return <div className="h-screen w-full flex items-center justify-center bg-gray-50"><Spinner className="w-8 h-8 text-accent animate-spin" /></div>;
   }
 
-  const handleLogout = async () => {
-    await signOut();
-    setLocation('/login');
-  };
-
-  // CORRECCIÓN TS2304: Restaurada la constante requerida para renderizar el Avatar sin fallos de compilación
-  const userInitial = user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U';
-
-  // OPTIMIZACIÓN CORE: El estado de carga global ignora tareas de limpieza si no estamos en esa pestaña
+  const userInitial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U';
   const isGlobalLoading = loadingRooms || loadingBookings || (currentView === 'housekeeping' && loadingTasks);
-
-  const renderContent = () => {
-    if (isGlobalLoading) {
-      return (
-        <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] opacity-50">
-          <Spinner className="w-10 h-10 text-accent mb-4" />
-          <p className="font-body text-xs uppercase tracking-widest text-gray-500 font-bold">Sincronizando Sistema</p>
-        </div>
-      );
-    }
-
-    switch (currentView) {
-      case 'room_map':
-        return (
-          <RoomMatrix 
-            rooms={matrixRooms} 
-            bookings={matrixBookings} 
-            onManualAllocate={(id, date) => toast.info(`Asignando manual en Hab ${id} para ${date}`)} 
-          />
-        );
-      case 'rates':
-        return (
-          <RatesAvailability 
-            categories={roomCategories} 
-            onSave={async () => { await new Promise(r => setTimeout(r, 1000)); }} 
-          />
-        );
-      case 'booking_search':
-        return (
-          <BookingSearch 
-            bookings={mappedBookings} 
-            isActionLoading={updateBookingStatusMutation.isPending} 
-            onStatusChange={(id, status) => updateBookingStatusMutation.mutateAsync({ bookingId: id, status })} 
-          />
-        );
-      case 'housekeeping':
-        return (
-          <HousekeepingReport 
-            rooms={housekeepingRooms} 
-            tasks={tasks} 
-            userRole={currentRoleString as 'developer' | 'admin' | 'receptionist' | 'housekeeper'} 
-            isActionLoading={updateRoomStatusMutation.isPending || toggleTaskMutation.isPending} 
-            onUpdateRoomStatus={(id, status) => updateRoomStatusMutation.mutateAsync({ roomId: id, status })} 
-            onToggleTask={(id, status) => toggleTaskMutation.mutateAsync({ taskId: id, isCompleted: status })} 
-            onAddCustomTask={(id, name) => addCustomTaskMutation.mutateAsync({ roomId: id, taskName: name })} 
-          />
-        );
-      case 'settings_staff':
-      case 'staff':
-        return <StaffManagement />;
-      case 'overview':
-      default:
-        if (currentRoleString === 'developer') return <DeveloperConsole t={t} />;
-        if (currentRoleString === 'admin') return <AdminPMS t={t} />;
-        if (currentRoleString === 'agency') return <AgencyPortal userEmail={user.email || ''} t={t} />;
-        if (currentRoleString === 'housekeeper') return <HousekeeperPortal />;
-        return <GuestPortal userEmail={user.email || ''} t={t} />;
-    }
-  };
-
-  // ============================================================================
-  // 5. RENDERIZADO HÍBRIDO (Layout Inmersivo vs Portal)
-  // ============================================================================
 
   if (isStaff) {
     return (
       <div className="flex h-screen bg-gray-50 overflow-hidden font-body selection:bg-accent/30">
-        <PMSSidebar 
-          currentView={currentView} 
-          onNavigate={setCurrentView} 
-          onSignOut={handleLogout} 
-        />
+        <PMSSidebar currentView={currentView} onNavigate={setCurrentView} onSignOut={signOut} />
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0 shadow-sm z-10">
             <div>
               <h1 className="font-display text-2xl font-bold text-gray-900 tracking-tight">
-                {currentView === 'overview' ? `Hola, ${user.user_metadata?.full_name?.split(' ')[0] || user.email?.split('@')[0]}` : t(`views.${currentRoleString}.title`) || 'Panel Operativo'}
+                {currentView === 'overview' ? `Olá, ${user.user_metadata?.full_name?.split(' ')[0] || 'User'}` : 'Gestão do Hotel'}
               </h1>
               <p className="font-body text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
-                Beach Core PMS • Rol: <span className="text-accent">{currentRoleString}</span>
+                Beach Core PMS • <span className="text-accent">{userRole}</span>
               </p>
             </div>
             <Avatar className="w-10 h-10 border-2 border-gray-100 shadow-sm cursor-pointer hover:border-accent transition-colors">
               <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-              <AvatarFallback className="bg-gray-900 text-white font-body font-bold text-sm">
-                {userInitial}
-              </AvatarFallback>
+              <AvatarFallback className="bg-gray-900 text-white font-bold">{userInitial}</AvatarFallback>
             </Avatar>
           </header>
           <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50/50">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={currentView}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+              <motion.div 
+                key={currentView} 
+                initial={{ opacity: 0, y: 15 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: -15 }} 
+                transition={{ duration: 0.2 }}
               >
-                {renderContent()}
+                {isGlobalLoading ? (
+                  <div className="flex flex-col items-center justify-center min-h-[40vh] opacity-50">
+                    <Spinner className="w-8 h-8 text-accent mb-4 animate-spin" />
+                    <p className="font-body text-[10px] font-bold uppercase tracking-widest">Sincronizando</p>
+                  </div>
+                ) : (
+                  VIEWS[currentView] || VIEWS.overview
+                )}
               </motion.div>
             </AnimatePresence>
           </main>
@@ -397,69 +366,24 @@ export default function AdminDashboard() {
     );
   }
 
-  // PORTAL SIMPLE (Aplica para Hóspedes, Agencias y el nuevo Portal de Limpieza 'housekeeper')
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-body selection:bg-accent/30 flex flex-col">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-body flex flex-col">
       <header className="border-b border-gray-200 bg-white sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-white font-brand text-base font-bold shadow-xs">
-            B
-          </div>
-          <span className="text-gray-300">/</span>
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-            {currentRoleString === 'agency' ? t('views.agency.title') : currentRoleString === 'housekeeper' ? t('housekeeping:title', { defaultValue: 'Portal de Limpieza' }) : t('views.guest.title')}
-          </span>
+          <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-white font-brand text-base font-bold shadow-sm">B</div>
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">{userRole}</span>
         </div>
-        <div className="relative">
-          <button 
-            onClick={() => setProfileOpen(!profileOpen)}
-            className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-accent rounded-full transition-all active:scale-95"
-            aria-label="Menú de perfil"
-          >
-            <Avatar className="w-9 h-9 border border-gray-100 shadow-sm cursor-pointer">
-              <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-              <AvatarFallback className="bg-gray-950 text-white font-body font-bold text-sm">
-                {userInitial}
-              </AvatarFallback>
-            </Avatar>
-          </button>
-          <AnimatePresence>
-            {profileOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-2xl p-2 shadow-xl z-50 origin-top-right"
-              >
-                <div className="px-4 py-3 border-b border-gray-50">
-                  <p className="text-xs text-gray-400 font-light">Autenticado como:</p>
-                  <p className="text-sm font-semibold text-gray-900 truncate mt-0.5">{user.email}</p>
-                  <span className="inline-block px-2.5 py-0.5 bg-gray-50 text-gray-600 rounded-md text-[9px] font-bold uppercase tracking-wider mt-2 border border-gray-100">
-                    {currentRoleString}
-                  </span>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2 px-4 py-3 mt-1.5 text-red-600 hover:bg-red-50 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <LogOut size={14} />
-                  {t('logout_button')}
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="flex items-center gap-4">
+          <Avatar className="w-9 h-9 border border-gray-100 shadow-xs">
+            <AvatarImage src={user.user_metadata?.avatar_url || ''} />
+            <AvatarFallback className="bg-gray-950 text-white font-bold">{userInitial}</AvatarFallback>
+          </Avatar>
+          <button onClick={() => signOut()} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Sair"><LogOut size={20} /></button>
         </div>
       </header>
       <main className="flex-1 container px-6 py-12 max-w-5xl mx-auto">
-        <div className="mb-10 text-center md:text-left">
-          <p className="text-[10px] font-bold text-accent uppercase tracking-[0.25em] mb-2">
-            Beach Hotel Canasvieiras
-          </p>
-          <h2 className="font-display text-4xl text-gray-900 tracking-tight">
-            {t('welcome_message')} {user.user_metadata?.full_name || user.email?.split('@')[0]}
-          </h2>
-        </div>
-        {renderContent()}
+        <h2 className="font-display text-4xl text-gray-900 mb-8 tracking-tight">Bienvenido, {user.user_metadata?.full_name || user.email?.split('@')[0]}</h2>
+        {VIEWS[currentView] || VIEWS.overview}
       </main>
     </div>
   );

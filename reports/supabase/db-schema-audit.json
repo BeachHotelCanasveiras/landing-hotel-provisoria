@@ -1,22 +1,599 @@
 {
-  "timestamp": "2026-06-16T16:12:35.379Z",
-  "tables": [
-    {
-      "table_name": "users",
-      "status": "ACTIVE"
-    },
+  "timestamp": "2026-06-16T21:13:23.340Z",
+  "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
+  "total_tables_audited": 10,
+  "schema_structure": [
     {
       "table_name": "guests",
-      "status": "ACTIVE"
-    },
-    {
-      "table_name": "rooms",
-      "status": "ACTIVE"
+      "columns_count": 6,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "user_email",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `users.email`.<fk table='users' column='email'/>"
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "last_name",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "phone",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
     },
     {
       "table_name": "bookings",
-      "status": "ACTIVE"
+      "columns_count": 8,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "room_id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `rooms.id`.<fk table='rooms' column='id'/>"
+        },
+        {
+          "name": "guest_id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `guests.id`.<fk table='guests' column='id'/>"
+        },
+        {
+          "name": "check_in",
+          "type": "string",
+          "format": "date",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "check_out",
+          "type": "string",
+          "format": "date",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "total_price",
+          "type": "number",
+          "format": "numeric",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "housekeeping_tasks",
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "room_id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `rooms.id`.<fk table='rooms' column='id'/>"
+        },
+        {
+          "name": "task_name",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "is_completed",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "is_custom",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "completed_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "room_ota_connections",
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "room_id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `rooms.id`.<fk table='rooms' column='id'/>"
+        },
+        {
+          "name": "channel_name",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "ical_import_url",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "ical_export_token",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "last_sync_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "housekeeping_audits",
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "room_id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `rooms.id`.<fk table='rooms' column='id'/>"
+        },
+        {
+          "name": "supervisor_id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `users.id`.<fk table='users' column='id'/>"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "photo_url",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "notes",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "room_amenities",
+      "columns_count": 10,
+      "columns": [
+        {
+          "name": "room_id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>\nThis is a Foreign Key to `rooms.id`.<fk table='rooms' column='id'/>"
+        },
+        {
+          "name": "has_minibar",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "has_ac",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "has_tv",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "has_bathtub",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "has_balcony",
+          "type": "boolean",
+          "format": "boolean",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "single_beds",
+          "type": "integer",
+          "format": "integer",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "double_beds",
+          "type": "integer",
+          "format": "integer",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "max_guests",
+          "type": "integer",
+          "format": "integer",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "guest_requests",
+      "columns_count": 5,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "room_id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `rooms.id`.<fk table='rooms' column='id'/>"
+        },
+        {
+          "name": "request_type",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "users",
+      "columns_count": 4,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "role",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "email_queue",
+      "columns_count": 12,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "recipient_email",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "html_content",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "attempts",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "max_attempts",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "error_log",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "scheduled_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "sent_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "updated_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "rooms",
+      "columns_count": 10,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "format": "integer",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "type",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "price_per_night",
+          "type": "number",
+          "format": "numeric",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "housekeeping_status",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "current_occupant",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "ical_import_url",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "ical_export_token",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": null
+        }
+      ]
     }
-  ],
-  "total_tables": 4
+  ]
 }

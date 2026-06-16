@@ -6,27 +6,27 @@
     "room_map": "Mapa de Habitaciones",
     "search": "CRM - Buscador"
   },
-  "reports": {
-    "title": "Informes",
-    "revenue": "Ingresos y Pronósticos",
-    "meals": "Comidas",
-    "police": "Informe Policial (FNRH)"
+  "property": {
+    "title": "Propiedad",
+    "inventory": "Inventario de Cuartos",
+    "rates": "Tarifas y Disponibilidad"
   },
+  "housekeeping": "Ama de Llaves",
   "accounting": {
     "title": "Contabilidad",
     "cash_flow": "Flujo de Caja",
-    "expenses": "Gastos y Proveedores",
-    "invoiced": "Total Facturado"
+    "expenses": "Gastos y Proveedores"
   },
-  "rates": "Precios y Disponibilidades",
-  "housekeeping": "Ama de Llaves",
-  "booking_engine": "Motor de Reservas",
+  "reports": {
+    "title": "Informes",
+    "revenue": "Ingresos y Pronósticos",
+    "police": "Informe Policial (FNRH)"
+  },
   "settings": {
     "title": "Configuraciones",
-    "all_settings": "Ver Configuraciones",
-    "email_templates": "Plantillas de Email",
-    "exchange_rates": "Tipos de Cambio",
-    "pos": "Punto de Venta"
+    "staff": "Equipo / Personal",
+    "all_settings": "Ver Ajustes"
   },
+  "booking_engine": "Motor de Reservas",
   "logout": "Cerrar Sesión"
 }

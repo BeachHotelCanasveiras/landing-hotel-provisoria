@@ -346,28 +346,28 @@
       "room_map": "Mapa de Habitaciones",
       "search": "CRM - Buscador"
     },
-    "reports": {
-      "title": "Informes",
-      "revenue": "Ingresos y Pronósticos",
-      "meals": "Comidas",
-      "police": "Informe Policial (FNRH)"
+    "property": {
+      "title": "Propiedad",
+      "inventory": "Inventario de Cuartos",
+      "rates": "Tarifas y Disponibilidad"
     },
+    "housekeeping": "Ama de Llaves",
     "accounting": {
       "title": "Contabilidad",
       "cash_flow": "Flujo de Caja",
-      "expenses": "Gastos y Proveedores",
-      "invoiced": "Total Facturado"
+      "expenses": "Gastos y Proveedores"
     },
-    "rates": "Precios y Disponibilidades",
-    "housekeeping": "Ama de Llaves",
-    "booking_engine": "Motor de Reservas",
+    "reports": {
+      "title": "Informes",
+      "revenue": "Ingresos y Pronósticos",
+      "police": "Informe Policial (FNRH)"
+    },
     "settings": {
       "title": "Configuraciones",
-      "all_settings": "Ver Configuraciones",
-      "email_templates": "Plantillas de Email",
-      "exchange_rates": "Tipos de Cambio",
-      "pos": "Punto de Venta"
+      "staff": "Equipo / Personal",
+      "all_settings": "Ver Ajustes"
     },
+    "booking_engine": "Motor de Reservas",
     "logout": "Cerrar Sesión"
   },
   "rates_availability": {
@@ -439,6 +439,26 @@
           "WiFi"
         ]
       }
+    }
+  },
+  "room_management": {
+    "badge": "Gestión de Activos",
+    "title": "Inventario de Habitaciones",
+    "subtitle": "Administre las unidades físicas, categorías y tarifas base del hotel de forma centralizada.",
+    "add_button": "Nueva Habitación",
+    "table": {
+      "name": "Identificador",
+      "type": "Categoría",
+      "price": "Tarifa Base",
+      "status": "Estado Operativo",
+      "actions": "Acciones"
+    },
+    "form": {
+      "create_title": "Registrar Unidad Física",
+      "room_name": "Nombre / Número (ej: Suite 101)",
+      "room_type": "Tipo de Habitación",
+      "nightly_price": "Precio por Noche (BRL)",
+      "save_button": "Integrar al Inventario"
     }
   },
   "room_matrix": {

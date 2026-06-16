@@ -1,0 +1,20 @@
+{
+  "badge": "Asset Management",
+  "title": "Room Inventory",
+  "subtitle": "Manage physical units, categories, and base rates for the hotel in a centralized way.",
+  "add_button": "New Room",
+  "table": {
+    "name": "Identifier",
+    "type": "Category",
+    "price": "Base Rate",
+    "status": "Operational Status",
+    "actions": "Actions"
+  },
+  "form": {
+    "create_title": "Register Physical Unit",
+    "room_name": "Name / Number (e.g., Suite 101)",
+    "room_type": "Room Type",
+    "nightly_price": "Price per Night (BRL)",
+    "save_button": "Integrate to Inventory"
+  }
+}

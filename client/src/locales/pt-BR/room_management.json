@@ -1,0 +1,20 @@
+{
+  "badge": "Gestão de Ativos",
+  "title": "Inventário de Quartos",
+  "subtitle": "Gerencie as unidades físicas, categorias e tarifas base do hotel de forma centralizada.",
+  "add_button": "Novo Quarto",
+  "table": {
+    "name": "Identificador",
+    "type": "Categoria",
+    "price": "Tarifa Base",
+    "status": "Estado Operativo",
+    "actions": "Ações"
+  },
+  "form": {
+    "create_title": "Registrar Unidade Física",
+    "room_name": "Nome / Número (ex: Suíte 101)",
+    "room_type": "Tipo de Quarto",
+    "nightly_price": "Preço por Noite (BRL)",
+    "save_button": "Integrar ao Inventário"
+  }
+}

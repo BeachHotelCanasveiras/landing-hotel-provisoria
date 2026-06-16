@@ -306,34 +306,34 @@
   },
   "pms_sidebar": {
     "menu_principal": "Main Menu",
-    "overview": "Hotel Overview Today",
+    "overview": "Daily Overview",
     "bookings": {
       "title": "Bookings",
       "room_map": "Room Matrix",
       "search": "CRM - Search"
     },
-    "reports": {
-      "title": "Reports",
-      "revenue": "Revenue & Forecasts",
-      "meals": "Meals",
-      "police": "Police Report (FNRH)"
+    "property": {
+      "title": "Property",
+      "inventory": "Room Inventory",
+      "rates": "Rates & Availability"
     },
+    "housekeeping": "Housekeeping Log",
     "accounting": {
       "title": "Accounting",
       "cash_flow": "Cash Flow",
-      "expenses": "Expenses & Suppliers",
-      "invoiced": "Total Invoiced"
+      "expenses": "Expenses & Suppliers"
     },
-    "rates": "Rates & Availability",
-    "housekeeping": "Housekeeping Log",
-    "booking_engine": "Booking Engine",
+    "reports": {
+      "title": "Reports",
+      "revenue": "Revenue & Forecasts",
+      "police": "Police Report (FNRH)"
+    },
     "settings": {
       "title": "Settings",
-      "all_settings": "All Settings",
-      "email_templates": "Email Templates",
-      "exchange_rates": "Exchange Rates",
-      "pos": "Point of Sale (POS)"
+      "staff": "Team / Staff",
+      "all_settings": "All Settings"
     },
+    "booking_engine": "Booking Engine",
     "logout": "Sign Out"
   },
   "rates_availability": {
@@ -405,6 +405,26 @@
           "WiFi"
         ]
       }
+    }
+  },
+  "room_management": {
+    "badge": "Asset Management",
+    "title": "Room Inventory",
+    "subtitle": "Manage physical units, categories, and base rates for the hotel in a centralized way.",
+    "add_button": "New Room",
+    "table": {
+      "name": "Identifier",
+      "type": "Category",
+      "price": "Base Rate",
+      "status": "Operational Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "create_title": "Register Physical Unit",
+      "room_name": "Name / Number (e.g., Suite 101)",
+      "room_type": "Room Type",
+      "nightly_price": "Price per Night (BRL)",
+      "save_button": "Integrate to Inventory"
     }
   },
   "room_matrix": {

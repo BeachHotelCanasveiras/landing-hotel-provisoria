@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-16T16:12:37.275Z",
+  "timestamp": "2026-06-16T21:13:24.769Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -50,7 +50,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "b1045ed6-2f4c-4156-852e-803b960047fa"
       },
       {
         "id": 102,
@@ -60,7 +62,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "5c03bf53-2f26-4c03-9dfb-c4789bc9e9c0"
       },
       {
         "id": 103,
@@ -70,7 +74,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "1f39c641-3ed3-4928-bef2-88c514ddcc9b"
       },
       {
         "id": 104,
@@ -80,7 +86,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "a77e91b8-9b6a-4276-b90b-c76e8b8d5279"
       },
       {
         "id": 105,
@@ -90,7 +98,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "02be0a7f-1736-436c-afe8-a3ec7fc181e7"
       },
       {
         "id": 106,
@@ -100,7 +110,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "dirty",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "29edf68b-8eeb-4928-8d84-8a6b1611d5e3"
       },
       {
         "id": 107,
@@ -110,7 +122,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "20512120-8652-4c70-a172-912b59ff7f92"
       },
       {
         "id": 108,
@@ -120,7 +134,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "cleaning",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "6d4acccf-81d7-4096-b1f1-600ea8f36eef"
       },
       {
         "id": 109,
@@ -130,7 +146,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "ad7b9db3-bef1-4d65-9344-4fa4b747ac44"
       },
       {
         "id": 110,
@@ -140,7 +158,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "82317dc7-77a5-4591-801c-22831045493d"
       },
       {
         "id": 201,
@@ -150,7 +170,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "94328ad1-6c11-4f0e-9820-3d5b3182efbb"
       },
       {
         "id": 202,
@@ -160,7 +182,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "dirty",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "4043ec62-e915-4940-a5de-d844de8bcdbc"
       },
       {
         "id": 203,
@@ -170,7 +194,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "0848e058-9989-433e-9e7a-1255536edd66"
       },
       {
         "id": 204,
@@ -180,7 +206,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "ac157186-047d-4b31-8b06-e0c8898de11c"
       },
       {
         "id": 205,
@@ -190,7 +218,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "6e839df2-02ac-4dc0-b89d-ab1ad948be03"
       },
       {
         "id": 206,
@@ -200,7 +230,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "4b9486c8-b621-47f9-ae5c-36385179051f"
       },
       {
         "id": 207,
@@ -210,7 +242,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "03d32517-0539-42e7-bbac-e4d9c22648c4"
       },
       {
         "id": 208,
@@ -220,7 +254,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "58cd4320-935d-4d94-a5aa-b646a19eacee"
       },
       {
         "id": 209,
@@ -230,7 +266,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "dc68763d-d26c-4e29-badc-fdae08884715"
       },
       {
         "id": 210,
@@ -240,7 +278,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "ee1b6f63-1289-47a7-b99c-a9716da8f048"
       },
       {
         "id": 211,
@@ -250,7 +290,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "4b52f976-bd10-4c09-a95b-271172bb70e1"
       },
       {
         "id": 212,
@@ -260,7 +302,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "af76ebb4-b873-4fbc-a59b-1d0e2419ac17"
       },
       {
         "id": 301,
@@ -270,7 +314,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "35308621-c8b6-43da-91c5-1d593460fd20"
       },
       {
         "id": 302,
@@ -280,7 +326,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "302cec28-70c1-4e9f-8915-7cfa2fc9b76f"
       },
       {
         "id": 303,
@@ -290,7 +338,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "90e4ed5e-894e-4e04-a751-f7598ade62b6"
       },
       {
         "id": 304,
@@ -300,7 +350,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "d45aebcb-4e45-4fd0-9141-300aecac5856"
       },
       {
         "id": 305,
@@ -310,7 +362,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "4bd7482f-7334-474b-ba94-02e8dae38182"
       },
       {
         "id": 306,
@@ -320,7 +374,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "d57f9e6f-6d0e-428f-a569-5834312845d5"
       },
       {
         "id": 307,
@@ -330,7 +386,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "f9cee9a9-2603-4732-9676-d55048f3b51b"
       },
       {
         "id": 308,
@@ -340,7 +398,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "67d3d2dd-a779-49e7-8060-ac634f8b57e4"
       },
       {
         "id": 401,
@@ -350,7 +410,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "dirty",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "1dd16724-049e-4546-8a07-1b6ba0d7d97d"
       },
       {
         "id": 402,
@@ -360,7 +422,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "dirty",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "c86ed376-04cc-4d11-8ef1-9e6f4e4f86b6"
       },
       {
         "id": 403,
@@ -370,7 +434,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "c0283a99-9514-48f0-b980-e1560ab8fe7c"
       },
       {
         "id": 404,
@@ -380,7 +446,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "432e5960-d978-4e67-947a-a7145d3dc8f4"
       },
       {
         "id": 405,
@@ -390,7 +458,9 @@
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
         "housekeeping_status": "clean",
-        "current_occupant": null
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "bd3e060c-d3a2-4e8d-9e6c-07c8deebb24c"
       }
     ],
     "bookings": []

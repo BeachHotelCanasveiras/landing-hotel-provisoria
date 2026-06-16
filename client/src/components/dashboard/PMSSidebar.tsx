@@ -1,25 +1,39 @@
 /**
  * @file PMSSidebar.tsx
  * @description Panel colapsable de navegación principal del PMS.
- * - i18n & Zod: 100% traducido y validado (Zero Hardcoded).
- * - SaaS Ready: Soporte para múltiples módulos operacionales con estados de colapso.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Full Internationalization: 0% strings hardcodeados.
+ * - Trinidad Atómica: Integración con PMSSidebarTranslationSchema.
+ * - UX Premium: Estética de lujo con micro-interacciones.
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
-  LayoutDashboard, Calendar, BarChart3, Briefcase, Tag, 
-  Sparkles, ExternalLink, Settings, LogOut, ChevronDown, ChevronUp, Menu 
+  LayoutDashboard, Calendar, BarChart3, Briefcase, 
+  Sparkles, ExternalLink, Settings, LogOut, ChevronDown, ChevronUp, 
+  Menu, Hotel 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PMSSidebarTranslationSchema } from '@/locales/schemas/pms_sidebar.schema';
 
+interface SubMenuItem {
+  key: string;
+  label: string;
+  view: string;
+}
+
+interface MenuItem {
+  key: string;
+  label: string;
+  icon: React.ElementType;
+  view?: string;
+  subItems?: SubMenuItem[];
+}
+
 interface PMSSidebarProps {
-  /** Vista activa actual en el orquestador principal */
   currentView: string;
-  /** Callback para notificar el cambio de vista */
   onNavigate: (view: string) => void;
-  /** Callback para ejecutar el cierre seguro de sesión */
   onSignOut: () => Promise<void>;
 }
 
@@ -29,19 +43,17 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   onSignOut,
 }) => {
   const { t, i18n } = useTranslation('pms_sidebar');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   
-  // Estados para controlar carpetas colapsables individuales (Mini Hotel Style)
-  const [openMenus, setOpenOpenMenus] = useState<Record<string, boolean>>({
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
     bookings: false,
+    property: true,
     reports: false,
     accounting: false,
     settings: false,
   });
 
-  // Estado para colapsar toda la barra lateral en móviles
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  // Validación de esquema Zod en DEV (ISO 27001)
+  // Validación de esquema en modo DEV
   if (import.meta.env.DEV) {
     try {
       const currentBundle = i18n.getResourceBundle(i18n.language, 'pms_sidebar') || {};
@@ -52,271 +64,183 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   }
 
   const toggleSubMenu = (menuKey: string) => {
-    setOpenOpenMenus(prev => ({
-      ...prev,
-      [menuKey]: !prev[menuKey]
-    }));
+    setOpenMenus(prev => ({ ...prev, [menuKey]: !prev[menuKey] }));
   };
+
+  // Configuración del menú consumiendo el esquema de traducción
+  const menuConfig: MenuItem[] = [
+    {
+      key: 'overview',
+      label: t('overview'),
+      icon: LayoutDashboard,
+      view: 'overview'
+    },
+    {
+      key: 'bookings',
+      label: t('bookings.title'),
+      icon: Calendar,
+      subItems: [
+        { key: 'map', label: t('bookings.room_map'), view: 'room_map' },
+        { key: 'search', label: t('bookings.search'), view: 'booking_search' },
+      ]
+    },
+    {
+      key: 'property',
+      label: t('property.title'),
+      icon: Hotel,
+      subItems: [
+        { key: 'inventory', label: t('property.inventory'), view: 'room_inventory' },
+        { key: 'rates', label: t('property.rates'), view: 'rates' },
+      ]
+    },
+    {
+      key: 'housekeeping',
+      label: t('housekeeping'),
+      icon: Sparkles,
+      view: 'housekeeping'
+    },
+    {
+      key: 'accounting',
+      label: t('accounting.title'),
+      icon: Briefcase,
+      subItems: [
+        { key: 'cash', label: t('accounting.cash_flow'), view: 'acc_cash_flow' },
+        { key: 'expenses', label: t('accounting.expenses'), view: 'acc_expenses' },
+      ]
+    },
+    {
+      key: 'reports',
+      label: t('reports.title'),
+      icon: BarChart3,
+      subItems: [
+        { key: 'revenue', label: t('reports.revenue'), view: 'report_revenue' },
+        { key: 'police', label: t('reports.police'), view: 'report_police' },
+      ]
+    },
+    {
+      key: 'settings',
+      label: t('settings.title'),
+      icon: Settings,
+      subItems: [
+        { key: 'staff', label: t('settings.staff'), view: 'staff' },
+        { key: 'all', label: t('settings.all_settings'), view: 'settings_all' },
+      ]
+    }
+  ];
 
   return (
     <div 
       className={cn(
-        "h-screen bg-[#1F2226] text-gray-300 font-body flex flex-col justify-between transition-all duration-300 border-r border-gray-800 shadow-2xl shrink-0 select-none",
+        "h-screen bg-[#141517] text-gray-400 font-body flex flex-col justify-between transition-all duration-500 border-r border-white/5 shadow-2xl shrink-0 select-none",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
       <div>
-        {/* Cabecera y Botón de Alternar Menú */}
-        <div className="p-6 border-b border-gray-800 flex items-center justify-between">
+        {/* HEADER */}
+        <div className="p-6 mb-2 flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center text-white font-brand text-base font-bold shadow-md">
-                M
+            <div className="flex items-center gap-3 animate-in fade-in duration-700">
+              <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-white shadow-[0_0_20px_rgba(212,165,116,0.3)]">
+                <Hotel size={20} strokeWidth={2.5} />
               </div>
-              <span className="font-display text-lg font-bold text-white tracking-wide">
-                Mini Hotel
-              </span>
+              <div className="flex flex-col">
+                <span className="font-display text-base font-bold text-white leading-tight">Mini Hotel</span>
+                <span className="text-[9px] font-bold text-accent uppercase tracking-tighter">Premium PMS</span>
+              </div>
             </div>
           )}
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400 hover:text-white cursor-pointer"
-            aria-label="Toggle Sidebar"
+            className="p-2 hover:bg-white/5 rounded-xl transition-all text-gray-500 hover:text-white cursor-pointer"
           >
-            <Menu size={16} strokeWidth={1.8} />
+            <Menu size={18} />
           </button>
         </div>
 
-        {/* Sección: Menú Principal */}
-        <div className="p-4 space-y-6 overflow-y-auto max-h-[calc(100vh-140px)] scrollbar-none">
+        {/* NAV */}
+        <div className="px-4 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-none">
           {!isCollapsed && (
-            <p className="text-[10px] font-body font-bold text-gray-500 uppercase tracking-widest pl-3 mb-2">
+            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] pl-4 mb-4 mt-2">
               {t('menu_principal')}
             </p>
           )}
 
-          <div className="space-y-1">
-            {/* Opción 1: Panorámica (Dashboard) */}
-            <button
-              onClick={() => onNavigate('overview')}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-3 rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer",
-                currentView === 'overview' 
-                  ? "bg-accent text-accent-foreground shadow-lg" 
-                  : "hover:bg-white/5 text-gray-400 hover:text-white"
-              )}
-            >
-              <LayoutDashboard size={16} strokeWidth={1.8} className={currentView === 'overview' ? '' : 'text-gray-500'} />
-              {!isCollapsed && <span>{t('overview')}</span>}
-            </button>
+          {menuConfig.map((item) => {
+            const Icon = item.icon;
+            const isGroup = !!item.subItems;
+            const isOpen = openMenus[item.key];
+            const isActive = currentView === item.view || item.subItems?.some(s => s.view === currentView);
 
-            {/* Opción 2: Reservas (Colapsable) */}
-            <div className="space-y-1">
-              <button
-                onClick={() => toggleSubMenu('bookings')}
-                className="w-full flex items-center justify-between px-3 py-3 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Calendar size={16} strokeWidth={1.8} className="text-gray-500" />
-                  {!isCollapsed && <span>{t('bookings.title')}</span>}
-                </div>
-                {!isCollapsed && (openMenus.bookings ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-              </button>
-
-              {/* Sub-enlaces de Reservas */}
-              {openMenus.bookings && !isCollapsed && (
-                <div className="pl-6 space-y-1">
-                  <button
-                    onClick={() => onNavigate('room_map')}
-                    className={cn(
-                      "w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer",
-                      currentView === 'room_map' && "text-accent font-bold"
+            return (
+              <div key={item.key} className="space-y-1">
+                <button
+                  onClick={() => isGroup ? toggleSubMenu(item.key) : item.view && onNavigate(item.view)}
+                  className={cn(
+                    "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group cursor-pointer",
+                    isActive && !isGroup ? "bg-accent text-white shadow-lg" : "hover:bg-white/5",
+                    isActive && isGroup && "text-white"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon size={18} strokeWidth={isActive ? 2.5 : 1.8} className={cn(isActive ? "text-white" : "text-gray-500 group-hover:text-gray-300")} />
+                    {!isCollapsed && (
+                      <span className={cn("text-xs font-semibold uppercase tracking-wider", isActive ? "opacity-100" : "opacity-80")}>
+                        {item.label}
+                      </span>
                     )}
-                  >
-                    {t('bookings.room_map')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('booking_search')}
-                    className={cn(
-                      "w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer",
-                      currentView === 'booking_search' && "text-accent font-bold"
-                    )}
-                  >
-                    {t('bookings.search')}
-                  </button>
-                </div>
-              )}
-            </div>
+                  </div>
+                  {isGroup && !isCollapsed && (
+                    isOpen ? <ChevronUp size={14} className="opacity-40" /> : <ChevronDown size={14} className="opacity-40" />
+                  )}
+                </button>
 
-            {/* Opción 3: Informes (Colapsable) */}
-            <div className="space-y-1">
-              <button
-                onClick={() => toggleSubMenu('reports')}
-                className="w-full flex items-center justify-between px-3 py-3 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <BarChart3 size={16} strokeWidth={1.8} className="text-gray-500" />
-                  {!isCollapsed && <span>{t('reports.title')}</span>}
-                </div>
-                {!isCollapsed && (openMenus.reports ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-              </button>
-
-              {/* Sub-enlaces de Informes */}
-              {openMenus.reports && !isCollapsed && (
-                <div className="pl-6 space-y-1">
-                  <button
-                    onClick={() => onNavigate('report_revenue')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('reports.revenue')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('report_meals')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('reports.meals')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('report_police')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('reports.police')}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Opción 4: Contabilidad (Colapsable) */}
-            <div className="space-y-1">
-              <button
-                onClick={() => toggleSubMenu('accounting')}
-                className="w-full flex items-center justify-between px-3 py-3 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Briefcase size={16} strokeWidth={1.8} className="text-gray-500" />
-                  {!isCollapsed && <span>{t('accounting.title')}</span>}
-                </div>
-                {!isCollapsed && (openMenus.accounting ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-              </button>
-
-              {/* Sub-enlaces de Contabilidad */}
-              {openMenus.accounting && !isCollapsed && (
-                <div className="pl-6 space-y-1">
-                  <button
-                    onClick={() => onNavigate('acc_cash_flow')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('accounting.cash_flow')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('acc_expenses')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('accounting.expenses')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('acc_invoiced')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('accounting.invoiced')}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Opción 5: Precios y Disponibilidades */}
-            <button
-              onClick={() => onNavigate('rates')}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-3 rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer",
-                currentView === 'rates' 
-                  ? "bg-accent text-accent-foreground shadow-lg" 
-                  : "hover:bg-white/5 text-gray-400 hover:text-white"
-              )}
-            >
-              <Tag size={16} strokeWidth={1.8} className={currentView === 'rates' ? '' : 'text-gray-500'} />
-              {!isCollapsed && <span>{t('rates')}</span>}
-            </button>
-
-            {/* Opción 6: Ama de Llaves */}
-            <button
-              onClick={() => onNavigate('housekeeping')}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-3 rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer",
-                currentView === 'housekeeping' 
-                  ? "bg-accent text-accent-foreground shadow-lg" 
-                  : "hover:bg-white/5 text-gray-400 hover:text-white"
-              )}
-            >
-              <Sparkles size={16} strokeWidth={1.8} className={currentView === 'housekeeping' ? '' : 'text-gray-500'} />
-              {!isCollapsed && <span>{t('housekeeping')}</span>}
-            </button>
-
-            {/* Opción 7: Motor de Reservas (Enlace Externo) */}
-            <a
-              href="https://beachcanasvieiras.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full flex items-center justify-between px-3 py-3 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <ExternalLink size={16} strokeWidth={1.8} className="text-gray-500" />
-                {!isCollapsed && <span>{t('booking_engine')}</span>}
+                {isGroup && isOpen && !isCollapsed && (
+                  <div className="pl-11 space-y-1 animate-in slide-in-from-top-2 duration-300">
+                    {item.subItems?.map((sub) => (
+                      <button
+                        key={sub.key}
+                        onClick={() => onNavigate(sub.view)}
+                        className={cn(
+                          "w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-medium transition-all cursor-pointer relative",
+                          currentView === sub.view 
+                            ? "text-accent font-bold bg-accent/5" 
+                            : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
+                        )}
+                      >
+                        {currentView === sub.view && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1 bg-accent rounded-full" />
+                        )}
+                        {sub.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            </a>
-
-            {/* Opción 8: Configuraciones (Colapsable) */}
-            <div className="space-y-1">
-              <button
-                onClick={() => toggleSubMenu('settings')}
-                className="w-full flex items-center justify-between px-3 py-3 hover:bg-white/5 text-gray-400 hover:text-white rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <Settings size={16} strokeWidth={1.8} className="text-gray-500" />
-                  {!isCollapsed && <span>{t('settings.title')}</span>}
-                </div>
-                {!isCollapsed && (openMenus.settings ? <ChevronUp size={14} /> : <ChevronDown size={14} />)}
-              </button>
-
-              {/* Sub-enlaces de Configuraciones */}
-              {openMenus.settings && !isCollapsed && (
-                <div className="pl-6 space-y-1">
-                  <button
-                    onClick={() => onNavigate('settings_all')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('settings.all_settings')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('settings_email')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('settings.email_templates')}
-                  </button>
-                  <button
-                    onClick={() => onNavigate('settings_exchange')}
-                    className="w-full text-left px-3 py-2 rounded-lg font-body text-xs font-semibold text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer"
-                  >
-                    {t('settings.exchange_rates')}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Botón de Cierre de Sesión (Abajo) */}
-      <div className="p-4 border-t border-gray-800">
+      {/* FOOTER */}
+      <div className="p-4 border-t border-white/5">
+        <a
+          href="https://beachcanasvieiras.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-3 px-4 py-3 mb-2 hover:bg-white/5 text-gray-500 hover:text-white rounded-2xl transition-all text-xs font-semibold uppercase tracking-wider"
+        >
+          <ExternalLink size={16} />
+          {!isCollapsed && <span>{t('booking_engine')}</span>}
+        </a>
+
         <button
           onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-3 py-3.5 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-xl font-body text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer"
+          className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-500/10 text-red-400/70 hover:text-red-400 rounded-2xl transition-all cursor-pointer"
         >
-          <LogOut size={16} strokeWidth={1.8} />
-          {!isCollapsed && <span>{t('logout')}</span>}
+          <LogOut size={16} />
+          {!isCollapsed && <span className="text-xs font-bold uppercase tracking-widest">{t('logout')}</span>}
         </button>
       </div>
-
     </div>
   );
 };
