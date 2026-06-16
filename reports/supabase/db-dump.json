@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-16T21:13:24.769Z",
+  "timestamp": "2026-06-16T21:43:34.884Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -42,18 +42,6 @@
     ],
     "guests": [],
     "rooms": [
-      {
-        "id": 101,
-        "name": "Suite 101",
-        "type": "single",
-        "price_per_night": 200,
-        "status": "available",
-        "created_at": "2026-06-16T03:26:36.912044+00:00",
-        "housekeeping_status": "clean",
-        "current_occupant": null,
-        "ical_import_url": null,
-        "ical_export_token": "b1045ed6-2f4c-4156-852e-803b960047fa"
-      },
       {
         "id": 102,
         "name": "Suite 102",
@@ -461,6 +449,18 @@
         "current_occupant": null,
         "ical_import_url": null,
         "ical_export_token": "bd3e060c-d3a2-4e8d-9e6c-07c8deebb24c"
+      },
+      {
+        "id": 101,
+        "name": "Suite 101",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "dirty",
+        "current_occupant": null,
+        "ical_import_url": null,
+        "ical_export_token": "b1045ed6-2f4c-4156-852e-803b960047fa"
       }
     ],
     "bookings": []
