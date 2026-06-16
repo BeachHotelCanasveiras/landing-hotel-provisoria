@@ -2,10 +2,9 @@
  * @file AdminDashboard.tsx
  * @description Orquestador Maestro del Panel de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Layout Híbrido: Sidebar inmersiva para Staff, Top-Nav para Clientes.
+ * - Corrección TS2304: Restaurada la constante 'userInitial' requerida por los Avatares.
+ * - Solución de Pantalla en Blanco aplicando Carga bajo Demanda (On-Demand Querying).
  * - Saneamiento de tipado estricto TS (100% libre de aserciones 'any' o variables huérfanas).
- * - Saneamiento de react-hooks/rules-of-hooks: Cero retornos tempranos.
- * - Integración del Portal de Limpieza y el Administrador de Personal de Élite (StaffManagement).
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -28,7 +27,7 @@ import { RatesAvailability } from '@/components/dashboard/reception/RatesAvailab
 import { BookingSearch, type BookingRecord } from '@/components/dashboard/reception/BookingSearch';
 import { HousekeepingReport, type HousekeepingTask } from '@/components/dashboard/reception/HousekeepingReport';
 import { HousekeeperPortal } from '@/components/dashboard/HousekeeperPortal';
-import { StaffManagement } from '@/components/dashboard/reception/StaffManagement'; // <-- IMPORTACIÓN DEL PORTAL DE PERSONAL
+import { StaffManagement } from '@/components/dashboard/reception/StaffManagement';
 
 // Importación contractual de tipos específicos de los sub-paneles para evitar casteos inseguros
 import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
@@ -128,6 +127,7 @@ export default function AdminDashboard() {
     enabled: !!user,
   });
 
+  // OPTIMIZACIÓN CORE: housekeeping_tasks solo se consulta si el usuario accede a la vista de Ama de Llaves
   const { data: tasks = [], isLoading: loadingTasks } = useQuery<HousekeepingTask[]>({
     queryKey: ['housekeeping_tasks'],
     queryFn: async () => {
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       return data as HousekeepingTask[];
     },
-    enabled: (isStaff || currentRoleString === 'housekeeper') && !!user,
+    enabled: isStaff && currentView === 'housekeeping' && !!user, // <-- Habilitada bajo demanda
   });
 
   // ============================================================================
@@ -285,8 +285,11 @@ export default function AdminDashboard() {
     setLocation('/login');
   };
 
-  const isGlobalLoading = loadingRooms || loadingBookings || loadingTasks;
-  const userInitial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U';
+  // CORRECCIÓN TS2304: Restaurada la constante requerida para renderizar el Avatar sin fallos de compilación
+  const userInitial = user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U';
+
+  // OPTIMIZACIÓN CORE: El estado de carga global ignora tareas de limpieza si no estamos en esa pestaña
+  const isGlobalLoading = loadingRooms || loadingBookings || (currentView === 'housekeeping' && loadingTasks);
 
   const renderContent = () => {
     if (isGlobalLoading) {
@@ -334,7 +337,7 @@ export default function AdminDashboard() {
             onAddCustomTask={(id, name) => addCustomTaskMutation.mutateAsync({ roomId: id, taskName: name })} 
           />
         );
-      case 'settings_staff': // <-- VISTA ENRUTADA PARA EL GESTOR DE PERSONAL
+      case 'settings_staff':
       case 'staff':
         return <StaffManagement />;
       case 'overview':
