@@ -5,6 +5,8 @@
  * - Satisface el tipado estricto (no-any-implícito) mediante anotación nativa de Supabase.
  * - Saneamiento: Resuelto el hoisting de fetchUserRole declarándola de forma clásica.
  * - Saneamiento: Exclusión de Fast Refresh para el hook personalizado para lograr compilación limpia.
+ * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida
+ *   de autenticación usando macro-tasks (setTimeout 0) para evitar colgar las conexiones del cliente.
  */
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -56,7 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session) {
         setUser(session.user);
-        fetchUserRole(session.user.id);
+        // WORKAROUND: Desacoplar consulta asíncrona del flujo de inicialización principal
+        setTimeout(() => {
+          fetchUserRole(session.user!.id);
+        }, 0);
       } else {
         setLoading(false);
       }
@@ -64,10 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Suscribirse a cambios con anotaciones de tipo nativas
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
+      (event: AuthChangeEvent, session: Session | null) => {
         if (session) {
           setUser(session.user);
-          await fetchUserRole(session.user.id);
+          // WORKAROUND: Prevenir deadlock (bloqueo mutuo) en supabase-js v2 liberando el hilo síncrono
+          setTimeout(() => {
+            fetchUserRole(session.user!.id);
+          }, 0);
         } else {
           setUser(null);
           setRole(null);
