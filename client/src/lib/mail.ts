@@ -1,17 +1,12 @@
-// client/src/lib/mail.ts
 /**
  * @file mail.ts
- * @description Servicio transaccional de envíos automáticos integrado con Resend.
- * - Envíos con cero hardcoding de remitente o variables.
- * - Diseñado para notificar a huéspedes y agencias aliadas.
+ * @description Servicio de encolamiento de correos transaccionales para el ecosistema Beach Hotel.
+ * - Desacoplamiento total: Inserta en `email_queue` para procesamiento asíncrono.
+ * - Resiliencia: La transacción de reserva nunca se bloquea por fallos en el servicio de correo.
+ * - ESLint Compliant: Uso de prefijo '_' para variables intencionalmente no usadas.
  */
 
-import { Resend } from 'resend';
-
-// Se inicializa de forma segura consumiendo las variables del entorno (.env)
-const resendApiKey = process.env.RESEND_API_KEY || import.meta.env.VITE_RESEND_API_KEY;
-
-export const resend = resendApiKey ? new Resend(resendApiKey) : null;
+import { supabase } from '@/lib/supabase';
 
 interface EmailPayload {
   to: string;
@@ -21,34 +16,42 @@ interface EmailPayload {
 }
 
 /**
- * Envía un correo electrónico utilizando el remitente institucional verificado
+ * Encola un correo electrónico para su procesamiento asíncrono.
+ * @param {EmailPayload} payload - Datos del correo a encolar.
+ * @returns {Promise<{success: boolean, id?: string, error?: string}>}
  */
 export async function sendEmail({ to, subject, html, fromName = 'Concierge' }: EmailPayload) {
-  if (!resend) {
-    console.warn('[Mail Service] ⚠️ RESEND_API_KEY no configurada. Omitiendo envío físico.');
-    return { success: false, message: 'Servicio de correo temporalmente inactivo.' };
-  }
+  // El parámetro 'fromName' se reserva para futuras iteraciones del Worker de correo
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _sender = fromName;
 
   try {
-    const { data, error } = await resend.emails.send({
-      // Se utiliza el dominio corporativo verificado en la cuenta de Resend
-      from: `${fromName} <reservas@beachcanasvieiras.com>`,
-      to: [to],
-      subject: subject,
-      html: html,
-      headers: {
-        'X-Entity-Ref-ID': crypto.randomUUID() // Previene la duplicación de hilos en Gmail
-      }
-    });
+    // 1. Inserción inmutable en la cola de mensajes de Supabase
+    // Garantiza disponibilidad (ISO 27001) al no depender de la API de Resend en el cliente.
+    const { data, error } = await supabase
+      .from('email_queue')
+      .insert([{
+        recipient_email: to,
+        subject: subject,
+        html_content: html,
+        status: 'pending',
+        attempts: 0,
+        max_attempts: 3,
+        scheduled_at: new Date().toISOString()
+      }])
+      .select('id')
+      .single();
 
     if (error) {
-      console.error('[Mail Service] Error de envío de Resend:', error.message);
-      return { success: false, error };
+      throw error;
     }
 
-    return { success: true, id: data?.id };
-  } catch (error: any) {
-    console.error('[Mail Service] Excepción en servicio de correos:', error);
-    return { success: false, error: error.message };
+    console.log(`[Mail Service] Correo encolado exitosamente con ID: ${data.id}`);
+    return { success: true, id: data.id };
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido al encolar correo';
+    console.error('[Mail Service] Error crítico al encolar:', errorMessage);
+    return { success: false, error: errorMessage };
   }
 }

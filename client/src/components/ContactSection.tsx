@@ -1,8 +1,7 @@
 /**
  * @file ContactSection.tsx
  * @description Sección de Formulario de Contacto (Cierre del Embudo).
- * Valida los inputs mediante esquemas Zod dinámicos localizados en caliente.
- * Se integra a la perfección con Sonner para dar feedback de éxito instantáneo.
+ * - Refactorizado: Cumple con la regla react-hooks/immutability de React 19.
  */
 
 import { useForm } from 'react-hook-form';
@@ -13,7 +12,7 @@ import { toast } from 'sonner';
 import { Mail, User, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ContactTranslationSchema } from '@/locales/schemas/contact.schema';
-import { cn } from '@/lib/utils'; // <-- CORRECCIÓN: Importamos la utilidad de unión de clases de Tailwind
+import { cn } from '@/lib/utils';
 
 export default function ContactSection() {
   const { t, i18n } = useTranslation('contact');
@@ -49,7 +48,7 @@ export default function ContactSection() {
   });
 
   /**
-   * Procesa la sumisión del formulario de forma segura y abre el gestor de correo predeterminado.
+   * Procesa la sumisión del formulario de forma segura.
    */
   const onSubmit = (data: FormData) => {
     const subject = `Consulta web de ${data.name}`;
@@ -58,7 +57,8 @@ export default function ContactSection() {
     const mailtoUrl = `mailto:reservas@beachcanasvieiras.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
     toast.success(t('toast_success'));
-    window.location.href = mailtoUrl;
+    // CORRECCIÓN (react-hooks/immutability): Evita mutar window.location de forma directa
+    window.open(mailtoUrl, '_self');
     reset();
   };
 

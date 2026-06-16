@@ -46,4 +46,22 @@ Con las tablas e índices creados de forma síncrona en Supabase, debemos activa
 
   ---
 
+  ## ✉️ 5. Automatización de la Cola de Correos Transaccionales (Outbox Pattern - ISO 27001)
+Este módulo desacopla la creación de reservas de la entrega de notificaciones físicas, garantizando transacciones seguras (PCI-DSS), cero fugas de API Keys y una entrega de alta fiabilidad.
+
+- [ ] **Esquema de Base de Datos (`email_queue`):**
+  - Crear la tabla física en Supabase con RLS restrictivo que autorice únicamente al `service_role`.
+  - Crear el índice optimizado `idx_email_queue_status_scheduled` para búsquedas en tiempo constante $O(1)$.
+  
+- [ ] **Worker de Despacho de Correo (`api/cron/process-mails.ts`):**
+  - Desplegar el endpoint serverless en Vercel para procesar lotes (batch) de hasta 5 correos.
+  - Implementar *Idempotencia de Envío* bloqueando el registro en estado `sending` antes de disparar la API de Resend.
+  - Sostener el *Staggering* anti-spam con pausas asíncronas de 2 segundos entre envíos.
+
+- [ ] **Gatillo Transaccional en Caliente (Trigger SQL):**
+  - Implementar una función en PL/pgSQL y su correspondiente Trigger `on_booking_confirmed` en Supabase.
+  - *Lógica del Trigger:* Cada vez que una fila en la tabla `bookings` sea insertada o actualizada con estado `confirmed`, inyectar de manera síncrona la plantilla y datos del correo en la tabla `email_queue`.
+
+  ---
+
   

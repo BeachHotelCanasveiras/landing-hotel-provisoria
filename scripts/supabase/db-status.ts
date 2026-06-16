@@ -1,8 +1,35 @@
-// scripts/supabase/db-status.ts
+/**
+ * @file db-status.ts
+ * @description Script de diagnóstico y auditoría unificada del estado de Supabase.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - 0% de uso de 'any' mediante tipado estricto e interfaces contractuales locales.
+ * - Saneamiento estricto de ESLint v9 (eliminadas capturas de error huérfanas).
+ */
+
 import 'dotenv/config';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+
+// ----------------------------------------------------------------------------
+// Interfaces Contractuales de Reportes
+// ----------------------------------------------------------------------------
+interface SchemaTableAudit {
+  table_name: string;
+  status: string;
+}
+
+interface SchemaReportData {
+  timestamp: string;
+  total_tables: number;
+  tables?: SchemaTableAudit[];
+}
+
+interface ConnectionReportData {
+  status: string;
+  message: string;
+  timestamp: string;
+}
 
 async function runStatusCheck() {
   console.log("====================================================================");
@@ -22,7 +49,7 @@ async function runStatusCheck() {
   console.log("\n🔌 [2/3] Ejecutando prueba de conexión (test-db-connection.ts)...");
   try {
     execSync("npx tsx scripts/supabase/test-db-connection.ts", { stdio: 'inherit' });
-  } catch (error) {
+  } catch { // CORRECCIÓN (no-unused-vars): Captura pura sin variable omitida
     console.error("⚠️ Error ejecutando la prueba de conexión directa.");
   }
 
@@ -30,7 +57,7 @@ async function runStatusCheck() {
   console.log("\n🔍 [3/3] Ejecutando auditoría de esquema de base de datos (db-audit.ts)...");
   try {
     execSync("npx tsx scripts/supabase/db-audit.ts", { stdio: 'inherit' });
-  } catch (error) {
+  } catch { // CORRECCIÓN (no-unused-vars): Captura pura sin variable omitida
     console.error("⚠️ Error ejecutando la auditoría de esquema.");
   }
 
@@ -45,11 +72,11 @@ async function runStatusCheck() {
 
   if (fs.existsSync(connectionReportPath)) {
     try {
-      const connData = JSON.parse(fs.readFileSync(connectionReportPath, 'utf-8'));
+      const connData = JSON.parse(fs.readFileSync(connectionReportPath, 'utf-8')) as ConnectionReportData;
       console.log(`\n• Conexión: [${connData.status}]`);
       console.log(`  Detalle: ${connData.message}`);
       console.log(`  Fecha: ${connData.timestamp}`);
-    } catch (e) {
+    } catch {
       console.error("No se pudo leer el reporte de conexión.");
     }
   } else {
@@ -58,17 +85,18 @@ async function runStatusCheck() {
 
   if (fs.existsSync(schemaReportPath)) {
     try {
-      const schemaData = JSON.parse(fs.readFileSync(schemaReportPath, 'utf-8'));
+      const schemaData = JSON.parse(fs.readFileSync(schemaReportPath, 'utf-8')) as SchemaReportData;
       console.log(`\n• Esquema de BD: Detectadas ${schemaData.total_tables} tablas en 'public'`);
       if (schemaData.tables && schemaData.tables.length > 0) {
         console.log("  Tablas encontradas:");
-        schemaData.tables.forEach((t: any) => {
+        // CORRECCIÓN (no-explicit-any): Tipado robusto en el callback
+        schemaData.tables.forEach((t: SchemaTableAudit) => {
           console.log(`    - ${t.table_name}`);
         });
       } else {
         console.log("  Advertencia: No se encontraron tablas creadas.");
       }
-    } catch (e) {
+    } catch {
       console.error("No se pudo leer el reporte de esquema.");
     }
   } else {

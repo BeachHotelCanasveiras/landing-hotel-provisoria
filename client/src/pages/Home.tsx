@@ -1,33 +1,38 @@
 /**
  * @file Home.tsx
- * @description Página principal (Landing Page) de la SPA.
- * Estructurada bajo el "Plan de Viaje y Conversión Real" para optimizar el embudo (CRO).
- * Integra de forma nativa la sección de Geolocalización Interactiva (MapView) para dotar al viajero
- * de control geográfico y mitigar riesgos (Fase 5), validando la cercanía del hotel a la playa.
- * Inyecta el nuevo componente de Excursiones Propias como potenciador de reserva de alta gama.
+ * @description Página principal optimizada con Lazy Loading (Code Splitting).
+ * Implementación de Suspense para mitigar CLS y mejorar el rendimiento de carga inicial.
  */
 
+import React, { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Spinner } from "@/components/ui/spinner";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
-import AboutSection from "@/components/AboutSection"; // Inyección de la Fase 2 del Embudo
+import AboutSection from "@/components/AboutSection";
 import Rooms from "@/components/Rooms";
 import Gallery from "@/components/Gallery";
-import Attractions from "@/components/Attractions";
-import Excursions from "@/components/Excursions"; // Inyección de la Fase 5: Experiencias Propias
-import { MapView } from "@/components/Map"; // Integración del aparato geográfico previamente huérfano
-import ContactSection from "@/components/ContactSection"; // Inyección de la sección de contacto
-import Testimonials from "@/components/Testimonials";
+import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { HomeTranslationSchema } from '@/locales/schemas/home.schema';
 
+// Carga perezosa de los aparatos pesados
+const Attractions = lazy(() => import("@/components/attractions").then(m => ({ default: m.Attractions })));
+const Excursions = lazy(() => import("@/components/excursions").then(m => ({ default: m.Excursions })));
+const Testimonials = lazy(() => import("@/components/Testimonials"));
+const MapView = lazy(() => import("@/components/Map").then(m => ({ default: m.MapView })));
+
+// Componente fallback ligero para mantener la jerarquía visual
+const SectionFallback = () => (
+  <div className="py-20 flex justify-center">
+    <Spinner className="w-8 h-8 text-accent opacity-50" />
+  </div>
+);
+
 export default function Home() {
   const { t, i18n } = useTranslation('home');
 
-  // ============================================================================
-  // VALIDACIÓN DE INTEGRIDAD DEL ESQUEMA (ZOD)
-  // ============================================================================
   if (import.meta.env.DEV) {
     try {
       const currentBundle = i18n.getResourceBundle(i18n.language, 'home') || {};
@@ -41,25 +46,16 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <Header />
       <main>
-        {/* Fase 1: Inspiración y Deseo */}
         <Hero />
-        
-        {/* Fase 2: Conexión y Propuesta de Confort (El Gancho) */}
         <AboutSection />
-        
-        {/* Fase 3: Configuración del Descanso e Interacción de Reserva (Carrusel responsivo) */}
         <Rooms />
-        
-        {/* Fase 4: Validación Visual Real */}
         <Gallery />
         
-        {/* Fase 5: Viabilidad Logística e Integración Geográfica */}
-        <Attractions />
-
-        {/* Fase 5 (B): Excursiones organizadas del Hotel (Carrusel responsivo) */}
-        <Excursions />
+        <Suspense fallback={<SectionFallback />}>
+          <Attractions />
+          <Excursions />
+        </Suspense>
         
-        {/* Bloque de Geolocalización Interactiva */}
         <section className="py-20 bg-white border-t border-gray-100">
           <div className="container px-4">
             <div className="text-center mb-12">
@@ -74,22 +70,19 @@ export default function Home() {
               </p>
             </div>
             
-            {/* 
-              Aparato MapView:
-              Estilo Soft-UI con bordes de 2.5rem para transmitir confort y accesibilidad.
-              Usa la API Key de Google Maps protegida desde variables de entorno locales.
-            */}
             <div className="max-w-4xl mx-auto">
-              <MapView className="w-full h-[400px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100" />
+              <Suspense fallback={<div className="w-full h-[400px] bg-gray-100 animate-pulse rounded-[2.5rem]" />}>
+                <MapView className="w-full h-[400px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100" />
+              </Suspense>
             </div>
           </div>
         </section>
 
-        {/* Fase 6: Cierre de Conversión (Formulario de Contacto Alternativo) */}
         <ContactSection />
 
-        {/* Fase 6: Validación Social */}
-        <Testimonials />
+        <Suspense fallback={<SectionFallback />}>
+          <Testimonials />
+        </Suspense>
       </main>
       <Footer />
       <WhatsAppButton />

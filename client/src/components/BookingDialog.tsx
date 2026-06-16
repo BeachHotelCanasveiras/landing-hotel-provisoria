@@ -1,10 +1,10 @@
 /**
  * @file BookingDialog.tsx
- * @description Orquestador principal de reservas de 2 pasos (Fase 6 del Embudo: Transacción).
+ * @description Orquestador principal de reservas de 2 pasos.
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Sincronización de estado en fase de renderizado según el estándar de React 19 (cero cascadas).
- * - Libre de tipos 'any' y totalmente compliant con ESLint v9.
- * - Divide responsabilidades delegando en BookingDatePicker y BookingDetailsForm.
+ * - Cero 'any': Tipado estricto en callbacks y flujos.
+ * - i18n Strict: Corrección de textos de error hardcodeados.
+ * - Desacoplado: Delega el cálculo de inventario a 'useBlockedDates'.
  */
 
 import React, { useState } from 'react';
@@ -17,15 +17,11 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { BookingTranslationSchema } from '@/locales/schemas/booking.schema';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 // Importaciones atómicas de sub-componentes (Aparato C.1 y C.2)
-import { BookingDatePicker } from './booking/BookingDatePicker';
-import { BookingDetailsForm } from './booking/BookingDetailsForm';
+import { BookingDatePicker, BookingDetailsForm } from './booking';
+import { useBlockedDates } from './booking/useBlockedDates';
 
 interface BookingDialogProps {
   isOpen: boolean;
@@ -36,6 +32,10 @@ interface BookingDialogProps {
 
 export default function BookingDialog({ isOpen, onClose, roomName, roomType }: BookingDialogProps) {
   const { t, i18n } = useTranslation(['booking', 'auth']);
+  
+  // Consumo dinámico del inventario en Supabase (Cero sobre-reservas)
+  const { data: blockedDates = [] } = useBlockedDates(roomType);
+
   const [range, setRange] = useState<DateRange | undefined>();
   const [step, setStep] = useState(1);
   
@@ -48,13 +48,9 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; email?: string }>({});
   
   const [guestsCount, setGuestsCount] = useState('2');
-  const [blockedDates] = useState<Date[]>([]);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
-  /**
-   * Sincronización de Estado en Renderizado (React 19 Pattern)
-   * Resuelve react-hooks/set-state-in-effect evitando renders en cascada.
-   */
+  // Sincronización de Estado en Renderizado (React 19 Pattern)
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   if (isOpen !== prevIsOpen) {
     setPrevIsOpen(isOpen);
@@ -91,21 +87,22 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
     const tempErrors: typeof errors = {};
     let isValid = true;
 
+    // RESOLUCIÓN DE DEUDA TÉCNICA: Textos de error internacionalizados
     if (!firstName.trim()) {
-      tempErrors.firstName = 'El nombre es obligatorio.';
+      tempErrors.firstName = t('booking:error_first_name_required', { defaultValue: 'El nombre es obligatorio.' });
       isValid = false;
     }
     if (!lastName.trim()) {
-      tempErrors.lastName = 'El apellido es obligatorio.';
+      tempErrors.lastName = t('booking:error_last_name_required', { defaultValue: 'El apellido es obligatorio.' });
       isValid = false;
     }
     
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email.trim()) {
-      tempErrors.email = 'El correo electrónico es obligatorio.';
+      tempErrors.email = t('booking:error_email_required', { defaultValue: 'El correo electrónico es obligatorio.' });
       isValid = false;
     } else if (!emailRegex.test(email)) {
-      tempErrors.email = 'Ingresa una dirección de correo válida.';
+      tempErrors.email = t('booking:error_email_invalid', { defaultValue: 'Ingresa una dirección de correo válida.' });
       isValid = false;
     }
 
@@ -116,7 +113,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const handleStripePayment = async () => {
     if (!range?.from || !range?.to) return;
     if (!validateForm()) {
-      toast.error('Por favor, corrige los campos del formulario.');
+      toast.error(t('booking:error_form_invalid', { defaultValue: 'Por favor, corrige los campos del formulario.' }));
       return;
     }
     
@@ -202,7 +199,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none bg-white rounded-[2.5rem] shadow-2xl z-[100]">
         
-        {/* Encabezado de Navegación del Diálogo */}
+        {/* Encabezado */}
         <div className="relative px-6 pt-8 pb-5 border-b border-gray-50 bg-white">
           <div className="flex items-center justify-between">
             <div className="w-10">
@@ -210,7 +207,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                 <button 
                   onClick={() => setStep(1)} 
                   disabled={paymentLoading}
-                  className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50"
+                  className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50 cursor-pointer"
                 >
                   <ChevronLeft size={22} className="text-gray-900" />
                 </button>
@@ -230,7 +227,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
               <button 
                 onClick={onClose} 
                 disabled={paymentLoading}
-                className="p-2 -mr-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50"
+                className="p-2 -mr-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50 cursor-pointer"
               >
                 <X size={20} className="text-gray-400" />
               </button>
@@ -238,7 +235,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
           </div>
         </div>
 
-        {/* Contenido del Diálogo */}
+        {/* Cuerpo */}
         <div className="p-6 max-h-[80vh] overflow-y-auto">
           <AnimatePresence mode="wait" custom={step}>
             {step === 1 ? (

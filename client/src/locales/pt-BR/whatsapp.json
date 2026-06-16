@@ -1,0 +1,6 @@
+{
+  "booking_confirmation": "Olá {{guestName}}, saudações da recepção do Hotel Beach Canasvieiras. Confirmamos que a sua reserva {{reference}} para o período de {{checkIn}} a {{checkOut}} está registrada com segurança.",
+  "excursion_inquiry": "Olá! Gostaria de reservar a excursão exclusiva do hotel: *{{name}}*.",
+  "attraction_directions": "Olá! Gostaria de saber como chegar a {{name}} a partir do Hotel.",
+  "general_contact": "Olá, gostaria de consultar a disponibilidade para fazer uma reserva no {{hotelName}}."
+}

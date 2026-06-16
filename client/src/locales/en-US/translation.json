@@ -446,5 +446,11 @@
         "relative_time_description": "Three months ago"
       }
     ]
+  },
+  "whatsapp": {
+    "booking_confirmation": "Hello {{guestName}}, greetings from the reception of Hotel Beach Canasvieiras. We confirm that your booking {{reference}} for the period from {{checkIn}} to {{checkOut}} is securely registered.",
+    "excursion_inquiry": "Hello! I would like to book the hotel's exclusive excursion: *{{name}}*.",
+    "attraction_directions": "Hello! I would like to know how to get to {{name}} from the Hotel.",
+    "general_contact": "Hello, I would like to check availability to make a reservation at {{hotelName}}."
   }
 }

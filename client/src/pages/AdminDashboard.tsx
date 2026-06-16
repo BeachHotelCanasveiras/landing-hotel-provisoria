@@ -3,17 +3,18 @@
  * @description Orquestador Maestro del Panel de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Layout Híbrido: Sidebar inmersiva para Staff, Top-Nav para Clientes.
- * - Saneamiento de react-hooks/rules-of-hooks: Cero retornos tempranos antes de la declaración de Hooks.
- * - Saneamiento de tipado estricto TS y ESLint v9.
+ * - Saneamiento de tipado estricto TS (100% libre de aserciones 'any' o variables huérfanas).
+ * - Saneamiento de react-hooks/rules-of-hooks: Cero retornos tempranos.
+ * - Integración del Portal de Limpieza y el Administrador de Personal de Élite (StaffManagement).
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
-import { LogOut } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { LogOut } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,14 +27,45 @@ import { RoomMatrix } from '@/components/dashboard/reception/RoomMatrix';
 import { RatesAvailability } from '@/components/dashboard/reception/RatesAvailability';
 import { BookingSearch, type BookingRecord } from '@/components/dashboard/reception/BookingSearch';
 import { HousekeepingReport, type HousekeepingTask } from '@/components/dashboard/reception/HousekeepingReport';
+import { HousekeeperPortal } from '@/components/dashboard/HousekeeperPortal';
+import { StaffManagement } from '@/components/dashboard/reception/StaffManagement'; // <-- IMPORTACIÓN DEL PORTAL DE PERSONAL
+
+// Importación contractual de tipos específicos de los sub-paneles para evitar casteos inseguros
+import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
 
 // ----------------------------------------------------------------------------
-// Interfaces Internas Estrictas
+// Interfaces Locales Estructuradas (Duck Typing - Resuelve TS2459)
+// ----------------------------------------------------------------------------
+interface MatrixRoom {
+  id: number;
+  name: string;
+  type: 'single' | 'double' | 'triple' | 'grupal';
+  housekeeping_status: 'clean' | 'dirty' | 'cleaning';
+}
+
+interface MatrixBooking {
+  id: string;
+  room_id: number;
+  guest_name: string;
+  check_in: string;
+  check_out: string;
+  status: 'pending' | 'confirmed';
+}
+
+interface RatesCategory {
+  id: string;
+  name: string;
+  total_inventory: number;
+  base_price_brl: number;
+}
+
+// ----------------------------------------------------------------------------
+// Interfaces Internas Estrictas de Supabase
 // ----------------------------------------------------------------------------
 interface SupabaseRoom {
   id: number;
   name: string;
-  type: string;
+  type: 'single' | 'double' | 'triple' | 'grupal';
   price_per_night: number;
   housekeeping_status: 'clean' | 'dirty' | 'cleaning';
   current_occupant?: string;
@@ -65,7 +97,9 @@ export default function AdminDashboard() {
   const [currentView, setCurrentView] = useState<string>('overview');
 
   const currentRoleString = String(role);
-  const isStaff = ['admin', 'developer', 'receptionist', 'housekeeper'].includes(currentRoleString);
+  
+  // Saneamiento de Roles (isStaff ahora es exclusivo de personal administrativo de escritorio)
+  const isStaff = ['admin', 'developer', 'receptionist'].includes(currentRoleString);
 
   // ============================================================================
   // 1. DATA FETCHING (TanStack Query) - Declarados SIEMPRE en el mismo orden
@@ -89,7 +123,6 @@ export default function AdminDashboard() {
         .select('*, guests(first_name, last_name, phone, user_email), rooms(name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      // Mitigación de ESLint explicit-any a través de unknown
       return data as unknown as SupabaseBooking[];
     },
     enabled: !!user,
@@ -102,7 +135,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       return data as HousekeepingTask[];
     },
-    enabled: isStaff && !!user,
+    enabled: (isStaff || currentRoleString === 'housekeeper') && !!user,
   });
 
   // ============================================================================
@@ -113,9 +146,9 @@ export default function AdminDashboard() {
     return rawBookings.map((b) => ({
       id: b.id,
       referenceCode: b.id.split('-')[0].toUpperCase(),
-      guestName: 'Huésped Invitado', 
-      guestEmail: 'Sincronizado vía Stripe',
-      guestPhone: '+5548998126650',
+      guestName: b.guests ? `${b.guests.first_name} ${b.guests.last_name}` : 'Huésped Invitado', 
+      guestEmail: b.guests?.user_email || 'Sincronizado vía Stripe',
+      guestPhone: b.guests?.phone || '+5548998126650',
       roomName: b.rooms?.name || `Habitación ${b.room_id}`,
       checkIn: b.check_in,
       checkOut: b.check_out,
@@ -124,7 +157,34 @@ export default function AdminDashboard() {
     }));
   }, [rawBookings]);
 
-  const roomCategories = useMemo(() => {
+  // Conversión de tipos limpia para RoomMatrix sin usar 'any'
+  const matrixRooms: MatrixRoom[] = useMemo(() => {
+    return rooms.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.type,
+      housekeeping_status: r.housekeeping_status,
+    }));
+  }, [rooms]);
+
+  // Mapeo seguro de reservas activas para el calendario de RoomMatrix
+  const matrixBookings: MatrixBooking[] = useMemo(() => {
+    return rawBookings
+      .filter((b) => b.status === 'confirmed' || b.status === 'checked_in' || b.status === 'pending')
+      .map((b) => {
+        const guestName = b.guests ? `${b.guests.first_name} ${b.guests.last_name}` : 'Huésped';
+        return {
+          id: b.id,
+          room_id: b.room_id,
+          guest_name: guestName,
+          check_in: b.check_in,
+          check_out: b.check_out,
+          status: (b.status === 'pending' ? 'pending' : 'confirmed') as 'pending' | 'confirmed',
+        };
+      });
+  }, [rawBookings]);
+
+  const roomCategories: RatesCategory[] = useMemo(() => {
     const cats: Record<string, { id: string; name: string; total_inventory: number; base_price_brl: number }> = {};
     rooms.forEach(r => {
       if (!cats[r.type]) {
@@ -134,6 +194,17 @@ export default function AdminDashboard() {
       cats[r.type].base_price_brl = Number(r.price_per_night) || 200; 
     });
     return Object.values(cats);
+  }, [rooms]);
+
+  // Conversión limpia para Housekeeping (Principio de Responsabilidad Única)
+  const housekeepingRooms: RoomHousekeepingData[] = useMemo(() => {
+    return rooms.map((r) => ({
+      id: r.id,
+      name: r.name,
+      type: r.type,
+      housekeeping_status: r.housekeeping_status,
+      current_occupant: r.current_occupant,
+    }));
   }, [rooms]);
 
   // ============================================================================
@@ -195,7 +266,6 @@ export default function AdminDashboard() {
   // 4. CONTROLADORES DE SESIÓN, REDIRECCIÓN PROTEGIDA Y RENDER
   // ============================================================================
 
-  // Failsafe de Seguridad (Protección de Ruta) en fase posterior a Hooks
   useEffect(() => {
     if (!authLoading && !user) {
       setLocation('/login');
@@ -230,19 +300,49 @@ export default function AdminDashboard() {
 
     switch (currentView) {
       case 'room_map':
-        // Aserciones seguras para componentes de UI
-        return <RoomMatrix rooms={rooms as unknown as any[]} bookings={mappedBookings as unknown as any[]} onManualAllocate={(id, date) => toast.info(`Asignando manual en Hab ${id} para ${date}`)} />;
+        return (
+          <RoomMatrix 
+            rooms={matrixRooms} 
+            bookings={matrixBookings} 
+            onManualAllocate={(id, date) => toast.info(`Asignando manual en Hab ${id} para ${date}`)} 
+          />
+        );
       case 'rates':
-        return <RatesAvailability categories={roomCategories as unknown as any[]} onSave={async () => { await new Promise(r => setTimeout(r, 1000)); }} />;
+        return (
+          <RatesAvailability 
+            categories={roomCategories} 
+            onSave={async () => { await new Promise(r => setTimeout(r, 1000)); }} 
+          />
+        );
       case 'booking_search':
-        return <BookingSearch bookings={mappedBookings} isActionLoading={updateBookingStatusMutation.isPending} onStatusChange={(id, status) => updateBookingStatusMutation.mutateAsync({ bookingId: id, status })} />;
+        return (
+          <BookingSearch 
+            bookings={mappedBookings} 
+            isActionLoading={updateBookingStatusMutation.isPending} 
+            onStatusChange={(id, status) => updateBookingStatusMutation.mutateAsync({ bookingId: id, status })} 
+          />
+        );
       case 'housekeeping':
-        return <HousekeepingReport rooms={rooms as unknown as any[]} tasks={tasks} userRole={currentRoleString as any} isActionLoading={updateRoomStatusMutation.isPending || toggleTaskMutation.isPending} onUpdateRoomStatus={(id, status) => updateRoomStatusMutation.mutateAsync({ roomId: id, status })} onToggleTask={(id, status) => toggleTaskMutation.mutateAsync({ taskId: id, isCompleted: status })} onAddCustomTask={(id, name) => addCustomTaskMutation.mutateAsync({ roomId: id, taskName: name })} />;
+        return (
+          <HousekeepingReport 
+            rooms={housekeepingRooms} 
+            tasks={tasks} 
+            userRole={currentRoleString as 'developer' | 'admin' | 'receptionist' | 'housekeeper'} 
+            isActionLoading={updateRoomStatusMutation.isPending || toggleTaskMutation.isPending} 
+            onUpdateRoomStatus={(id, status) => updateRoomStatusMutation.mutateAsync({ roomId: id, status })} 
+            onToggleTask={(id, status) => toggleTaskMutation.mutateAsync({ taskId: id, isCompleted: status })} 
+            onAddCustomTask={(id, name) => addCustomTaskMutation.mutateAsync({ roomId: id, taskName: name })} 
+          />
+        );
+      case 'settings_staff': // <-- VISTA ENRUTADA PARA EL GESTOR DE PERSONAL
+      case 'staff':
+        return <StaffManagement />;
       case 'overview':
       default:
         if (currentRoleString === 'developer') return <DeveloperConsole t={t} />;
         if (currentRoleString === 'admin') return <AdminPMS t={t} />;
         if (currentRoleString === 'agency') return <AgencyPortal userEmail={user.email || ''} t={t} />;
+        if (currentRoleString === 'housekeeper') return <HousekeeperPortal />;
         return <GuestPortal userEmail={user.email || ''} t={t} />;
     }
   };
@@ -251,7 +351,6 @@ export default function AdminDashboard() {
   // 5. RENDERIZADO HÍBRIDO (Layout Inmersivo vs Portal)
   // ============================================================================
 
-  // LAYOUT 1: Interfaz de Escritorio (Staff / Operadores)
   if (isStaff) {
     return (
       <div className="flex h-screen bg-gray-50 overflow-hidden font-body selection:bg-accent/30">
@@ -295,7 +394,7 @@ export default function AdminDashboard() {
     );
   }
 
-  // LAYOUT 2: Portal Simple (Huéspedes y Agencias)
+  // PORTAL SIMPLE (Aplica para Hóspedes, Agencias y el nuevo Portal de Limpieza 'housekeeper')
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-body selection:bg-accent/30 flex flex-col">
       <header className="border-b border-gray-200 bg-white sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm">
@@ -305,7 +404,7 @@ export default function AdminDashboard() {
           </div>
           <span className="text-gray-300">/</span>
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">
-            {currentRoleString === 'agency' ? t('views.agency.title') : t('views.guest.title')}
+            {currentRoleString === 'agency' ? t('views.agency.title') : currentRoleString === 'housekeeper' ? t('housekeeping:title', { defaultValue: 'Portal de Limpieza' }) : t('views.guest.title')}
           </span>
         </div>
         <div className="relative">

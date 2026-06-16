@@ -4,7 +4,7 @@
  * @description Hook personalizado que escucha inserciones en tiempo real en la tabla
  * 'bookings' de Supabase para disparar alertas inmediatas en el Dashboard.
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Corrige el error de referencia fatal de la variable huérfana 'api'.
+ * - Saneamiento de ESLint: Uso de Optional Catch Binding para eliminar la variable 'e' huérfana.
  * - Limpieza inmaculada de suscripciones de canal para evitar fugas de memoria.
  * - Satisface las normas ISO 27001 de disponibilidad.
  */
@@ -37,12 +37,12 @@ export function useBookingNotifications(onNewBooking?: (booking: BookingRealtime
         (payload) => {
           const newBooking = payload.new as BookingRealtimePayload;
           
-          // 2. Feedback auditivo premium de alerta de conversión
+          // 2. Feedback auditivo de alerta de conversión
           try {
             const audio = new Audio('/sounds/booking-alert.mp3');
             audio.volume = 0.5;
             audio.play();
-          } catch (e) {
+          } catch { // CORRECCIÓN (react-hooks): Optional Catch Binding que elimina 'e' sin uso
             console.log('[Realtime Notification] Reproducción de sonido omitida por políticas del navegador o falta de interacción.');
           }
 

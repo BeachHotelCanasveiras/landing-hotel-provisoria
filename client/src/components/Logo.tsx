@@ -59,7 +59,7 @@ export const Logo = ({
         className="h-full w-auto object-contain select-none pointer-events-none"
         draggable={false}
         loading="eager"
-        // @ts-ignore
+    // @ts-expect-error - Atributo fetchpriority nativo de navegador no soportado por TS básico
         fetchpriority="high"
       />
     </picture>

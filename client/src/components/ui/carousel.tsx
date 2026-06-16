@@ -93,11 +93,20 @@ function Carousel({
 
   React.useEffect(() => {
     if (!api) return;
-    onSelect(api);
+
+    // CORRECCIÓN (react-hooks/set-state-in-effect): Evita llamadas síncronas a setState en efectos
+    const handleInit = () => {
+      onSelect(api);
+    };
+
     api.on("reInit", onSelect);
     api.on("select", onSelect);
 
+    // Posponer el estado de scroll inicial a la siguiente iteración de macro-tareas para evitar renders en cascada
+    const timer = setTimeout(handleInit, 0);
+
     return () => {
+      clearTimeout(timer); // Limpieza preventiva (Evita memory leaks)
       api?.off("select", onSelect);
     };
   }, [api, onSelect]);
