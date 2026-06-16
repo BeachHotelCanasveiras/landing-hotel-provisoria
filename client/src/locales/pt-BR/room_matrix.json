@@ -1,0 +1,13 @@
+{
+  "badge": "Controle de Inventário em Tempo Real",
+  "title": "Mapa de Ocupação",
+  "subtitle": "Gráfico interativo de alocações físicas, status de leitos e atribuição algorítmica de quartos.",
+  "smart_allocate_btn": "Alocação Inteligente (IA)",
+  "smart_allocating": "Calculando slot ideal...",
+  "smart_allocate_success": "Alocação ideal concluída no Quarto {{room}}",
+  "no_rooms_found": "Nenhum quarto disponível encontrado para os critérios selecionados.",
+  "columns": {
+    "room": "Quarto",
+    "type": "Tipo"
+  }
+}

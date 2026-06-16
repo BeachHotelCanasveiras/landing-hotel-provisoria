@@ -18,6 +18,26 @@
       }
     }
   },
+  "amenities": {
+    "badge": "Especificación de Inventario",
+    "title": "Configuración de Amenities",
+    "subtitle": "Especificación física de inventario para la Habitación {{roomName}} (ID: {{roomId}}).",
+    "save_button": "Guardar Especificación",
+    "labels": {
+      "has_ac": "Aire Acondicionado (Climatización)",
+      "has_minibar": "Minibar / Frigobar",
+      "has_tv": "Televisor Smart TV",
+      "has_bathtub": "Tina de Baño / Jacuzzi",
+      "has_balcony": "Balcón Privado",
+      "has_wifi": "Conexión Wi-Fi de Alta Velocidad",
+      "has_ocean_view": "Vista al Mar (Ocean View)",
+      "has_safe": "Caja Fuerte de Seguridad",
+      "has_hairdryer": "Secador de Cabello Profesional",
+      "has_coffee": "Cafetera y Hervidor",
+      "double_beds": "Camas Matrimoniales",
+      "single_beds": "Camas Individuales"
+    }
+  },
   "attractions": {
     "badge": "Ubicación Estratégica",
     "title": "Descubre Canasvieiras",
@@ -115,6 +135,30 @@
       "name": "*Nombre:*",
       "footer": "_Enviado desde beachcanasvieiras.com_"
     }
+  },
+  "booking_search": {
+    "badge": "Módulo CRM de Recepción",
+    "title": "Buscador de Reservas",
+    "subtitle": "Auditoría en tiempo real de estancias, control de check-in / check-out y pasarelas de comunicación directa.",
+    "search_placeholder": "Buscar por nombre, email o código de reserva...",
+    "filter_status_all": "Todos los estados",
+    "status": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmada",
+      "checked_in": "Checked In (Hospedado)",
+      "checked_out": "Checked Out (Salida)",
+      "cancelled": "Cancelada"
+    },
+    "columns": {
+      "reference": "Referencia",
+      "guest": "Huésped / Email",
+      "room": "Habitación",
+      "dates": "Fechas de Estancia",
+      "total": "Total Facturado",
+      "status": "Estado",
+      "actions": "Acciones Rápidas"
+    },
+    "no_bookings_found": "No se encontraron reservas que coincidan con los criterios de búsqueda."
   },
   "contact": {
     "badge": "Contacto",
@@ -263,6 +307,19 @@
     "map_title": "En el Corazón de Canasvieiras",
     "map_subtitle": "Ubicados estratégicamente sobre la Avenida das Nações, la arteria principal del balneario. Verifica nuestra cercanía a pasos de la playa de aguas tranquilas."
   },
+  "housekeeping": {
+    "badge": "Control Operativo de Pisos",
+    "title": "Reporte de Ama de Llaves",
+    "subtitle": "Lista de control de aseo de habitaciones, tareas patrón y mantenimiento en caliente.",
+    "add_custom_task_placeholder": "Agregar tarea de mantenimiento extra...",
+    "add_button": "Añadir",
+    "status": {
+      "clean": "Limpia",
+      "dirty": "Sucia",
+      "cleaning": "En Limpieza"
+    },
+    "tasks_completed_suffix": "tareas completadas"
+  },
   "nav": {
     "home": "Inicio",
     "rooms": "Habitaciones",
@@ -280,6 +337,57 @@
     "lang_es": "es - Español",
     "lang_en": "en - Inglés",
     "lang_pt": "pt - Portugués"
+  },
+  "pms_sidebar": {
+    "menu_principal": "Menú Principal",
+    "overview": "Panorámica de Hoy",
+    "bookings": {
+      "title": "Reservas",
+      "room_map": "Mapa de Habitaciones",
+      "search": "CRM - Buscador"
+    },
+    "reports": {
+      "title": "Informes",
+      "revenue": "Ingresos y Pronósticos",
+      "meals": "Comidas",
+      "police": "Informe Policial (FNRH)"
+    },
+    "accounting": {
+      "title": "Contabilidad",
+      "cash_flow": "Flujo de Caja",
+      "expenses": "Gastos y Proveedores",
+      "invoiced": "Total Facturado"
+    },
+    "rates": "Precios y Disponibilidades",
+    "housekeeping": "Ama de Llaves",
+    "booking_engine": "Motor de Reservas",
+    "settings": {
+      "title": "Configuraciones",
+      "all_settings": "Ver Configuraciones",
+      "email_templates": "Plantillas de Email",
+      "exchange_rates": "Tipos de Cambio",
+      "pos": "Punto de Venta"
+    },
+    "logout": "Cerrar Sesión"
+  },
+  "rates_availability": {
+    "badge": "Gestión de Tarifas y Rendimiento",
+    "title": "Precios y Disponibilidades",
+    "subtitle": "Matriz interactiva para la carga masiva de tarifas base, restricciones de estadía mínima y cierres de ventas.",
+    "save_btn": "Guardar Cambios",
+    "sync_btn": "Sincronizar OTAs",
+    "saving": "Guardando cambios en el servidor...",
+    "save_success": "Tarifas e inventarios actualizados correctamente.",
+    "row_labels": {
+      "availability": "Disponibilidad",
+      "min_stay": "Estadía Mínima",
+      "min_nights_arrival": "Noches Mín. desde Llegada",
+      "closed": "Cerrada",
+      "no_check_in": "Sin Llegadas",
+      "no_check_out": "Sin Salidas",
+      "rates_brl": "Precio en Reales (BRL)",
+      "rates_usd": "Precio en Dólares (USD)"
+    }
   },
   "rooms": {
     "badge": "Hospitalidad & Confort",
@@ -331,6 +439,19 @@
           "WiFi"
         ]
       }
+    }
+  },
+  "room_matrix": {
+    "badge": "Control de Inventario en Tiempo Real",
+    "title": "Mapa de Ocupación",
+    "subtitle": "Gráfica interactiva de asignaciones físicas, estado de camas y asignación algorítmica de cuartos.",
+    "smart_allocate_btn": "Asignación Inteligente (AI)",
+    "smart_allocating": "Calculando slot óptimo...",
+    "smart_allocate_success": "Asignación óptima completada en la Habitación {{room}}",
+    "no_rooms_found": "No se encontraron habitaciones disponibles para los criterios seleccionados.",
+    "columns": {
+      "room": "Habitación",
+      "type": "Tipo"
     }
   },
   "testimonials": {

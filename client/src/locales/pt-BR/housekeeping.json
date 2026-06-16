@@ -1,0 +1,13 @@
+{
+  "badge": "Controle Operacional de Governança",
+  "title": "Relatório de Governança / Camareira",
+  "subtitle": "Lista de verificação de limpeza dos quartos, tarefas padrão e manutenção em tempo real.",
+  "add_custom_task_placeholder": "Adicionar tarefa extra de manutenção...",
+  "add_button": "Adicionar",
+  "status": {
+    "clean": "Limpo",
+    "dirty": "Sujo",
+    "cleaning": "Limpando"
+  },
+  "tasks_completed_suffix": "tarefas concluídas"
+}

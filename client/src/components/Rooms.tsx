@@ -2,17 +2,21 @@
  * @file Rooms.tsx
  * @description Catálogo de Habitaciones (Fase 3 del Embudo: Decisión).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Saneamiento completo de tipos: Libre de 'any' para ESLint v9.
+ * - Inyección visual de mini-iconos responsivos al lado de cada píldora de amenities.
  * - Implementa la TÁCTICA HÍBRIDA móvil (Snap-Scroll horizontal en celulares).
  * - Textos mapeados dinámicamente desde el namespace 'rooms' de i18next.
  * - Validación estructural estricta con Zod (RoomsTranslationSchema).
- * - Protección defensiva (Safe Fallbacks) contra fallos de carga en tiempo de ejecución.
- * - Tipado estricto libre de 'any' implícitos (TS7006 resuelto).
  */
 
 import { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
+import { 
+  AirVent, Wifi, Coffee, GlassWater, BedDouble, Bed, 
+  KeyRound, Users, ShieldCheck, HelpCircle 
+} from 'lucide-react';
 import BookingDialog from './BookingDialog';
 import { RoomsTranslationSchema } from '@/locales/schemas/rooms.schema';
 
@@ -33,12 +37,62 @@ interface RoomData {
   amenities: string[];
 }
 
+/**
+ * Contrato estricto para los textos localizados devueltos por i18next
+ * para evitar el tipo 'any' implícito (satisfaciendo ESLint v9).
+ */
+interface RoomTranslation {
+  name: string;
+  description: string;
+  amenities: string[];
+}
+
 const ROOMS_CONFIG: RoomConfig[] = [
   { id: 1, type: 'single', image: `${CLOUDINARY_BASE}suites/single.png` },
   { id: 2, type: 'double', image: `${CLOUDINARY_BASE}suites/grupal.png` },
   { id: 3, type: 'triple', image: `${CLOUDINARY_BASE}suites/triple.png` },
   { id: 4, type: 'grupal', image: `${CLOUDINARY_BASE}suites/viajeros-grupo.png` },
 ];
+
+/**
+ * @function getAmenityIcon
+ * @description Mapeador de precisión bilingüe para inyectar mini-iconos de alta definición.
+ * @param {string} amenityText - Texto localizado del amenity.
+ * @returns {React.ReactElement} Icono SVG de Lucide React de 12px de ancho.
+ */
+const getAmenityIcon = (amenityText: string): React.ReactElement => {
+  const text = amenityText.toLowerCase();
+  
+  if (text.includes('aire') || text.includes('climatizac') || text.includes('ac')) {
+    return <AirVent size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('wifi') || text.includes('internet')) {
+    return <Wifi size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('desayuno') || text.includes('café') || text.includes('comida')) {
+    return <Coffee size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('minibar') || text.includes('frigobar') || text.includes('bebida')) {
+    return <GlassWater size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('matrimonial') || text.includes('casal') || text.includes('doble')) {
+    return <BedDouble size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('cama') || text.includes('solteiro') || text.includes('single')) {
+    return <Bed size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('fuerte') || text.includes('cofre') || text.includes('seguridad')) {
+    return <KeyRound size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('grupal') || text.includes('capacidad') || text.includes('familia') || text.includes('grupo')) {
+    return <Users size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  if (text.includes('vip') || text.includes('coordinac')) {
+    return <ShieldCheck size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+  }
+  
+  return <HelpCircle size={12} className="text-accent shrink-0" strokeWidth={1.8} />;
+};
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -74,12 +128,15 @@ export default function Rooms() {
     const rawData = t(`suites.${config.type}`, { returnObjects: true });
     const isObject = typeof rawData === 'object' && rawData !== null;
     
+    // Casting de tipos seguro para evitar explicit-any de ESLint
+    const typedData = isObject ? (rawData as unknown as RoomTranslation) : null;
+
     return {
       ...config,
-      name: isObject ? (rawData as any).name : '',
-      description: isObject ? (rawData as any).description : '',
-      amenities: isObject && Array.isArray((rawData as any).amenities) 
-        ? (rawData as any).amenities as string[] 
+      name: typedData ? typedData.name : '',
+      description: typedData ? typedData.description : '',
+      amenities: typedData && Array.isArray(typedData.amenities) 
+        ? typedData.amenities 
         : [],
     };
   });
@@ -137,10 +194,16 @@ export default function Rooms() {
                 <div className="p-8 pb-0">
                   <h3 className="font-display text-2xl text-gray-900 mb-3 tracking-tight">{room.name}</h3>
                   <p className="font-body text-sm text-gray-500 mb-6 leading-relaxed line-clamp-3">{room.description}</p>
+                  
+                  {/* Píldoras de Amenities Saneadas e Iconizadas */}
                   <div className="mb-6">
                     <div className="flex flex-wrap gap-2">
                       {room.amenities.slice(0, 3).map((amenity: string, i: number) => (
-                        <span key={i} className="text-[10px] bg-gray-50 text-gray-600 px-2.5 py-1 rounded-md font-body font-medium border border-gray-100">
+                        <span 
+                          key={i} 
+                          className="inline-flex items-center gap-1.5 text-[10px] bg-gray-50 text-gray-600 px-2.5 py-1 rounded-md font-body font-medium border border-gray-100 select-none"
+                        >
+                          {getAmenityIcon(amenity)}
                           {amenity}
                         </span>
                       ))}

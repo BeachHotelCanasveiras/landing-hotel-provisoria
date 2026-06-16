@@ -1,0 +1,24 @@
+{
+  "badge": "Módulo CRM de Recepção",
+  "title": "Buscador de Reservas",
+  "subtitle": "Auditoria em tempo real de estadias, controle de check-in / check-out e canais de comunicação direta.",
+  "search_placeholder": "Buscar por nome, e-mail ou código de reserva...",
+  "filter_status_all": "Todos os status",
+  "status": {
+    "pending": "Pendente",
+    "confirmed": "Confirmado",
+    "checked_in": "Checked In (Hospedado)",
+    "checked_out": "Checked Out (Partida)",
+    "cancelled": "Cancelado"
+  },
+  "columns": {
+    "reference": "Referência",
+    "guest": "Hóspede / E-mail",
+    "room": "Quarto",
+    "dates": "Período de Estadia",
+    "total": "Total Faturado",
+    "status": "Status",
+    "actions": "Ações Rápidas"
+  },
+  "no_bookings_found": "Nenhuma reserva encontrada que corresponda aos critérios de busca."
+}

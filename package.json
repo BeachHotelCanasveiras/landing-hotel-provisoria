@@ -13,6 +13,9 @@
     "check": "node scripts/compile-i18n.js && tsc --noEmit && pnpm lint",
     "format": "prettier --write .",
     "db:status": "tsx scripts/supabase/db-status.ts",
+    "db:dump": "tsx scripts/supabase/db-dump.ts",
+    "db:all": "tsx scripts/supabase/test-db-connection.ts && tsx scripts/supabase/db-audit.ts && tsx scripts/supabase/db-dump.ts",
+    "db:seed:rooms": "tsx scripts/supabase/seed-pms-rooms.ts",
     "stripe:diagnostics": "tsx scripts/stripe/test-keys.ts && tsx scripts/stripe/test-endpoints.ts",
     "stripe:sync": "tsx scripts/stripe/sync-stats.ts",
     "stripe:all": "pnpm run stripe:diagnostics && pnpm run stripe:sync"

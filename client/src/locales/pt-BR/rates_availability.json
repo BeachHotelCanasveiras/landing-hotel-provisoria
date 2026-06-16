@@ -1,0 +1,19 @@
+{
+  "badge": "Gestão de Tarifas e Rendimento",
+  "title": "Preços e Disponibilidades",
+  "subtitle": "Matriz interativa para carga em lote de tarifas base, restrições de estadia mínima e fechamentos de vendas.",
+  "save_btn": "Salvar Alterações",
+  "sync_btn": "Sincronizar OTAs",
+  "saving": "Salvando alterações no servidor...",
+  "save_success": "Tarifas e inventários atualizados com sucesso.",
+  "row_labels": {
+    "availability": "Disponibilidade",
+    "min_stay": "Estadia Mínima",
+    "min_nights_arrival": "Noites Mín. desde Chegada",
+    "closed": "Fechada",
+    "no_check_in": "Sem Entradas",
+    "no_check_out": "Sem Saídas",
+    "rates_brl": "Preço em Reais (BRL)",
+    "rates_usd": "Preço em Dólares (USD)"
+  }
+}

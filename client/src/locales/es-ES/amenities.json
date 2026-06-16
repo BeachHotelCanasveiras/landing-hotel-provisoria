@@ -1,0 +1,20 @@
+{
+  "badge": "Especificación de Inventario",
+  "title": "Configuración de Amenities",
+  "subtitle": "Especificación física de inventario para la Habitación {{roomName}} (ID: {{roomId}}).",
+  "save_button": "Guardar Especificación",
+  "labels": {
+    "has_ac": "Aire Acondicionado (Climatización)",
+    "has_minibar": "Minibar / Frigobar",
+    "has_tv": "Televisor Smart TV",
+    "has_bathtub": "Tina de Baño / Jacuzzi",
+    "has_balcony": "Balcón Privado",
+    "has_wifi": "Conexión Wi-Fi de Alta Velocidad",
+    "has_ocean_view": "Vista al Mar (Ocean View)",
+    "has_safe": "Caja Fuerte de Seguridad",
+    "has_hairdryer": "Secador de Cabello Profesional",
+    "has_coffee": "Cafetera y Hervidor",
+    "double_beds": "Camas Matrimoniales",
+    "single_beds": "Camas Individuales"
+  }
+}

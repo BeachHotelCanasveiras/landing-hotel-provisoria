@@ -1,0 +1,13 @@
+{
+  "badge": "Housekeeping Control Panel",
+  "title": "Housekeeping Report",
+  "subtitle": "Room cleaning checklist, standard tasks, and on-the-fly maintenance logs.",
+  "add_custom_task_placeholder": "Add extra maintenance task...",
+  "add_button": "Add",
+  "status": {
+    "clean": "Clean",
+    "dirty": "Dirty",
+    "cleaning": "Cleaning"
+  },
+  "tasks_completed_suffix": "tasks completed"
+}

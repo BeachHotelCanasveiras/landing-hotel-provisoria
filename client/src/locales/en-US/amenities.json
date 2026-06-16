@@ -1,0 +1,20 @@
+{
+  "badge": "Inventory Specification",
+  "title": "Amenities Configuration",
+  "subtitle": "Physical inventory specifications for Room {{roomName}} (ID: {{roomId}}).",
+  "save_button": "Save Specifications",
+  "labels": {
+    "has_ac": "Air Conditioning (Climatization)",
+    "has_minibar": "Minibar / Fridge",
+    "has_tv": "Smart TV Flat Screen",
+    "has_bathtub": "Bathtub / Jacuzzi",
+    "has_balcony": "Private Balcony",
+    "has_wifi": "High-Speed Wi-Fi Connection",
+    "has_ocean_view": "Ocean View",
+    "has_safe": "Secure Safe Box",
+    "has_hairdryer": "Professional Hair Dryer",
+    "has_coffee": "Coffee & Tea Maker",
+    "double_beds": "Double Beds",
+    "single_beds": "Single Beds"
+  }
+}

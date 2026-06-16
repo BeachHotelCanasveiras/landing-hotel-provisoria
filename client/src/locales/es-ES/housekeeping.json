@@ -1,0 +1,13 @@
+{
+  "badge": "Control Operativo de Pisos",
+  "title": "Reporte de Ama de Llaves",
+  "subtitle": "Lista de control de aseo de habitaciones, tareas patrón y mantenimiento en caliente.",
+  "add_custom_task_placeholder": "Agregar tarea de mantenimiento extra...",
+  "add_button": "Añadir",
+  "status": {
+    "clean": "Limpia",
+    "dirty": "Sucia",
+    "cleaning": "En Limpieza"
+  },
+  "tasks_completed_suffix": "tareas completadas"
+}

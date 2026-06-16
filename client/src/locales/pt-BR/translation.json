@@ -18,6 +18,26 @@
       }
     }
   },
+  "amenities": {
+    "badge": "Especificação do Inventário",
+    "title": "Configuração de Comodidades",
+    "subtitle": "Especificações físicas do inventário para o Quarto {{roomName}} (ID: {{roomId}}).",
+    "save_button": "Salvar Especificações",
+    "labels": {
+      "has_ac": "Ar Condicionado (Climatização)",
+      "has_minibar": "Frigobar / Minibar",
+      "has_tv": "Televisor Smart TV",
+      "has_bathtub": "Banheira de Hidromassagem / Jacuzzi",
+      "has_balcony": "Varanda Privativa",
+      "has_wifi": "Conexão Wi-Fi de Alta Velocidade",
+      "has_ocean_view": "Vista para o Mar (Ocean View)",
+      "has_safe": "Cofre Eletrônico de Segurança",
+      "has_hairdryer": "Secador de Cabelo Profissional",
+      "has_coffee": "Cafeteira e Chaleira",
+      "double_beds": "Camas de Casal",
+      "single_beds": "Camas de Solteiro"
+    }
+  },
   "attractions": {
     "badge": "Localização Estratégica",
     "title": "Descubra Canasvieiras",
@@ -263,6 +283,19 @@
     "map_title": "No Coração de Canasvieiras",
     "map_subtitle": "Localizado estrategicamente na Avenida das Nações, a principal via do balneário. Verifique nossa proximidade a poucos passos da praia de águas tranquilas."
   },
+  "housekeeping": {
+    "badge": "Controle Operacional de Governança",
+    "title": "Relatório de Governança / Camareira",
+    "subtitle": "Lista de verificação de limpeza dos quartos, tarefas padrão e manutenção em tempo real.",
+    "add_custom_task_placeholder": "Adicionar tarefa extra de manutenção...",
+    "add_button": "Adicionar",
+    "status": {
+      "clean": "Limpo",
+      "dirty": "Sujo",
+      "cleaning": "Limpando"
+    },
+    "tasks_completed_suffix": "tarefas concluídas"
+  },
   "nav": {
     "home": "Início",
     "rooms": "Quartos",
@@ -280,6 +313,49 @@
     "lang_es": "es - Espanhol",
     "lang_en": "en - Inglês",
     "lang_pt": "pt - Português"
+  },
+  "pms_sidebar": {
+    "badge": "Módulo CRM de Recepção",
+    "title": "Buscador de Reservas",
+    "subtitle": "Auditoria em tempo real de estadias, controle de check-in / check-out e canais de comunicação direta.",
+    "search_placeholder": "Buscar por nome, e-mail ou código de reserva...",
+    "filter_status_all": "Todos os status",
+    "status": {
+      "pending": "Pendente",
+      "confirmed": "Confirmado",
+      "checked_in": "Checked In (Hospedado)",
+      "checked_out": "Checked Out (Partida)",
+      "cancelled": "Cancelado"
+    },
+    "columns": {
+      "reference": "Referência",
+      "guest": "Hóspede / E-mail",
+      "room": "Quarto",
+      "dates": "Período de Estadia",
+      "total": "Total Faturado",
+      "status": "Status",
+      "actions": "Ações Rápidas"
+    },
+    "no_bookings_found": "Nenhuma reserva encontrada que corresponda aos critérios de busca."
+  },
+  "rates_availability": {
+    "badge": "Gestão de Tarifas e Rendimento",
+    "title": "Preços e Disponibilidades",
+    "subtitle": "Matriz interativa para carga em lote de tarifas base, restrições de estadia mínima e fechamentos de vendas.",
+    "save_btn": "Salvar Alterações",
+    "sync_btn": "Sincronizar OTAs",
+    "saving": "Salvando alterações no servidor...",
+    "save_success": "Tarifas e inventários atualizados com sucesso.",
+    "row_labels": {
+      "availability": "Disponibilidade",
+      "min_stay": "Estadia Mínima",
+      "min_nights_arrival": "Noites Mín. desde Chegada",
+      "closed": "Fechada",
+      "no_check_in": "Sem Entradas",
+      "no_check_out": "Sem Saídas",
+      "rates_brl": "Preço em Reais (BRL)",
+      "rates_usd": "Preço em Dólares (USD)"
+    }
   },
   "rooms": {
     "badge": "Hospitalidade & Conforto",
@@ -331,6 +407,19 @@
           "WiFi"
         ]
       }
+    }
+  },
+  "room_matrix": {
+    "badge": "Controle de Inventário em Tempo Real",
+    "title": "Mapa de Ocupação",
+    "subtitle": "Gráfico interativo de alocações físicas, status de leitos e atribuição algorítmica de quartos.",
+    "smart_allocate_btn": "Alocação Inteligente (IA)",
+    "smart_allocating": "Calculando slot ideal...",
+    "smart_allocate_success": "Alocação ideal concluída no Quarto {{room}}",
+    "no_rooms_found": "Nenhum quarto disponível encontrado para os critérios selecionados.",
+    "columns": {
+      "room": "Quarto",
+      "type": "Tipo"
     }
   },
   "testimonials": {

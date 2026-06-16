@@ -1,0 +1,32 @@
+{
+  "menu_principal": "Main Menu",
+  "overview": "Hotel Overview Today",
+  "bookings": {
+    "title": "Bookings",
+    "room_map": "Room Matrix",
+    "search": "CRM - Search"
+  },
+  "reports": {
+    "title": "Reports",
+    "revenue": "Revenue & Forecasts",
+    "meals": "Meals",
+    "police": "Police Report (FNRH)"
+  },
+  "accounting": {
+    "title": "Accounting",
+    "cash_flow": "Cash Flow",
+    "expenses": "Expenses & Suppliers",
+    "invoiced": "Total Invoiced"
+  },
+  "rates": "Rates & Availability",
+  "housekeeping": "Housekeeping Log",
+  "booking_engine": "Booking Engine",
+  "settings": {
+    "title": "Settings",
+    "all_settings": "All Settings",
+    "email_templates": "Email Templates",
+    "exchange_rates": "Exchange Rates",
+    "pos": "Point of Sale (POS)"
+  },
+  "logout": "Sign Out"
+}

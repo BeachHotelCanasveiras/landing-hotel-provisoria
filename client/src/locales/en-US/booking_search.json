@@ -1,0 +1,24 @@
+{
+  "badge": "Reception CRM Module",
+  "title": "Booking Search",
+  "subtitle": "Real-time stay audit, check-in / check-out operational control, and direct communication gateways.",
+  "search_placeholder": "Search by name, email or booking code...",
+  "filter_status_all": "All statuses",
+  "status": {
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "checked_in": "Checked In (In House)",
+    "checked_out": "Checked Out",
+    "cancelled": "Cancelled"
+  },
+  "columns": {
+    "reference": "Reference",
+    "guest": "Guest / Email",
+    "room": "Room",
+    "dates": "Dates of Stay",
+    "total": "Total Invoiced",
+    "status": "Status",
+    "actions": "Quick Actions"
+  },
+  "no_bookings_found": "No bookings found matching the selected search criteria."
+}

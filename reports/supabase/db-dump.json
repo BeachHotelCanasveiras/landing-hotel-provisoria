@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-15T04:21:48.300Z",
+  "timestamp": "2026-06-16T03:26:53.777Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -14,10 +14,385 @@
         "email": "razpodesta@gmail.com",
         "role": "developer",
         "created_at": "2026-06-15T03:49:26.357194+00:00"
+      },
+      {
+        "id": "38057c1d-e00b-4803-9822-d4bc6ec2132b",
+        "email": "iamhotelbeach@gmail.com",
+        "role": "guest",
+        "created_at": "2026-06-15T04:56:32.563565+00:00"
+      },
+      {
+        "id": "70a30c75-733c-46a2-8827-d20f198aa17c",
+        "email": "reservas@beachcanasvieiras.com",
+        "role": "admin",
+        "created_at": "2026-06-15T05:21:46.932802+00:00"
+      },
+      {
+        "id": "3af4c306-818e-4621-9752-f3f3dbc17fba",
+        "email": "iamenefeterazt@gmail.com",
+        "role": "guest",
+        "created_at": "2026-06-15T06:34:33.087317+00:00"
+      },
+      {
+        "id": "283b8225-5335-4514-937c-d336925eab3d",
+        "email": "iamagentevai@gmail.com",
+        "role": "guest",
+        "created_at": "2026-06-15T12:57:00.362543+00:00"
       }
     ],
     "guests": [],
-    "rooms": [],
+    "rooms": [
+      {
+        "id": 101,
+        "name": "Suite 101",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 102,
+        "name": "Suite 102",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 103,
+        "name": "Suite 103",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 104,
+        "name": "Suite 104",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 105,
+        "name": "Suite 105",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 106,
+        "name": "Suite 106",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "dirty",
+        "current_occupant": null
+      },
+      {
+        "id": 107,
+        "name": "Suite 107",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 108,
+        "name": "Suite 108",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "cleaning",
+        "current_occupant": null
+      },
+      {
+        "id": 109,
+        "name": "Suite 109",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 110,
+        "name": "Suite 110",
+        "type": "single",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 201,
+        "name": "Suite 201",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 202,
+        "name": "Suite 202",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "dirty",
+        "current_occupant": null
+      },
+      {
+        "id": 203,
+        "name": "Suite 203",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 204,
+        "name": "Suite 204",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 205,
+        "name": "Suite 205",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 206,
+        "name": "Suite 206",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 207,
+        "name": "Suite 207",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 208,
+        "name": "Suite 208",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 209,
+        "name": "Suite 209",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 210,
+        "name": "Suite 210",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 211,
+        "name": "Suite 211",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 212,
+        "name": "Suite 212",
+        "type": "double",
+        "price_per_night": 200,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 301,
+        "name": "Suite 301",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 302,
+        "name": "Suite 302",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 303,
+        "name": "Suite 303",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 304,
+        "name": "Suite 304",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 305,
+        "name": "Suite 305",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 306,
+        "name": "Suite 306",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 307,
+        "name": "Suite 307",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 308,
+        "name": "Suite 308",
+        "type": "triple",
+        "price_per_night": 280,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 401,
+        "name": "Suite 401",
+        "type": "grupal",
+        "price_per_night": 80,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "dirty",
+        "current_occupant": null
+      },
+      {
+        "id": 402,
+        "name": "Suite 402",
+        "type": "grupal",
+        "price_per_night": 80,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "dirty",
+        "current_occupant": null
+      },
+      {
+        "id": 403,
+        "name": "Suite 403",
+        "type": "grupal",
+        "price_per_night": 80,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 404,
+        "name": "Suite 404",
+        "type": "grupal",
+        "price_per_night": 80,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      },
+      {
+        "id": 405,
+        "name": "Suite 405",
+        "type": "grupal",
+        "price_per_night": 80,
+        "status": "available",
+        "created_at": "2026-06-16T03:26:36.912044+00:00",
+        "housekeeping_status": "clean",
+        "current_occupant": null
+      }
+    ],
     "bookings": []
   }
 }

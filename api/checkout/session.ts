@@ -1,13 +1,14 @@
 /**
  * @file session.ts
  * @description Endpoint para inicializar sesiones de pago en Stripe.
- * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse), libre de 'any' para ESLint v9 y protección inmutable.
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Algoritmo de asignación preventiva: Soporta múltiples habitaciones físicas del mismo tipo (limit 1).
+ * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-// Inicialización de Stripe sincronizada con la API exacta de tu stack
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
   apiVersion: '2026-05-27.dahlia' 
 });
@@ -25,7 +26,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { roomType, roomName, checkIn, checkOut, guestName, email } = req.body;
 
-    // 1. Validación de campos obligatorios
     if (!roomType || !checkIn || !checkOut || !email) {
       return res.status(400).json({ message: 'Datos de reserva o correo electrónico incompletos.' });
     }
@@ -35,11 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'Dirección de correo electrónico con formato inválido.' });
     }
 
-    // 2. Normalización de fechas y validación de fronteras (Previene Date-Tampering)
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Establecer a medianoche de hoy local
+    today.setHours(0, 0, 0, 0);
 
-    // Forzar lectura en huso horario local para evitar desfases de día por desfase UTC
     const start = new Date(`${checkIn}T00:00:00`);
     const end = new Date(`${checkOut}T00:00:00`);
 
@@ -57,24 +55,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'La fecha de salida debe ser estrictamente posterior a la entrada.' });
     }
 
-    // 3. Autoridad del Servidor: Recuperar tarifa real desde la base de datos
+    // 🚀 OPTIMIZACIÓN DE PRÓXIMA GENERACIÓN: Asignación física preventiva
+    // Busca la primera habitación real disponible de esta categoría para anclar el precio inmutable.
     const { data: room, error: roomError } = await supabase
       .from('rooms')
       .select('id, price_per_night')
       .eq('type', roomType)
-      .single();
+      .eq('status', 'available')
+      .limit(1)
+      .maybeSingle();
 
     if (roomError || !room) {
-      return res.status(404).json({ message: 'La habitación seleccionada no se encuentra disponible en nuestro catálogo.' });
+      return res.status(404).json({ message: 'No hay habitaciones físicas disponibles para esta categoría en las fechas seleccionadas.' });
     }
 
     const totalPrice = Number(room.price_per_night) * nights;
 
-    // 4. Inicialización segura de Checkout con Stripe
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       customer_creation: 'always',
-      customer_email: email.trim(), // Pre-llenado de pasarela para fricción cero (CRO)
+      customer_email: email.trim(),
       line_items: [{
         price_data: {
           currency: 'brl',
@@ -99,10 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ url: session.url });
   } catch (error: unknown) {
-    // Auditamos el error internamente con toda la traza de sistema sin usar explicit 'any'
     console.error('[Checkout Session Error Critical]:', error);
-    
-    // Respondemos con un mensaje sanitizado para el cliente final (ISO 27001 Compliance)
-    return res.status(500).json({ message: 'No se pudo procesar la solicitud de reserva debido a una inconsistencia del sistema.' });
+    return res.status(500).json({ message: 'Inconsistencia de red al procesar la solicitud de reserva.' });
   }
 }

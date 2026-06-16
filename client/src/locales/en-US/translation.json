@@ -18,6 +18,26 @@
       }
     }
   },
+  "amenities": {
+    "badge": "Inventory Specification",
+    "title": "Amenities Configuration",
+    "subtitle": "Physical inventory specifications for Room {{roomName}} (ID: {{roomId}}).",
+    "save_button": "Save Specifications",
+    "labels": {
+      "has_ac": "Air Conditioning (Climatization)",
+      "has_minibar": "Minibar / Fridge",
+      "has_tv": "Smart TV Flat Screen",
+      "has_bathtub": "Bathtub / Jacuzzi",
+      "has_balcony": "Private Balcony",
+      "has_wifi": "High-Speed Wi-Fi Connection",
+      "has_ocean_view": "Ocean View",
+      "has_safe": "Secure Safe Box",
+      "has_hairdryer": "Professional Hair Dryer",
+      "has_coffee": "Coffee & Tea Maker",
+      "double_beds": "Double Beds",
+      "single_beds": "Single Beds"
+    }
+  },
   "attractions": {
     "badge": "Strategic Location",
     "title": "Discover Canasvieiras",
@@ -115,6 +135,30 @@
       "name": "*Name:*",
       "footer": "_Sent from beachcanasvieiras.com_"
     }
+  },
+  "booking_search": {
+    "badge": "Reception CRM Module",
+    "title": "Booking Search",
+    "subtitle": "Real-time stay audit, check-in / check-out operational control, and direct communication gateways.",
+    "search_placeholder": "Search by name, email or booking code...",
+    "filter_status_all": "All statuses",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "checked_in": "Checked In (In House)",
+      "checked_out": "Checked Out",
+      "cancelled": "Cancelled"
+    },
+    "columns": {
+      "reference": "Reference",
+      "guest": "Guest / Email",
+      "room": "Room",
+      "dates": "Dates of Stay",
+      "total": "Total Invoiced",
+      "status": "Status",
+      "actions": "Quick Actions"
+    },
+    "no_bookings_found": "No bookings found matching the selected search criteria."
   },
   "contact": {
     "badge": "Contact",
@@ -229,6 +273,19 @@
     "map_title": "In the Heart of Canasvieiras",
     "map_subtitle": "Strategically located on Avenida das Nações, the main avenue of the resort. Verify our proximity, just steps from the calm waters beach."
   },
+  "housekeeping": {
+    "badge": "Housekeeping Control Panel",
+    "title": "Housekeeping Report",
+    "subtitle": "Room cleaning checklist, standard tasks, and on-the-fly maintenance logs.",
+    "add_custom_task_placeholder": "Add extra maintenance task...",
+    "add_button": "Add",
+    "status": {
+      "clean": "Clean",
+      "dirty": "Dirty",
+      "cleaning": "Cleaning"
+    },
+    "tasks_completed_suffix": "tasks completed"
+  },
   "nav": {
     "home": "Home",
     "rooms": "Rooms",
@@ -246,6 +303,57 @@
     "lang_es": "es - Spanish",
     "lang_en": "en - English",
     "lang_pt": "pt - Portuguese"
+  },
+  "pms_sidebar": {
+    "menu_principal": "Main Menu",
+    "overview": "Hotel Overview Today",
+    "bookings": {
+      "title": "Bookings",
+      "room_map": "Room Matrix",
+      "search": "CRM - Search"
+    },
+    "reports": {
+      "title": "Reports",
+      "revenue": "Revenue & Forecasts",
+      "meals": "Meals",
+      "police": "Police Report (FNRH)"
+    },
+    "accounting": {
+      "title": "Accounting",
+      "cash_flow": "Cash Flow",
+      "expenses": "Expenses & Suppliers",
+      "invoiced": "Total Invoiced"
+    },
+    "rates": "Rates & Availability",
+    "housekeeping": "Housekeeping Log",
+    "booking_engine": "Booking Engine",
+    "settings": {
+      "title": "Settings",
+      "all_settings": "All Settings",
+      "email_templates": "Email Templates",
+      "exchange_rates": "Exchange Rates",
+      "pos": "Point of Sale (POS)"
+    },
+    "logout": "Sign Out"
+  },
+  "rates_availability": {
+    "badge": "Revenue & Rates Management",
+    "title": "Rates & Availability",
+    "subtitle": "Interactive matrix for bulk loading base rates, minimum stay restrictions, and sales closures.",
+    "save_btn": "Save Changes",
+    "sync_btn": "Sync OTAs",
+    "saving": "Saving changes to server...",
+    "save_success": "Rates and inventories successfully updated.",
+    "row_labels": {
+      "availability": "Availability",
+      "min_stay": "Min Stay",
+      "min_nights_arrival": "Min Nights from Arrival",
+      "closed": "Closed",
+      "no_check_in": "No Check-In",
+      "no_check_out": "No Check-Out",
+      "rates_brl": "Price in Reais (BRL)",
+      "rates_usd": "Price in Dollars (USD)"
+    }
   },
   "rooms": {
     "badge": "Hospitality & Comfort",
@@ -297,6 +405,19 @@
           "WiFi"
         ]
       }
+    }
+  },
+  "room_matrix": {
+    "badge": "Real-Time Inventory Control",
+    "title": "Room Matrix",
+    "subtitle": "Interactive physical allocation chart, bed status, and algorithmic room slot assignment.",
+    "smart_allocate_btn": "Smart Allocation (AI)",
+    "smart_allocating": "Calculating optimal slot...",
+    "smart_allocate_success": "Optimal allocation completed in Room {{room}}",
+    "no_rooms_found": "No available rooms found matching the selected criteria.",
+    "columns": {
+      "room": "Room",
+      "type": "Type"
     }
   },
   "testimonials": {

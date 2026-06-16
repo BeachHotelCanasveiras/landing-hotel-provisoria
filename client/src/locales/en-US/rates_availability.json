@@ -1,0 +1,19 @@
+{
+  "badge": "Revenue & Rates Management",
+  "title": "Rates & Availability",
+  "subtitle": "Interactive matrix for bulk loading base rates, minimum stay restrictions, and sales closures.",
+  "save_btn": "Save Changes",
+  "sync_btn": "Sync OTAs",
+  "saving": "Saving changes to server...",
+  "save_success": "Rates and inventories successfully updated.",
+  "row_labels": {
+    "availability": "Availability",
+    "min_stay": "Min Stay",
+    "min_nights_arrival": "Min Nights from Arrival",
+    "closed": "Closed",
+    "no_check_in": "No Check-In",
+    "no_check_out": "No Check-Out",
+    "rates_brl": "Price in Reais (BRL)",
+    "rates_usd": "Price in Dollars (USD)"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "badge": "Especificação do Inventário",
+  "title": "Configuração de Comodidades",
+  "subtitle": "Especificações físicas do inventário para o Quarto {{roomName}} (ID: {{roomId}}).",
+  "save_button": "Salvar Especificações",
+  "labels": {
+    "has_ac": "Ar Condicionado (Climatização)",
+    "has_minibar": "Frigobar / Minibar",
+    "has_tv": "Televisor Smart TV",
+    "has_bathtub": "Banheira de Hidromassagem / Jacuzzi",
+    "has_balcony": "Varanda Privativa",
+    "has_wifi": "Conexão Wi-Fi de Alta Velocidade",
+    "has_ocean_view": "Vista para o Mar (Ocean View)",
+    "has_safe": "Cofre Eletrônico de Segurança",
+    "has_hairdryer": "Secador de Cabelo Profissional",
+    "has_coffee": "Cafeteira e Chaleira",
+    "double_beds": "Camas de Casal",
+    "single_beds": "Camas de Solteiro"
+  }
+}

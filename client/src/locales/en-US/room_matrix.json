@@ -1,0 +1,13 @@
+{
+  "badge": "Real-Time Inventory Control",
+  "title": "Room Matrix",
+  "subtitle": "Interactive physical allocation chart, bed status, and algorithmic room slot assignment.",
+  "smart_allocate_btn": "Smart Allocation (AI)",
+  "smart_allocating": "Calculating optimal slot...",
+  "smart_allocate_success": "Optimal allocation completed in Room {{room}}",
+  "no_rooms_found": "No available rooms found matching the selected criteria.",
+  "columns": {
+    "room": "Room",
+    "type": "Type"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "badge": "Control de Inventario en Tiempo Real",
+  "title": "Mapa de Ocupación",
+  "subtitle": "Gráfica interactiva de asignaciones físicas, estado de camas y asignación algorítmica de cuartos.",
+  "smart_allocate_btn": "Asignación Inteligente (AI)",
+  "smart_allocating": "Calculando slot óptimo...",
+  "smart_allocate_success": "Asignación óptima completada en la Habitación {{room}}",
+  "no_rooms_found": "No se encontraron habitaciones disponibles para los criterios seleccionados.",
+  "columns": {
+    "room": "Habitación",
+    "type": "Tipo"
+  }
+}

@@ -214,6 +214,46 @@ Header: Se integró el menú de perfil premium con avatar, nombre desplegable y 
 
 ---
 
+## Fase 4: Consolidación del Ecosistema PMS (Property Management System) Autogestionable
+**Fecha de Hito:** Junio 2026
+**Visión Arquitectónica:** Transformar la aplicación de un portal estático/transaccional a un **SaaS Multi-Tenant de Autogestión Hotelera**. El sistema ahora es capaz de administrar inventarios, asignaciones heurísticas, control de pisos (Housekeeping), tarifas dinámicas y roles de usuario bajo una arquitectura de "cero fricciones" y máxima seguridad (ISO 27001).
+
+### 1. Atomización Estructural y Patrón Smart/Dumb
+Para garantizar un rendimiento de renderizado impecable y escalabilidad a futuro, el orquestador monolítico `AdminDashboard.tsx` fue desensamblado en sub-aparatos de responsabilidad única. 
+*   **Orquestador Híbrido (`AdminDashboard.tsx`):** Se refactorizó para actuar únicamente como un contenedor inteligente ("Smart Component"). Evalúa el rol del usuario mediante Supabase Auth y despacha los datos cacheados con `TanStack Query` hacia los componentes de presentación. Presenta un layout inmersivo (con Sidebar) para Staff, y un Top-Nav limpio para Huéspedes/Agencias.
+*   **Módulos de Recepción (SaaS-Ready):** 
+    *   `HousekeepingReport.tsx`: Panel interactivo para la gestión de limpieza. Soporta tareas patrón automáticas (creadas vía triggers en DB) y tareas de mantenimiento manuales inyectadas en caliente.
+    *   `RatesAvailability.tsx`: Matriz bidimensional para la carga masiva de tarifas base, control de inventario (`min_stay`, `closed`) y manejo multidivisa.
+    *   `BookingSearch.tsx`: Módulo CRM para el personal. Permite filtrar huéspedes, ejecutar Check-in (`IN`) y Check-out (`OUT`), y lanzar notificaciones automatizadas por WhatsApp.
+    *   `AmenitiesConfig.tsx`: Creado bajo el Principio de Inversión de Dependencias. Permite configurar el catálogo de comodidades inyectando diccionarios dinámicos, preparándolo para ser revendido a cualquier hotel (Marca Blanca).
+
+### 2. Innovación Algorítmica: Defragmentación de Inventario (IA)
+*   **Aparato `RoomMatrix.tsx`:** Se desarrolló un calendario visual de ocupación que mapea el cruce entre habitaciones físicas y línea de tiempo (15 días).
+*   **Smart Allocation (Asignación Heurística):** Se programó un algoritmo que evalúa el estado de limpieza actual de las habitaciones y la densidad de reservas futuras. El sistema asigna automáticamente a los huéspedes ("Walk-ins" o nuevas reservas) en el *slot* físico que genere la menor fragmentación del inventario, preservando los bloques de disponibilidad largos para estadías de alto valor.
+
+### 3. Seguridad de Base de Datos y Control de Accesos (RBAC)
+*   **Bypass y Sincronización de Roles:** Se corrigió un defecto de diseño donde los usuarios creados vía OAuth quedaban huérfanos de rol. Se implementó el script `create-super-admin.ts` utilizando la API de administración para crear cuentas auto-verificadas y saltar la restricción del servidor SMTP (`email_rate_limit`).
+*   **Políticas RLS Rigurosas:** Se inyectó una política en Supabase (`auth.uid() = id`) para permitir que la sesión de frontend lea su propio rol en `public.users`, corrigiendo los bloqueos silenciosos del cliente.
+*   **Topología de Base de Datos (`seed-pms-rooms.ts`):** Se creó un script idempotente que construye la matriz física del hotel de forma dinámica (ej. 4 pisos, 35 habitaciones).
+
+### 4. Calidad de Código de Élite (ESLint v9 & React 19)
+*   **Flat Config (ESM):** Se eliminaron las configuraciones obsoletas de CJS. El proyecto ahora está blindado por `eslint.config.js`, analizando de forma estricta el tipado y las dependencias de hooks.
+*   **Erradicación de Impurezas (react-hooks/purity):** Se refactorizó `DeveloperConsole.tsx` para eliminar la mutación de fechas (`Date.now()`) durante la fase de renderizado, encapsulándolas estáticamente.
+*   **Eliminación del 'State in Effect':** En componentes como `BookingDialog.tsx` y `AmenitiesConfig.tsx`, se aplicó el patrón oficial de React 19 para la inicialización y sincronización de estado perezoso (Lazy State) durante el renderizado, erradicando los renders en cascada destructivos.
+*   **Tipado Estricto (Zero 'any'):** Todo el código se refactorizó utilizando `unknown`, aserciones `instanceof Error` y contratos Zod.
+
+### 5. Experiencia de Usuario (UX) e Internacionalización
+*   **Smart Header:** El `Header.tsx` fue descompuesto. Ahora implementa un sistema de ocultamiento por GPU al hacer scroll down (foco de lectura) y reaparición al hacer scroll up.
+*   **Menú de Perfil Premium:** Si el usuario está autenticado, la cabecera muestra un `UserProfileMenu.tsx` (Glassmorphism) con su Avatar real de Google o iniciales calculadas, eliminando botones toscos.
+*   **Compilador i18n Optimizado:** El script `compile-i18n.js` ahora elimina estados previos, normaliza a minúsculas (`toLowerCase`) para evitar colisiones entre sistemas operativos, y detiene el build si detecta un JSON vacío.
+
+### 6. Roadmap y Próximos Pasos
+1.  **Cola de Correos Transaccionales (`email_queue`):** Integrar la tabla de base de datos con el servicio `mail.ts` usando cron jobs (Vercel Cron) para despachar correos de confirmación con retrasos síncronos (Anti-Spam).
+2.  **SEO y Microdatos:** Inyección de esquemas `JSON-LD` en la raíz de la página para la indexación enriquecida en Google Hotel Search.
+3.  **Auditoría de Despliegue Final:** Monitorear logs en Vercel para asegurar la correcta comunicación del Webhook de Stripe en el entorno de producción.
+
+---
+
 
 
 
