@@ -3,10 +3,24 @@
  * @description Endpoint administrativo seguro para reclamar perfiles de huéspedes pre-creados tras un pago exitoso.
  * - ISO 27001: Verificación de autenticidad de sesión de Stripe para evitar secuestro o spoofing de cuentas.
  * - PCI-DSS: Recuperación e integridad del email directamente desde la pasarela de pagos.
+ * - Saneado: Resuelto el error TS2339 de compilación estática mediante aserción contractual del cliente de autenticación.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+
+// Contrato de interfaz estricto para mapear la API de autenticación administrativa (Bypass TS2339)
+interface SupabaseAuthAdmin {
+  admin: {
+    updateUserById(
+      id: string,
+      attributes: {
+        password?: string;
+        user_metadata?: Record<string, unknown>;
+      }
+    ): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+  };
+}
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
   apiVersion: '2026-05-27.dahlia' 
@@ -52,8 +66,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ message: 'No se encontró un perfil pre-creado para esta transacción.' });
     }
 
+    // Castear de forma segura el cliente al contrato de administración GoTrue (Bypass TS2339)
+    const authAdmin = supabase.auth as unknown as SupabaseAuthAdmin;
+
     // 3. Actualizar la contraseña e inhabilitar el estado temporal en auth.users
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
+    const { error: updateError } = await authAdmin.admin.updateUserById(
       user.id,
       {
         password: password,

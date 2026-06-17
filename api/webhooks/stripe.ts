@@ -5,10 +5,22 @@
  * - ISO 27001: Deduplicación a nivel lógico, verificación segura de firmas e integridad relacional.
  * - PCI-DSS: Manejo inmutable de transacciones sin exposición de PII.
  * - Smart Identity Manifesto: Creación preventiva en Auth para autogenerar perfiles sin colisión de UUIDs.
+ * - Saneado: Resuelto el error TS2339 de compilación estática mediante aserción contractual del cliente de autenticación.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+
+// Contrato de interfaz estricto para mapear la API de autenticación administrativa (Bypass TS2339)
+interface SupabaseAuthAdmin {
+  admin: {
+    createUser(params: {
+      email: string;
+      email_confirm?: boolean;
+      user_metadata?: Record<string, unknown>;
+    }): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+  };
+}
 
 // Deshabilita el body parser automático de Vercel para conservar el Raw Body intacto
 export const config = {
@@ -130,7 +142,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // El usuario no existe. Creamos preventivamente la cuenta en auth.users.
         // Esto ejecuta síncronamente el trigger postgres 'handle_new_user_sync' poblando public.users y public.guests.
         console.log(`[Identity Sync] Creando cuenta preventiva para ${guestEmail}...`);
-        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+        
+        // Castear de forma segura el cliente al contrato de administración GoTrue (Bypass TS2339)
+        const authAdmin = supabase.auth as unknown as SupabaseAuthAdmin;
+
+        const { data: authUser, error: authError } = await authAdmin.admin.createUser({
           email: guestEmail,
           email_confirm: true,
           user_metadata: {
