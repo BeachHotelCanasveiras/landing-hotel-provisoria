@@ -1,8 +1,9 @@
 /**
  * @file BookingDialog.tsx
  * @description Orquestador principal de reservas de 2 pasos.
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA y las normas de rendimiento de React 19:
  * - Cero 'any': Tipado estricto en callbacks, estados y flujos de red.
+ * - Saneamiento react-hooks/set-state-in-effect: Sincronización procesada de forma atómica en el manejador de eventos.
  * - Smart Identity Manifesto: Auto-hidratación de datos en renderizado si hay sesión activa (React 19 Pattern).
  * - Trinidad Atómica (i18n SSoT): Envío del locale activo del cliente (i18n.language) hacia Stripe Checkout.
  * - Desacoplado: Delega el cálculo de inventario a 'useBlockedDates'.
@@ -53,6 +54,9 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   const [guestsCount, setGuestsCount] = useState('2');
   const [paymentLoading, setPaymentLoading] = useState(false);
 
+  // 🚀 Control reactivo para reservas destinadas a terceros
+  const [isBookForSomeoneElse, setIsBookForSomeoneElse] = useState(false);
+
   // Sincronización de Estado en Renderizado (React 19 Pattern)
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   if (isOpen !== prevIsOpen) {
@@ -62,6 +66,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
       setRange(undefined);
       setErrors({});
       setPaymentLoading(false);
+      setIsBookForSomeoneElse(false); // Reset al abrir
       
       // Auto-llenado inteligente si existe sesión activa (SaaS Elite Feature)
       if (user) {
@@ -77,6 +82,29 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
       }
     }
   }
+
+  // 🚀 MANEJADOR DE EVENTOS ATÓMICO: Evita renderizados en cascada (set-state-in-effect)
+  const handleToggleBookForSomeoneElse = (val: boolean) => {
+    setIsBookForSomeoneElse(val);
+
+    if (user) {
+      if (val) {
+        // Se limpia para permitir escribir datos de terceros
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+        setErrors({});
+      } else {
+        // Se restaura con los datos del usuario logueado de forma atómica
+        setEmail(user.email || '');
+        const fullName = user.user_metadata?.full_name || '';
+        const parts = fullName.trim().split(/\s+/);
+        setFirstName(parts[0] || '');
+        setLastName(parts.slice(1).join(' ') || '');
+        setErrors({});
+      }
+    }
+  };
 
   // Validación estricta con Zod en modo desarrollo (Failsafe)
   if (import.meta.env.DEV) {
@@ -294,6 +322,9 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   onSubmit={handleStripePayment}
                   onSocialLogin={handleSocialLogin}
                   t={t}
+                  isLoggedIn={!!user} // Identifica estado de sesión activo
+                  isBookForSomeoneElse={isBookForSomeoneElse} // Pasa el estado reactivo
+                  setIsBookForSomeoneElse={handleToggleBookForSomeoneElse} // 🚀 Saneamiento: Manejador de eventos libre de useEffect
                 />
               </motion.div>
             )}
