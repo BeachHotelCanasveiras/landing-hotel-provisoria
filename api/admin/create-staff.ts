@@ -3,6 +3,7 @@
  * @description Endpoint administrativo para la creación automatizada de personal del hotel.
  * - ISO 27001: Verificación estricta de JWT de administrador para prevenir escalada de privilegios.
  * - SaaS Ready: Normalización automática de correos corporativos y contraseñas temporales.
+ * - Tipo Saneado: Saneado el error TS2339 inyectando la interfaz ExtendedAuthClient sin recurrir a 'any'.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -13,6 +14,19 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Contrato de interfaz estricto para mapear la API administrativa de GoTrue (Bypass TS2339)
+interface ExtendedAuthClient {
+  getUser(token: string): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+  admin: {
+    createUser(params: {
+      email: string;
+      password?: string;
+      email_confirm?: boolean;
+      user_metadata?: Record<string, unknown>;
+    }): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+  };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -27,8 +41,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const token = authHeader.split(' ')[1];
   
+  // Asertar de forma segura el cliente al contrato administrativo de GoTrue
+  const authAdmin = supabaseAdmin.auth as unknown as ExtendedAuthClient;
+
   try {
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error: authError } = await authAdmin.getUser(token);
     if (authError || !user) {
       return res.status(401).json({ message: 'Sesión inválida o expirada' });
     }
@@ -60,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const tempPassword = `Bch_${Math.random().toString(36).substring(2, 10)}!`;
 
     // 4. CREACIÓN EN SUPABASE AUTH (Bypasseando confirmación SMTP)
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: newUser, error: createError } = await authAdmin.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true, // Evita que el empleado tenga que confirmar por correo

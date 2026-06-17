@@ -2,9 +2,9 @@
  * @file AdminDashboard.tsx
  * @description Orquestador Maestro del Panel de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Tipo Saneado: Sincronización del contrato de roles para HousekeepingReport sin 'any'.
- * - Corrección de compilación: Importación de 'LogOut' de Lucide React restaurada.
+ * - Interceptor de Onboarding: Bloqueo perimetral si 'temp_password_active' es verdadero.
  * - Saneamiento completo de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
+ * - SOLID: Delegación pura del flujo de primer acceso al aparato especializado 'OnboardingForm'.
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LogOut } from 'lucide-react'; // Corrección de importación
+import { LogOut } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth, type UserRole } from '@/contexts/AuthContext';
@@ -29,8 +29,9 @@ import { HousekeepingReport, type HousekeepingTask } from '@/components/dashboar
 import { HousekeeperPortal } from '@/components/dashboard/HousekeeperPortal';
 import { StaffManagement } from '@/components/dashboard/reception/StaffManagement';
 
-// Sincronización e importación del nuevo componente de gestión
+// Sincronización e importación de componentes de inventario y onboarding
 import { RoomManagement } from '@/components/dashboard/reception/RoomManagement';
+import { OnboardingForm } from '@/components/dashboard/reception/OnboardingForm';
 
 import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
 
@@ -317,6 +318,20 @@ export default function AdminDashboard() {
 
   if (authLoading || !user) {
     return <div className="h-screen w-full flex items-center justify-center bg-gray-50"><Spinner className="w-8 h-8 text-accent animate-spin" /></div>;
+  }
+
+  // INTERCEPTOR DE ONBOARDING: Fuerza cambio de contraseña y datos personales si es el primer acceso
+  const isTempPasswordActive = !!user.user_metadata?.temp_password_active;
+  if (isTempPasswordActive) {
+    return (
+      <OnboardingForm 
+        user={user} 
+        onComplete={async () => {
+          await queryClient.invalidateQueries({ queryKey: ['user'] });
+          window.location.reload(); // Hidratar metadatos nuevos
+        }}
+      />
+    );
   }
 
   const userInitial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U';

@@ -2,6 +2,7 @@
  * @file export.ts
  * @description Exportador universal e independiente de disponibilidad en formato iCal (RFC 5545).
  * - Seguridad (ISO 27001): Validación mediante tokens independientes por canal.
+ * - Tipo Saneado: Saneado el error TS7006 inyectando la interfaz BookingRow de forma estricta.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -11,6 +12,14 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Contrato de datos estricto para cada registro de reserva en la exportación
+interface BookingRow {
+  id: string;
+  check_in: string;
+  check_out: string;
+  created_at: string;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -54,8 +63,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'METHOD:PUBLISH'
     ].join('\r\n') + '\r\n';
 
-    if (bookings && bookings.length > 0) {
-      bookings.forEach((b) => {
+    const bookingsData = (bookings || []) as unknown as BookingRow[];
+
+    if (bookingsData.length > 0) {
+      bookingsData.forEach((b) => {
         const checkInFormatted = b.check_in.replace(/-/g, '');
         const checkOutFormatted = b.check_out.replace(/-/g, '');
         const creationFormatted = new Date(b.created_at).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';

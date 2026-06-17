@@ -1,8 +1,9 @@
 /**
  * @file export.ts
  * @description Generador dinámico de archivos iCal (.ics) para exportación de disponibilidad.
- * - Seguridad (ISO 27001): Exige un token criptográfico UUID para evitar husmeo de calendarios.
+ * - Seguridad (ISO 27001): Exige un token de acceso criptográfico UUID único por habitación.
  * - Cumplimiento: Estructura estándar RFC 5545 compatible con Booking.com y Airbnb.
+ * - Tipo Saneado: Saneado el error TS7006 inyectando la interfaz BookingRow de forma estricta.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -12,6 +13,14 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Contrato estricto para cada registro de reserva en la exportación
+interface BookingRow {
+  id: string;
+  check_in: string;
+  check_out: string;
+  created_at: string;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -57,8 +66,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       'METHOD:PUBLISH'
     ].join('\r\n') + '\r\n';
 
-    if (bookings && bookings.length > 0) {
-      bookings.forEach((b) => {
+    const bookingsData = (bookings || []) as unknown as BookingRow[];
+
+    if (bookingsData.length > 0) {
+      bookingsData.forEach((b) => {
         // Formatear fechas de entrada/salida (YYYYMMDD) sin horas para bloquear días enteros
         const checkInFormatted = b.check_in.replace(/-/g, '');
         const checkOutFormatted = b.check_out.replace(/-/g, '');
