@@ -3,7 +3,7 @@
  * @file AuthContext.tsx
  * @description Proveedor de estado global de autenticación y roles de usuario.
  * - Satisface el tipado estricto (no-any-implícito) mediante anotación nativa de Supabase.
- * - Smart Identity Manifesto: Añadido método 'refreshUser' para hidratación en caliente sin parpadeo de recarga de página.
+ * - Smart Identity Manifesto: Sincroniza e hidrata en caliente el perfil del huésped en cookies seguras.
  * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida
  *   de autenticación usando macro-tasks (setTimeout 0) para evitar colgar las conexiones del cliente.
  */
@@ -11,6 +11,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { StorageService } from '@/lib/storage'; // 🚀 Importación del servicio de persistencia segura
 
 export type UserRole = 'guest' | 'agency' | 'admin' | 'developer' | 'housekeeper';
 
@@ -33,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Declaración clásica para que se eleve al inicio de la compilación de forma segura (Hoisting)
   async function fetchUserRole(userId: string) {
     try {
-      const { data, error } = await supabase
+      const { data: userData, error } = await supabase
         .from('users')
         .select('role')
         .eq('id', userId)
@@ -42,8 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('[AuthContext] Error al recuperar rol del usuario:', error.message);
         setRole('guest');
-      } else if (data) {
-        setRole(data.role as UserRole);
+      } else if (userData) {
+        setRole(userData.role as UserRole);
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Error desconocido';
@@ -55,7 +56,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
-   * Consulta el estado del servidor de autenticación para hidratar metadatos en caliente
+   * 🚀 SINCRONIZACIÓN DE PERFIL: Consulta base de datos y guarda en cookies de forma asíncrona y segura
+   */
+  async function syncUserProfileCookie(activeUser: User) {
+    try {
+      const { data: guestData } = await supabase
+        .from('guests')
+        .select('first_name, last_name')
+        .eq('id', activeUser.id)
+        .maybeSingle();
+
+      const email = activeUser.email || '';
+      let firstName = '';
+      let lastName = '';
+
+      if (guestData && guestData.first_name) {
+        firstName = guestData.first_name;
+        lastName = guestData.last_name || 'Huésped';
+      } else {
+        // Fallback robusto a partir de metadatos OAuth
+        const fullName = activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || '';
+        const parts = fullName.trim().split(/\s+/);
+        firstName = parts[0] || email.split('@')[0] || '';
+        
+        // Capitalización limpia del Nombre
+        firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+        lastName = parts.slice(1).join(' ') || 'Huésped';
+      }
+
+      // Escribimos de forma encriptada/ofuscada la cookie local
+      StorageService.setObfuscatedProfile({
+        firstName,
+        lastName,
+        email
+      });
+      
+      console.log('[AuthContext] Perfil de usuario sincronizado y cacheado en cookies locales.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error de red';
+      console.warn('[AuthContext] Error al guardar caché de perfil local:', msg);
+    }
+  }
+
+  /**
+   * Consulta el estado del servidor de autenticación para actualizar metadatos en caliente
    */
   const refreshUser = async () => {
     try {
@@ -63,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       if (updatedUser) {
         setUser(updatedUser);
+        await syncUserProfileCookie(updatedUser); // Sincroniza metadatos frescos
         console.log('[AuthContext] Metadatos del usuario actualizados en caliente.');
       }
     } catch (e: unknown) {
@@ -79,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // WORKAROUND: Desacoplar consulta asíncrona del flujo de inicialización principal
         setTimeout(() => {
           fetchUserRole(session.user!.id);
+          syncUserProfileCookie(session.user!); // 🚀 Sincronización in-background de cookie de perfil
         }, 0);
       } else {
         setLoading(false);
@@ -93,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // WORKAROUND: Prevenir deadlock (bloqueo mutuo) en supabase-js v2 liberando el hilo síncrono
           setTimeout(() => {
             fetchUserRole(session.user!.id);
+            syncUserProfileCookie(session.user!); // 🚀 Sincronización in-background de cookie de perfil
           }, 0);
         } else {
           setUser(null);
@@ -109,6 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     setLoading(true);
+    StorageService.removeObfuscatedProfile(); // 🚀 Destruye caché de perfil al desloguearse
     await supabase.auth.signOut();
   };
 
