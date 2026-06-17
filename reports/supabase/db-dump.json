@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-16T21:43:34.884Z",
+  "timestamp": "2026-06-17T00:41:09.625Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -38,9 +38,52 @@
         "email": "iamagentevai@gmail.com",
         "role": "guest",
         "created_at": "2026-06-15T12:57:00.362543+00:00"
+      },
+      {
+        "id": "d38a08b7-d5c5-474f-bbcf-320fa7115825",
+        "email": "raz.podesta@beachcanasvieiras.com",
+        "role": "admin",
+        "created_at": "2026-06-16T22:02:07.260351+00:00"
+      },
+      {
+        "id": "7fb0ea24-f1fd-4660-a905-ca64f7847161",
+        "email": "maximo.menghi@beachcanasvieiras.com",
+        "role": "admin",
+        "created_at": "2026-06-16T22:03:26.077416+00:00"
+      },
+      {
+        "id": "c1dfb1fd-3bab-455c-abaf-fa66487aaed7",
+        "email": "eric.hidalgo@beachcanasvieiras.com",
+        "role": "admin",
+        "created_at": "2026-06-16T22:15:24.884626+00:00"
       }
     ],
-    "guests": [],
+    "guests": [
+      {
+        "id": "d38a08b7-d5c5-474f-bbcf-320fa7115825",
+        "user_email": "raz.podesta@beachcanasvieiras.com",
+        "first_name": "Raz",
+        "last_name": "Podestá",
+        "phone": null,
+        "created_at": "2026-06-16T22:02:07.260351+00:00"
+      },
+      {
+        "id": "7fb0ea24-f1fd-4660-a905-ca64f7847161",
+        "user_email": "maximo.menghi@beachcanasvieiras.com",
+        "first_name": "Máximo",
+        "last_name": "Menghi",
+        "phone": null,
+        "created_at": "2026-06-16T22:03:26.077416+00:00"
+      },
+      {
+        "id": "c1dfb1fd-3bab-455c-abaf-fa66487aaed7",
+        "user_email": "eric.hidalgo@beachcanasvieiras.com",
+        "first_name": "Eric",
+        "last_name": "Hidalgo",
+        "phone": null,
+        "created_at": "2026-06-16T22:15:24.884626+00:00"
+      }
+    ],
     "rooms": [
       {
         "id": 102,

@@ -341,7 +341,40 @@ SOLID (Clean Code): La atomización estricta de BookingSearch y Excursions asegu
 
 --
 
+## Hito: Onboarding de Seguridad, Validación Multi-País y Saneamiento Vercel (Junio 2026)
+- **Capa de Onboarding e Interceptor del Dashboard:**
+    - Implementado un interceptor reactivo en `AdminDashboard.tsx` que detecta si la cuenta recién creada posee la metadata de contraseña temporal activa (`temp_password_active: true`).
+    - Diseñado el aparato modular `OnboardingForm.tsx` que fuerza el cambio de contraseña a nivel de Supabase Auth e hidrata la información residencial del empleado en la tabla pública.
+- **Validación Telefónica Industrial y Sanitización L0:**
+    - Integración exitosa de la biblioteca de código abierto `libphonenumber-js` para validar y estructurar de forma interactiva números telefónicos bajo el estándar internacional E.164.
+    - Implementación de filtros de desinfectación preventiva en el esquema Zod `onboarding.schema.ts` para depurar caracteres peligrosos y neutralizar cualquier vector de inyección SQLi o ataques de scripts (XSS).
+- **Resolución de Regresiones y Saneamiento Vercel (Compilación Limpia):**
+    - Saneados los errores `TS7006` en los exportadores iCal y OTA (`api/ical/rooms/export.ts` y `api/ota/export.ts`) mediante el tipado estricto del parámetro de iteración usando una interfaz local `BookingRow`.
+    - Resueltos los errores de tipo `TS2339` en el endpoint administrativo `api/admin/create-staff.ts` mediante la aserción de tipo segura `ExtendedAuthClient`, eliminando aserciones `any` e integrando el Flat Config de ESLint v9.
+- **Optimización de Diagnóstico Dinámico:**
+    - Refactorizado el script de auditoría `scripts/supabase/db-audit.ts` para consultar dinámicamente la especificación OpenAPI de PostgREST, reflejando fielmente la estructura de las 10 tablas activas de la base de datos sin rigideces en el código.
 
+    ---
+
+    ## Hito: Seguridad de Concurrencia, Validación Multi-País y Saneamiento Serverless (Junio 2026)
+- **Resolución de Congelamiento en Autenticación (Deadlock Workaround):**
+    - Identificado y resuelto un bloqueo mutuo (*deadlock*) crítico en `supabase-js` v2 dentro de `client/src/contexts/AuthContext.tsx`. Las llamadas asíncronas de base de datos (`fetchUserRole`) ejecutadas dentro del ciclo síncrono de `onAuthStateChange` se derivaron de forma segura a macro-tareas no bloqueantes (`setTimeout` con retraso 0), liberando la comunicación del cliente y permitiendo cargas instantáneas en el dashboard.
+- **Validación Telefónica de Nivel Industrial y Sanitización L0:**
+    - Integración de la biblioteca de código abierto `libphonenumber-js` para validar de forma reactiva números telefónicos bajo el estándar global E.164.
+    - Implementada desinfectación de entradas en `client/src/locales/schemas/onboarding.schema.ts` y en el formulario de primer acceso para neutralizar caracteres peligrosos, bloqueando de raíz cualquier intento de inyección de código (SQLi/XSS).
+- **Control de Primer Acceso (Onboarding de Personal):**
+    - Completado el aparato modular `client/src/components/dashboard/reception/OnboardingForm.tsx` con soporte para tres idiomas (`pt-BR`, `es-ES`, `en-US`), forzando al personal a cambiar su contraseña temporal e hidratar su dirección y teléfono antes de habilitar el acceso al PMS.
+- **Saneamiento de Compilación en Vercel (TypeScript SSoT):**
+    - Saneados los errores `TS7006` en los exportadores iCal y OTA (`api/ical/rooms/export.ts` y `api/ota/export.ts`) mediante el tipado estricto del parámetro de iteración usando la interfaz local `BookingRow`.
+    - Resueltos los errores de tipo `TS2339` en el endpoint administrativo `api/admin/create-staff.ts` mediante la aserción de tipo segura `ExtendedAuthClient`, eliminando aserciones `any` e integrando el Flat Config de ESLint v9.
+- **Inyección Defensiva de Analíticas en HTML:**
+    - Refactorizado `client/index.html` para reemplazar la etiqueta de script estática de Umami por un cargador dinámico autoejecutable, evitando el error público `ERR_HTTP2_PROTOCOL_ERROR` si las variables de entorno de producción no están declaradas en Vercel.
+- **Optimización de Diagnóstico de Base de Datos:**
+    - Refactorizado el script de auditoría `scripts/supabase/db-audit.ts` para consultar dinámicamente la especificación OpenAPI de PostgREST, reflejando fielmente la estructura de las 10 tablas activas de la base de datos sin rigideces en el código.
+    
+    ---
+
+    
 
 
 
