@@ -6,11 +6,13 @@
  * - Integra el proveedor global de autenticación y roles de Supabase (AuthProvider).
  * - Implementa el guardián de rutas protegidas (ProtectedRoute) con redirección automatizada.
  * - Registro de rutas para portal de acceso (/login), éxito de Stripe (/success) y panel multi-rol (/admin).
+ * - Vercel Analytics: Inyección del visor transaccional y de performance en la raíz de la app.
  */
 
 import { useEffect } from "react";
 import { useLocation, Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Analytics } from "@vercel/analytics/react"; // 🚀 Integración Oficial de Analíticas Vercel
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
@@ -139,6 +141,7 @@ function App() {
                   closeButton
                 />
                 <Router />
+                <Analytics /> {/* 🚀 Analíticas transversales de tráfico, velocidad y conversiones de Stripe */}
               </AppInitializer>
             </TooltipProvider>
           </AuthProvider>

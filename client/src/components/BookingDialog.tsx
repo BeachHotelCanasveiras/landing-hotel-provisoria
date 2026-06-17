@@ -4,8 +4,8 @@
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA y las normas de rendimiento de React 19:
  * - Cero 'any': Tipado estricto en callbacks, estados y flujos de red.
  * - Saneamiento react-hooks/set-state-in-effect: Sincronización procesada de forma atómica en el manejador de eventos.
- * - Smart Identity Manifesto: Auto-hidratación de datos en renderizado si hay sesión activa (React 19 Pattern).
- * - Trinidad Atómica (i18n SSoT): Envío del locale activo del cliente (i18n.language) hacia Stripe Checkout.
+ * - Smart SSoT Auto-Hydration: Sistema dinámico de auto-hidratación de 3 capas en tiempo real (Stripe + Guests DB).
+ * - Saneamiento TS2339: Reemplazado .then().catch() por IIFEs asíncronas con try/catch nativo para compatibilidad con PromiseLike.
  * - Desacoplado: Delega el cálculo de inventario a 'useBlockedDates'.
  */
 
@@ -71,10 +71,45 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
       // Auto-llenado inteligente si existe sesión activa (SaaS Elite Feature)
       if (user) {
         setEmail(user.email || '');
-        const fullName = user.user_metadata?.full_name || '';
+        
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || '';
         const parts = fullName.trim().split(/\s+/);
-        setFirstName(parts[0] || '');
-        setLastName(parts.slice(1).join(' ') || '');
+        const metaFirst = parts[0] || '';
+        const metaLast = parts.slice(1).join(' ') || '';
+
+        // 🚀 CAPA 1: Usar metadatos de sesión activos (OAuth)
+        if (metaFirst && metaFirst !== 'Huésped' && metaLast) {
+          setFirstName(metaFirst);
+          setLastName(metaLast);
+        } else {
+          // 🚀 CAPA 2 (HOT FALLBACK): Función asíncrona autoejecutable (IIFE) contra error TS2339 de PromiseLike
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('guests')
+                .select('first_name, last_name')
+                .eq('id', user.id)
+                .maybeSingle();
+
+              if (data && data.first_name) {
+                setFirstName(data.first_name);
+                setLastName(data.last_name || 'Huésped');
+              } else {
+                // 🚀 CAPA 3 (FAILSAFE): Parsing del prefijo del correo electrónico capitalizado
+                const emailPart = user.email?.split('@')[0] || '';
+                const capitalized = emailPart.charAt(0).toUpperCase() + emailPart.slice(1);
+                setFirstName(capitalized);
+                setLastName('Huésped');
+              }
+            } catch {
+              // Failsafe absoluto ante excepciones de red
+              const emailPart = user.email?.split('@')[0] || '';
+              const capitalized = emailPart.charAt(0).toUpperCase() + emailPart.slice(1);
+              setFirstName(capitalized);
+              setLastName('Huésped');
+            }
+          })();
+        }
       } else {
         setFirstName('');
         setLastName('');
@@ -95,13 +130,46 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
         setEmail('');
         setErrors({});
       } else {
-        // Se restaura con los datos del usuario logueado de forma atómica
+        // Se restaura con los datos de 3 capas de forma atómica
         setEmail(user.email || '');
-        const fullName = user.user_metadata?.full_name || '';
+        
+        const fullName = user.user_metadata?.full_name || user.user_metadata?.name || '';
         const parts = fullName.trim().split(/\s+/);
-        setFirstName(parts[0] || '');
-        setLastName(parts.slice(1).join(' ') || '');
-        setErrors({});
+        const metaFirst = parts[0] || '';
+        const metaLast = parts.slice(1).join(' ') || '';
+
+        if (metaFirst && metaFirst !== 'Huésped' && metaLast) {
+          setFirstName(metaFirst);
+          setLastName(metaLast);
+          setErrors({});
+        } else {
+          // 🚀 IIFE Asíncrona para compatibilidad inmaculada con PromiseLike de Supabase
+          (async () => {
+            try {
+              const { data } = await supabase
+                .from('guests')
+                .select('first_name, last_name')
+                .eq('id', user.id)
+                .maybeSingle();
+
+              if (data && data.first_name) {
+                setFirstName(data.first_name);
+                setLastName(data.last_name || 'Huésped');
+              } else {
+                const emailPart = user.email?.split('@')[0] || '';
+                const capitalized = emailPart.charAt(0).toUpperCase() + emailPart.slice(1);
+                setFirstName(capitalized);
+                setLastName('Huésped');
+              }
+            } catch {
+              const emailPart = user.email?.split('@')[0] || '';
+              const capitalized = emailPart.charAt(0).toUpperCase() + emailPart.slice(1);
+              setFirstName(capitalized);
+              setLastName('Huésped');
+            }
+          })();
+          setErrors({});
+        }
       }
     }
   };
@@ -240,8 +308,8 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none bg-white rounded-[2.5rem] shadow-2xl z-[100]">
         
-        {/* Encabezado */}
-        <div className="relative px-6 pt-8 pb-5 border-b border-gray-50 bg-white">
+        {/* Encabezado Compactado */}
+        <div className="relative px-5 pt-6 pb-4 border-b border-gray-50 bg-white">
           <div className="flex items-center justify-between">
             <div className="w-10">
               {step === 2 && (
@@ -276,8 +344,8 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
           </div>
         </div>
 
-        {/* Cuerpo */}
-        <div className="p-6 max-h-[80vh] overflow-y-auto">
+        {/* Cuerpo Compactado (Anti-Scroll en móviles) */}
+        <div className="p-4 sm:p-5 max-h-[85vh] overflow-y-auto">
           <AnimatePresence mode="wait" custom={step}>
             {step === 1 ? (
               <motion.div
@@ -324,7 +392,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   t={t}
                   isLoggedIn={!!user} // Identifica estado de sesión activo
                   isBookForSomeoneElse={isBookForSomeoneElse} // Pasa el estado reactivo
-                  setIsBookForSomeoneElse={handleToggleBookForSomeoneElse} // 🚀 Saneamiento: Manejador de eventos libre de useEffect
+                  setIsBookForSomeoneElse={handleToggleBookForSomeoneElse} // Manejador de eventos libre de useEffect
                 />
               </motion.div>
             )}
