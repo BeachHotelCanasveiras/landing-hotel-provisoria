@@ -1,8 +1,9 @@
 /**
  * @file Success.tsx
  * @description Página de retorno de Stripe (Fase 6 Post-Venta).
- * Implementa la arquitectura "Venta Primero, Registro Después".
+ * Implementa la arquitectura "Venta Primero, Registro Después" bajo la lógica de RESERVA POR CATEGORÍA:
  * - Smart Identity Manifesto: Reclamo de cuenta con verificación de firma Stripe.
+ * - Desglose de Categoría: Muestra la categoría de alojamiento contratada de forma clara y desacoplada de ID físico.
  * - Saneado: Integración de desglose financiero expandido y widget de envío de voucher alternativo.
  * - ESLint & TS: 100% libre de advertencias de variables sin uso o dependencias incompletas de hooks.
  */
@@ -58,7 +59,7 @@ export default function Success() {
         setGuestEmail(data.customer_email || '');
         setGuestName(data.customer_name || 'Huésped');
         
-        // Carga de variables financieras de Stripe expandidas
+        // Carga de variables financieras de Stripe expandidas (Categoría)
         setPurchaseRoom(data.room_name || 'Habitación Reservada');
         setPurchaseCheckIn(data.check_in || '');
         setPurchaseCheckOut(data.check_out || '');
@@ -206,7 +207,7 @@ export default function Success() {
               </p>
             </div>
 
-            {/* 📋 TARJETA DESGLOSE DE COMPRA (Smart Identity Manifesto) */}
+            {/* 📋 TARJETA DESGLOSE DE COMPRA (Categoría de Alojamiento) */}
             {purchaseTotalPrice !== null && (
               <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 text-left space-y-3">
                 <div className="flex items-center gap-2 border-b border-gray-200/50 pb-2 mb-2">
@@ -215,7 +216,7 @@ export default function Success() {
                 </div>
                 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-body text-gray-500">Habitación</span>
+                  <span className="font-body text-gray-500">Alojamiento</span>
                   <span className="font-body font-semibold text-gray-900">{purchaseRoom}</span>
                 </div>
                 

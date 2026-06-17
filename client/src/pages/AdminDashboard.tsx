@@ -1,11 +1,14 @@
 /**
  * @file AdminDashboard.tsx
  * @description Orquestador Maestro del Panel de Control (PMS & Portales).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA y la lógica de RESERVA POR CATEGORÍA:
  * - Interceptor de Onboarding: Bloqueo perimetral reactivo con refresco en caliente de sesión.
  * - Saneamiento de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
  * - Smart Identity Manifesto: Reemplazado window.location.reload() por rehidratación silenciosa mediante refreshUser().
  * - Saneado: Integración e inyección atómica de la consola de administración de vouchers y plantillas.
+ * - Ciclo Transaccional Inteligente: Auto-asignación de habitación física libre y limpia al hacer Check-In (IN),
+ *   y liberación a estado Sucio (dirty) al hacer Check-Out (OUT).
+ * - Saneamiento TS2322: Exclusión lógica de reservas sin habitación asignada en el mapa matricial (RoomMatrix).
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -33,7 +36,7 @@ import { StaffManagement } from '@/components/dashboard/reception/StaffManagemen
 // Sincronización e importación de componentes de inventario, plantillas y onboarding
 import { RoomManagement } from '@/components/dashboard/reception/RoomManagement';
 import { OnboardingForm } from '@/components/dashboard/reception/OnboardingForm';
-import { TemplateManager } from '@/components/dashboard/reception/TemplateManager'; // Inyección del administrador de plantillas
+import { TemplateManager } from '@/components/dashboard/reception/TemplateManager';
 
 import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
 
@@ -50,12 +53,13 @@ interface SupabaseRoom {
 
 interface SupabaseBooking {
   id: string;
-  room_id: number;
+  room_id: number | null; // 🚀 Desacoplado: Puede ser nulo antes de asignación física
+  room_type?: string | null; // 🚀 Nueva columna de categoría
   check_in: string;
   check_out: string;
   total_price: number;
   status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
-  rooms?: { name: string };
+  rooms?: { name: string } | null; // 🚀 Relación nullable
   guests?: { 
     first_name: string; 
     last_name: string; 
@@ -73,7 +77,7 @@ interface MatrixRoom {
 
 interface MatrixBooking {
   id: string;
-  room_id: number;
+  room_id: number; // 🚀 Saneado para cumplir de forma estricta con RoomMatrix.tsx (Failsafe TS2322)
   guest_name: string;
   check_in: string;
   check_out: string;
@@ -147,7 +151,8 @@ export default function AdminDashboard() {
       guestName: b.guests ? `${b.guests.first_name} ${b.guests.last_name}` : 'Huésped Invitado', 
       guestEmail: b.guests?.user_email || 'Sincronizado vía Stripe',
       guestPhone: b.guests?.phone || '+5548998126650',
-      roomName: b.rooms?.name || `Habitación ${b.room_id}`,
+      // 🚀 Mapeo Inteligente: Si no hay habitación física, muestra la categoría de Stripe
+      roomName: b.rooms?.name || `[${b.room_type?.toUpperCase() || 'S/A'}] PENDIENTE`,
       checkIn: b.check_in,
       checkOut: b.check_out,
       totalPrice: Number(b.total_price),
@@ -166,10 +171,11 @@ export default function AdminDashboard() {
 
   const matrixBookings: MatrixBooking[] = useMemo(() => {
     return rawBookings
-      .filter((b) => b.status === 'confirmed' || b.status === 'checked_in' || b.status === 'pending')
+      // 🚀 Saneamiento TS2322: Excluimos reservas que no tienen cuarto asignado aún de la matriz física
+      .filter((b) => b.room_id !== null && b.room_id !== undefined && (b.status === 'confirmed' || b.status === 'checked_in' || b.status === 'pending'))
       .map((b) => ({
         id: b.id,
-        room_id: b.room_id,
+        room_id: b.room_id as number, // Aserción segura posterior al filtro
         guest_name: b.guests ? `${b.guests.first_name} ${b.guests.last_name}` : 'Hóspede',
         check_in: b.check_in,
         check_out: b.check_out,
@@ -258,13 +264,77 @@ export default function AdminDashboard() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['housekeeping_tasks'] })
   });
 
+  // 🚀 MUTACIÓN AVANZADA: Maneja de forma atómica Check-In y Check-Out integrando el control físico
   const updateBookingStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: SupabaseBooking['status'] }) => {
-      const { error } = await supabase.from('bookings').update({ status }).eq('id', id);
+      let assignedRoomId: number | null = null;
+
+      // ⏳ Caso A: Al hacer Check-In (checked_in), validamos y asignamos habitación física libre
+      if (status === 'checked_in') {
+        const { data: currentBooking } = await supabase
+          .from('bookings')
+          .select('room_id, room_type')
+          .eq('id', id)
+          .single();
+
+        if (currentBooking && !currentBooking.room_id) {
+          const typeToFind = currentBooking.room_type || 'double';
+          
+          // Buscar primer cuarto libre (disponible y limpio) de esa categoría
+          const { data: freeRoom } = await supabase
+            .from('rooms')
+            .select('id')
+            .eq('type', typeToFind)
+            .eq('status', 'available')
+            .eq('housekeeping_status', 'clean')
+            .limit(1)
+            .maybeSingle();
+
+          if (!freeRoom) {
+            throw new Error(`No hay habitaciones físicas libres y limpias para la categoría: ${typeToFind.toUpperCase()}. Por favor, limpia un cuarto antes de ingresar al huésped.`);
+          }
+          assignedRoomId = freeRoom.id;
+        } else if (currentBooking && currentBooking.room_id) {
+          assignedRoomId = currentBooking.room_id;
+        }
+      }
+
+      const payload: { status: SupabaseBooking['status']; room_id?: number | null } = { status };
+      
+      if (assignedRoomId) {
+        payload.room_id = assignedRoomId;
+        // Marcar habitación física como ocupada
+        await supabase.from('rooms').update({ status: 'occupied' }).eq('id', assignedRoomId);
+      }
+
+      // ⏳ Caso B: Al hacer Check-Out (checked_out), liberamos la habitación y la marcamos como sucia (dirty)
+      if (status === 'checked_out') {
+        const { data: currentBooking } = await supabase
+          .from('bookings')
+          .select('room_id')
+          .eq('id', id)
+          .single();
+
+        if (currentBooking && currentBooking.room_id) {
+          await supabase
+            .from('rooms')
+            .update({ status: 'available', housekeeping_status: 'dirty' })
+            .eq('id', currentBooking.room_id);
+        }
+      }
+
+      const { error } = await supabase.from('bookings').update(payload).eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bookings'] }),
-    onError: (err: Error) => toast.error(`Error: ${err.message}`)
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      toast.success('Estado de reserva actualizado con éxito.');
+    },
+    onError: (err: Error) => {
+      console.error('[Booking Status Mutation Error]:', err.message);
+      toast.error(err.message || 'Error al actualizar el estado.');
+    }
   });
 
   // ============================================================================
@@ -313,7 +383,7 @@ export default function AdminDashboard() {
     
     staff: <StaffManagement />,
     
-    settings_all: <TemplateManager /> // Inyección del gestor de plantillas y vouchers
+    settings_all: <TemplateManager />
   };
 
   useEffect(() => {

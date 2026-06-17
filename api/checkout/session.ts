@@ -1,18 +1,42 @@
 /**
  * @file session.ts
  * @description Endpoint seguro para inicializar sesiones de pago en Stripe.
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE INGENIERÍA y el paradigma de RESERVA POR CATEGORÍA:
+ * - Desacoplamiento de ID físico: No se pre-asigna una habitación física en la reserva.
+ * - Validación por Tipo: Se obtiene el precio base del tipo de habitación seleccionado.
  * - Lazy Initialization: Evita colapsos de cold start ante variables de entorno no configuradas.
  * - Timezone-Aware Validation: Permite reservas del mismo día (Walk-ins) en GMT-3 sin conflicto de servidor UTC.
- * - Smart Identity Manifesto: Almacena el 'locale' de i18n del huésped en la metadata de Stripe de forma inmutable.
+ * - Smart Identity Manifesto: Almacena el 'locale' de i18n del huésped en la metadata de Stripe.
+ * - Criptografía Estricta (ISO 27001): Compila, encripta (AES-256-GCM) y setea el estado del carrito en una cookie HttpOnly segura.
  * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import crypto from 'crypto'; // Criptografía nativa de Node.js para rendimiento extremo
+
+// Configuración criptográfica de grado bancario
+const ALGORITHM = 'aes-256-gcm';
+const SECRET_SEED = process.env.JWT_SECRET || 'fallback-secret-seed-32bytes-long-required-for-dev';
+const ENCRYPTION_KEY = crypto.createHash('sha256').update(SECRET_SEED).digest();
 
 let stripeInstance: Stripe | null = null;
 let supabaseInstance: SupabaseClient | null = null;
+
+/**
+ * Encripta un texto utilizando AES-256-GCM
+ */
+function encryptData(text: string): string {
+  const iv = crypto.randomBytes(12); // Vector de inicialización estándar de 12 bytes para GCM
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
+  
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  const authTag = cipher.getAuthTag().toString('hex');
+  
+  // Retorna el payload formateado de forma segura: iv:authTag:contenidoEncriptado
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`;
+}
 
 /**
  * Inicialización defensiva de Stripe
@@ -89,22 +113,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const stripe = getStripe();
     const supabase = getSupabase();
 
-    // ASIGNACIÓN FÍSICA PREVENTIVA: Buscar el primer cuarto disponible para congelar tarifa
-    const { data: room, error: roomError } = await supabase
+    // 🚀 LÓGICA POR CATEGORÍA: Obtener la tarifa base de este TIPO de cuarto sin pre-asignar ID físico
+    const { data: roomRate, error: rateError } = await supabase
       .from('rooms')
-      .select('id, price_per_night')
+      .select('price_per_night')
       .eq('type', roomType)
-      .eq('status', 'available')
       .limit(1)
       .maybeSingle();
 
-    if (roomError || !room) {
+    if (rateError || !roomRate) {
       return res.status(404).json({ 
-        message: 'No hay habitaciones físicas disponibles para esta categoría en las fechas seleccionadas.' 
+        message: `No se encontró configuración de tarifas para la categoría: ${roomType}` 
       });
     }
 
-    const totalPrice = Number(room.price_per_night) * nights;
+    const totalPrice = Number(roomRate.price_per_night) * nights;
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -115,7 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           currency: 'brl',
           product_data: { 
             name: `Reserva: ${roomName}`, 
-            description: `${nights} noches` 
+            description: `${nights} noches (${roomType.toUpperCase()})` 
           },
           unit_amount: Math.round(totalPrice * 100),
         },
@@ -124,14 +147,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       mode: 'payment',
       success_url: `${req.headers.origin || 'https://beachcanasvieiras.com'}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin || 'https://beachcanasvieiras.com'}/`,
+      // 🔒 METADATOS DESACOPLADOS: Guardamos room_type en lugar del room_id físico
       metadata: { 
-        room_id: room.id.toString(), 
+        room_type: roomType, 
         check_in: checkIn, 
         check_out: checkOut, 
         guest_name: guestName ? guestName.trim() : 'Invitado',
-        locale: targetLocale // Almacenamiento inmutable del idioma preferido para envíos localizados
+        locale: targetLocale 
       },
     });
+
+    // 🔒 SERIALIZACIÓN Y ENCRIPTADO DEL CARRITO DE COMPRA (Smart Identity Manifesto)
+    const cartData = JSON.stringify({
+      roomType,
+      roomName,
+      checkIn,
+      checkOut,
+      totalPrice,
+      currency: 'BRL',
+      email: email.trim(),
+      guestName: guestName ? guestName.trim() : 'Invitado',
+      locale: targetLocale
+    });
+
+    const encryptedCart = encryptData(cartData);
+    const cookieMaxAge = 60 * 30; // 30 minutos de vida útil (Perfecto para transacciones)
+
+    // Setear cabecera HttpOnly, Secure y SameSite=Lax para retorno de Stripe
+    res.setHeader('Set-Cookie', `beach_checkout_intent=${encryptedCart}; Path=/; Max-Age=${cookieMaxAge}; HttpOnly; Secure; SameSite=Lax`);
 
     return res.status(200).json({ url: session.url });
   } catch (error: unknown) {

@@ -2,7 +2,9 @@
  * @file stripe.ts
  * @description Webhook de seguridad e idempotencia para conciliar pagos exitosos en Supabase.
  * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse) y libre de 'any' para ESLint v9.
- * - ISO 27001: Deduplicación a nivel lógico, verificación segura de firmas e integridad relacional.
+ * Paradigma de RESERVA POR CATEGORÍA:
+ * - Desacoplamiento de ID físico: Las reservas se crean con `room_id = null` y asociadas a un `room_type`.
+ * - ISO 27001: Deduplicación a nivel lógico basada en huésped y tipo, verificación segura de firmas e integridad relacional.
  * - PCI-DSS: Manejo inmutable de transacciones sin exposición de PII.
  * - Smart Identity Manifesto: Creación preventiva en Auth para autogenerar perfiles sin colisión de UUIDs.
  * - Saneado: Resuelto el error TS2339 de compilación estática mediante aserción contractual del cliente de autenticación.
@@ -84,13 +86,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     
-    const roomId = parseInt(session.metadata?.room_id || '0');
+    const roomType = session.metadata?.room_type || ''; // 🚀 Lectura desacoplada de categoría
     const checkIn = session.metadata?.check_in;
     const checkOut = session.metadata?.check_out;
     const guestName = session.metadata?.guest_name || session.customer_details?.name || 'Huésped Invitado';
     const guestEmail = session.customer_details?.email?.trim().toLowerCase();
 
-    if (!roomId || !checkIn || !checkOut) {
+    if (!roomType || !checkIn || !checkOut) {
       console.error('[Webhook Error] Datos incompletos en la metadata de Stripe:', session.metadata);
       return res.status(400).send('Webhook Error: Incomplete metadata.');
     }
@@ -101,27 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-      // 1. DEDUPLICACIÓN / IDEMPOTENCIA (ISO 27001)
-      // Buscamos si existe previamente una reserva idéntica ya confirmada
-      const { data: existingBooking, error: checkError } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('room_id', roomId)
-        .eq('check_in', checkIn)
-        .eq('check_out', checkOut)
-        .eq('status', 'confirmed')
-        .maybeSingle();
-
-      if (checkError) {
-        throw checkError;
-      }
-
-      if (existingBooking) {
-        console.warn(`[Webhook Duplicate Warning] Reserva id: ${existingBooking.id} ya conciliada previamente.`);
-        return res.status(200).json({ received: true, deduplicated: true });
-      }
-
-      // 2. GOBERNANZA DE IDENTIDADES (Smart Identity Manifesto)
+      // 1. GOBERNANZA DE IDENTIDADES (Smart Identity Manifesto)
       let guestId: string | null = null;
 
       // Buscar si el email ya posee cuenta pública registrada
@@ -188,10 +170,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .eq('id', guestId);
       }
 
+      // 2. DEDUPLICACIÓN / IDEMPOTENCIA (ISO 27001)
+      // Buscamos si existe previamente una reserva idéntica ya confirmada usando room_type
+      const { data: existingBooking, error: checkError } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('room_type', roomType)
+        .eq('guest_id', guestId)
+        .eq('check_in', checkIn)
+        .eq('check_out', checkOut)
+        .eq('status', 'confirmed')
+        .maybeSingle();
+
+      if (checkError) {
+        throw checkError;
+      }
+
+      if (existingBooking) {
+        console.warn(`[Webhook Duplicate Warning] Reserva id: ${existingBooking.id} ya conciliada previamente.`);
+        return res.status(200).json({ received: true, deduplicated: true });
+      }
+
       // 3. Inserción inmutable de la reserva con enlace de clave foránea correcto
+      // Se registra 'room_id = null' ya que la asignación física de la Suite específica se maneja internamente.
       const { error: insertError } = await supabase.from('bookings').insert([{
-        room_id: roomId,
-        guest_id: guestId, // Enlace relacional inmaculado
+        room_id: null, 
+        room_type: roomType, // Autoridad de categoría
+        guest_id: guestId,
         check_in: checkIn,
         check_out: checkOut,
         total_price: (session.amount_total || 0) / 100,
@@ -202,7 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         throw insertError;
       }
 
-      console.log(`[Webhook Success] Pago conciliado e identidad enlazada exitosamente para ${guestEmail}.`);
+      console.log(`[Webhook Success] Pago conciliado e identidad de categoría enlazada para ${guestEmail}.`);
     } catch (dbError: unknown) {
       const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Error de BD desconocido';
       console.error('[Webhook DB Error Critical]:', dbErrorMessage);
@@ -210,5 +215,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  return res.status(200).json({ received: true });
+  return (res as VercelResponse).status(200).json({ received: true });
 }

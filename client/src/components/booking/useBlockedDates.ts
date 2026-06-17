@@ -1,8 +1,8 @@
 /**
  * @file useBlockedDates.ts
  * @description Hook de alto rendimiento para calcular fechas bloqueadas en base al inventario de Supabase.
- * Lógica Heurística: Bloquea un día si y solo si:
- *   Nº de Reservas Activas (día D) >= Total de Habitaciones Físicas de esa categoría (N).
+ * Lógica Heurística por Categoría: Bloquea un día si y solo si:
+ *   Nº de Reservas Activas de Categoría (día D) >= Total de Habitaciones Físicas de esa categoría (N).
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -18,30 +18,30 @@ export function useBlockedDates(roomType: string) {
   return useQuery<Date[]>({
     queryKey: ['blocked-dates', roomType],
     queryFn: async () => {
-      // 1. Obtener el inventario total de habitaciones físicas de esta categoría
+      // 1. Obtener la capacidad total de habitaciones físicas de esta categoría (excluyendo solo fuera de servicio)
       const { count: totalRooms, error: countError } = await supabase
         .from('rooms')
         .select('*', { count: 'exact', head: true })
         .eq('type', roomType)
-        .eq('status', 'available');
+        .neq('status', 'maintenance'); // Excluye únicamente habitaciones bajo reparación física
 
       if (countError || totalRooms === null || totalRooms === 0) {
         return [];
       }
 
-      // 2. Obtener todas las reservas confirmadas o checked_in activas para este tipo de cuarto
+      // 2. Obtener todas las reservas activas (confirmadas o checked_in) para esta categoría específica
       const { data: bookings, error: bookingsError } = await supabase
         .from('bookings')
         .select('check_in, check_out')
-        .eq('status', 'confirmed') // Ignoramos canceladas o pendientes de pago
-        .eq('rooms.type', roomType); // Filtro relacional implicito de Supabase
+        .in('status', ['confirmed', 'checked_in']) // Incluye confirmadas y hospedadas
+        .eq('room_type', roomType); // 🚀 Filtro directo por categoría para evitar bypass de null-rooms
 
       // Fallback si no hay reservas o hay error
       if (bookingsError || !bookings || bookings.length === 0) {
         return [];
       }
 
-      // 3. Heurística de Defragmentación: Contar reservas por cada fecha individual
+      // 3. Heurística de Ocupación: Contar reservas por cada fecha individual
       const dateOccupancyMap: Record<string, number> = {};
 
       (bookings as unknown as BookingDbRow[]).forEach((b) => {
@@ -57,7 +57,7 @@ export function useBlockedDates(roomType: string) {
         });
       });
 
-      // 4. Bloquear solo los días donde la ocupación llegó al límite físico del inventario
+      // 4. Bloquear solo los días donde la ocupación llegó al límite físico de la categoría
       const blockedDates: Date[] = [];
       Object.entries(dateOccupancyMap).forEach(([dateStr, activeBookingsCount]) => {
         if (activeBookingsCount >= totalRooms) {

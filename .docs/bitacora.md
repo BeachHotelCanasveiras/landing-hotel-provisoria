@@ -374,7 +374,59 @@ SOLID (Clean Code): La atomización estricta de BookingSearch y Excursions asegu
     
     ---
 
-    
+⚓ Bitácora de Ingeniería: Consolidación de Identidades, Transaccionalidad y Mensajería Multilingüe (v2026-06-17)
+Este registro técnico documenta el diseño de la arquitectura de identidades unificada, la mitigación de carreras de datos, el flujo de mensajería multilingüe asíncrona y la evaluación de persistencia criptográfica para el ecosistema Beach Hotel Canasvieiras.
+1. El Desafío Resuelto: El Ciclo de Vida del Huésped (SSoT)
+El Problema de la Carrera de Datos (Stripe Webhook vs Redirección)
+En sistemas transaccionales con redirección (Checkout-First, Register-Later), la velocidad de redirección del navegador tras un pago exitoso suele ser inferior a un segundo, mientras que los webhooks de Stripe pueden experimentar latencias de red de hasta 5 segundos.
+Impacto: El huésped llegaba a /success y el servidor de base de datos aún no tenía registro de su cuenta pública public.users ni de su perfil public.guests. Al intentar registrar su contraseña definitiva, el sistema fallaba.
+Mitigación: Rediseñamos api/checkout/claim-account.ts para actuar como un controlador resiliente. Si al momento de reclamar la cuenta detecta que el webhook de Stripe está demorado, la API de administración crea de forma proactiva y en caliente la cuenta en auth.users, lo que dispara síncronamente los triggers de base de datos y permite asociar el guest_id a la reserva de manera atómica [api/checkout/claim-account.ts, scripts/supabase/migration-pms-v2.sql].
+El Vacío de Internacionalización en Vouchers
+El envío de duplicados de comprobantes (api/checkout/send-copy.ts) operaba con una plantilla estática en español.
+Solución: Re-diseñamos el esquema de base de datos de plantillas (email_templates) para operar bajo una clave primaria compuesta (id, locale) [scripts/supabase/migration-templates.sql, scripts/supabase/migration-pms-v2.sql]. El backend ahora lee el locale almacenado de forma inmutable en la metadata de Stripe, consulta el asunto y HTML en el idioma nativo del comprador (es-ES, en-US, pt-BR) y compila las variables de forma dinámica antes de encolarlo en email_queue [api/checkout/send-copy.ts].
+2. Anatomía de los Aparatos Creados y Modificados
+api/webhooks/stripe.ts (Webhook de Conciliación): Procesa la creación preventiva de cuentas y encolamiento asíncrono utilizando el guest_id relacional inmaculado [api/webhooks/stripe.ts].
+api/checkout/claim-account.ts (API de Activación Resiliente): Resuelve condiciones de carrera creando al usuario bajo demanda de forma administrativa si el webhook experimenta latencias de red [api/checkout/claim-account.ts].
+api/checkout/send-copy.ts (API de Despacho Localizado): Consulta a public.email_templates filtrando por clave compuesta (id, locale) y encola vouchers personalizados en el idioma nativo del comprador [api/checkout/send-copy.ts].
+client/src/pages/Success.tsx (Pantalla de Éxito Personalizada): Despliega el desglose financiero expandido de la reserva y cuenta con el widget interactivo que invoca al despacho alternativo [client/src/pages/Success.tsx].
+client/src/components/dashboard/reception/TemplateManager.tsx (Editor de Vouchers): Formulario optimizado mediante el patrón de remontado por llave de React 19 para evitar renders en cascada y habilitar la exportación/impresión PDF nativa de vouchers [client/src/components/dashboard/reception/TemplateManager.tsx].
+
+---
+
+## Hito: Implementación de Persistencia Segura y Tolerancia a Fallos (Stripe Outage Fallback)
+**Fecha:** 17 de Junio, 2026  
+**Estatus:** Consolidado y Desplegado en Producción
+
+### 1. Contexto y Problema
+En el flujo transaccional "Venta Primero, Registro Después" (CRO), el cliente es redirigido temporalmente al dominio de Stripe (`checkout.stripe.com`) para procesar el cobro. Al ocurrir esto:
+1. El estado síncrono en memoria de la aplicación React (SPA) se destruye por completo.
+2. Al retornar a la página de éxito (`/success`), depender exclusivamente de consultas en tiempo real a las APIs de Stripe o Supabase para reconstruir el resumen de compra de Karla Valeska introduce puntos de fricción severos:
+   * **Latencia de Red:** El FCP (First Contentful Paint) se degrada debido a los viajes de ida y vuelta (roundtrips) de la API.
+   * **Tolerancia a Fallos:** Si Stripe experimenta una degradación de servicio o caída temporal, la página de éxito colapsa, impidiendo que el huésped cree su contraseña y complete el ciclo de conversión.
+
+### 2. Evaluación de Alternativas de Almacenamiento
+
+*   **LocalStorage / SessionStorage:** Descartado de inmediato. Son vulnerables a lecturas maliciosas mediante ataques de Scripting en Sitios Cruzados (XSS) e inyecciones en el DOM. Además, pierden contexto al cambiar de dominio.
+*   **Base de Datos Relacional Temporaria:** Robusta, pero introduce sobrecarga redundante de escritura/lectura en Supabase por cada carrito abandonado por el usuario, degradando el performance de base de datos a escala.
+*   **Cookie de Sesión Encriptada y Autenticada:** Seleccionada como la solución óptima. Ofrece inmutabilidad, protección nativa del navegador e independencia ante la caída de servicios externos.
+
+### 3. Decisión de Arquitectura y Especificación de Diseño
+Implementamos una cookie temporal de 30 minutos llamada `beach_checkout_intent` gobernada bajo las siguientes directivas estrictas de seguridad (ISO 27001):
+
+1.  **Cifrado Simétrico Autenticado (AES-256-GCM):** La cookie no se almacena en texto plano. Se cifra en caliente en el servidor mediante el módulo `crypto` de Node.js, utilizando una clave derivada de 256 bits a partir de `JWT_SECRET`. El formato incluye un vector de inicialización (`IV`) único de 12 bytes y una etiqueta de autenticación (`Auth Tag`) de 16 bytes para evitar ataques de manipulación o falsificación de datos (Data Tampering).
+2.  **Gobernanza de Cookies en el Navegador:**
+    *   `HttpOnly`: Bloquea el acceso al hilo de ejecución de JavaScript, garantizando inmunidad total contra robos por XSS.
+    *   `Secure`: Fuerza la transmisión de la cookie únicamente a través de canales cifrados HTTPS.
+    *   `SameSite=Lax`: Directiva mandatoria que asegura que el navegador envíe la cookie de regreso de forma nativa al retornar desde el dominio de Stripe.
+3.  **Algoritmo de Tolerancia Activa:**
+    El endpoint de recuperación `/api/checkout/retrieve` opera bajo un bloque de contingencia de doble ruta:
+    *   **Ruta Principal:** Consulta de forma síncrona a la API de Stripe expandiendo `line_items`.
+    *   **Ruta de Fallback:** Si Stripe falla por timeout, tasa de límite o caída de red, el controlador descifra de forma segura la cookie local y retorna el carrito original. El usuario visualiza su confirmación de compra y activa su cuenta de forma 100% transparente.
+
+### 4. Aparatos Modificados / Creados
+*   `api/checkout/session.ts` -> Serializa, encripta y escribe la cabecera `Set-Cookie` en la inicialización del pago.
+*   `api/checkout/retrieve.ts` -> Descifra la cookie en el bloque de excepciones del handler para garantizar redundancia y alta disponibilidad.
+
 
 
 
