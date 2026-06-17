@@ -2,9 +2,9 @@
  * @file AdminDashboard.tsx
  * @description Orquestador Maestro del Panel de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Interceptor de Onboarding: Bloqueo perimetral si 'temp_password_active' es verdadero.
- * - Saneamiento completo de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
- * - SOLID: Delegación pura del flujo de primer acceso al aparato especializado 'OnboardingForm'.
+ * - Interceptor de Onboarding: Bloqueo perimetral reactivo con refresco en caliente de sesión.
+ * - Saneamiento de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
+ * - Smart Identity Manifesto: Reemplazado window.location.reload() por rehidratación silenciosa mediante refreshUser().
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -88,7 +88,7 @@ interface RatesCategory {
 export default function AdminDashboard() {
   const { t } = useTranslation(['dashboard', 'housekeeping']);
   const [, setLocation] = useLocation();
-  const { user, role, signOut, loading: authLoading } = useAuth();
+  const { user, role, signOut, refreshUser, loading: authLoading } = useAuth(); // Consumo del refreshUser
   const queryClient = useQueryClient();
 
   const [currentView, setCurrentView] = useState<string>('overview');
@@ -327,8 +327,9 @@ export default function AdminDashboard() {
       <OnboardingForm 
         user={user} 
         onComplete={async () => {
+          // Rehidratación atómica y silenciosa en caliente (Smart Identity Manifesto)
           await queryClient.invalidateQueries({ queryKey: ['user'] });
-          window.location.reload(); // Hidratar metadatos nuevos
+          await refreshUser(); 
         }}
       />
     );

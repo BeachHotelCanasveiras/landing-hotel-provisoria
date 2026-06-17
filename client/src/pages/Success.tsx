@@ -2,6 +2,8 @@
  * @file Success.tsx
  * @description Página de retorno de Stripe (Fase 6 Post-Venta).
  * Implementa la arquitectura "Venta Primero, Registro Después".
+ * - Smart Identity Manifesto: Reclamo de cuenta con verificación de firma Stripe.
+ * - Saneado: Resuelto error de linter no-unused-vars utilizando el nombre del huésped para personalizar el título.
  */
 
 import { useState, useEffect } from 'react';
@@ -21,7 +23,7 @@ export default function Success() {
   const [loadingSession, setLoadingSession] = useState(true);
   const [isRegistering, setIsRegistering] = useState(false);
   const [guestEmail, setGuestEmail] = useState('');
-  const [guestName, setGuestName] = useState('');
+  const [guestName, setGuestName] = useState(''); // Utilizado dinámicamente para personalización
   const [password, setPassword] = useState('');
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function Success() {
     };
 
     fetchStripeSession();
-  }, [setLocation]);
+  }, [setLocation, setGuestEmail, setGuestName]);
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,24 +65,40 @@ export default function Success() {
     setIsRegistering(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
-        email: guestEmail,
-        password: password,
-        options: {
-          data: {
-            full_name: guestName,
-            role: 'guest',
-          },
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get('session_id');
+
+      // 1. Reclamar la cuenta pre-creada mediante nuestro endpoint seguro de firma
+      const response = await fetch('/api/checkout/claim-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          sessionId,
+          password,
+        }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al procesar la reclamación de la cuenta.');
+      }
 
-      toast.success(t('success_toast_ok'));
+      // 2. Iniciar sesión automáticamente de forma transparente
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: guestEmail,
+        password: password,
+      });
+
+      if (signInError) throw signInError;
+
+      toast.success(t('success_toast_ok') || '¡Cuenta activada con éxito!');
       StorageService.setCookie('beach_hotel_pending_registration', 'false');
       setLocation('/admin');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al crear la cuenta.');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Error al crear la cuenta.';
+      toast.error(msg);
       setIsRegistering(false);
     }
   };
@@ -111,8 +129,9 @@ export default function Success() {
               <CheckCircle className="w-10 h-10 text-green-500" strokeWidth={2.5} />
             </motion.div>
 
+            {/* UX Premium: Título con saludo dinámico personalizado */}
             <h1 className="font-display text-3xl text-gray-900 tracking-tight mb-2">
-              {t('success_title')}
+              {guestName ? `Obrigado, ${guestName.trim().split(' ')[0]}!` : t('success_title')}
             </h1>
             <p className="font-body text-sm text-gray-500 leading-relaxed font-light mb-8 max-w-sm mx-auto">
               {t('success_subtitle')}

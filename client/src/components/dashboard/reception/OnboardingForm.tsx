@@ -3,14 +3,15 @@
  * @description Aparato de Primer Acceso, Cambio de Contraseña e Hidratación de Perfil de Personal.
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Integración con la biblioteca industrial 'libphonenumber-js' para validación multipaís.
- * - Desinfectación rigurosa de entradas para impedir inyección SQLi y ataques XSS.
- * - Trinidad Atómica: Consumo estricto del diccionario 'onboarding' (pt-BR, es-ES, en-US).
+ * - Desinfectación rigurosa de entradas contra XSS permitiendo nombres de dirección reales.
+ * - Saneamiento de ESLint v9: Eliminado el tipo 'any' mediante importación explícita de tipos Supabase.
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { User } from '@supabase/supabase-js'; // Enlace de tipado fuerte
 import { Lock, Phone, MapPin, CheckCircle, ShieldAlert } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ import { toast } from 'sonner';
 
 interface OnboardingFormProps {
   /** Objeto de usuario autenticado de Supabase */
-  user: any; 
+  user: User; 
   /** Callback ejecutado tras finalizar exitosamente el proceso */
   onComplete: () => Promise<void>;
 }
@@ -41,6 +42,17 @@ export const OnboardingForm: React.FC<OnboardingFormProps> = ({ user, onComplete
   }>({});
 
   /**
+   * Normaliza y limpia entradas telefónicas prependiendo el indicador internacional si es omitido
+   */
+  const formatPhoneInput = (input: string): string => {
+    let clean = input.trim();
+    if (!clean.startsWith('+') && clean.length >= 10) {
+      clean = '+' + clean;
+    }
+    return clean.replace(/[^\d+]/g, '');
+  };
+
+  /**
    * Sanitiza y valida de forma segura las entradas del usuario (Capa de Seguridad L0)
    */
   const validateInputs = (): boolean => {
@@ -58,21 +70,21 @@ export const OnboardingForm: React.FC<OnboardingFormProps> = ({ user, onComplete
     }
 
     // 2. Sanitización y Validación del Teléfono con libphonenumber-js (Multipaís)
-    const rawDigits = phone.replace(/[^\d+]/g, ''); // Remover espacios, paréntesis o guiones peligrosos
-    const parsedPhone = parsePhoneNumberFromString(rawDigits);
+    const normalizedPhone = formatPhoneInput(phone);
+    const parsedPhone = parsePhoneNumberFromString(normalizedPhone);
     
     if (!parsedPhone || !parsedPhone.isValid()) {
       tempErrors.phone = t('validation_phone_invalid', { defaultValue: 'Número de telefone internacional inválido (Ex: +55 48 99812-6650)' });
       isValid = false;
     }
 
-    // 3. Sanitización de la dirección (Anti-XSS / SQLi)
-    const sqlXssRegex = /[<>;'"]/g;
+    // 3. Sanitización de la dirección (Anti-XSS / HTML Injection)
+    const htmlTagRegex = /[<>]/g; // Bloquea estrictamente inyección de scripts HTML sin romper apóstrofes legítimos
     if (address.trim().length < 8) {
       tempErrors.address = t('validation_address_short', { defaultValue: 'Por favor, digite seu endereço residencial completo.' });
       isValid = false;
-    } else if (sqlXssRegex.test(address)) {
-      tempErrors.address = t('validation_address_invalid', { defaultValue: 'Caracteres especiais não permitidos no endereço.' });
+    } else if (htmlTagRegex.test(address)) {
+      tempErrors.address = t('validation_address_invalid', { defaultValue: 'Caracteres HTML especiais não são permitidos no endereço.' });
       isValid = false;
     }
 
@@ -100,9 +112,9 @@ export const OnboardingForm: React.FC<OnboardingFormProps> = ({ user, onComplete
       if (authError) throw authError;
 
       // 2. Formatear y sanitizar el teléfono final según el formato internacional de Google (E.164)
-      const rawDigits = phone.replace(/[^\d+]/g, '');
-      const parsedPhone = parsePhoneNumberFromString(rawDigits);
-      const formattedPhone = parsedPhone ? parsedPhone.format('E.164') : rawDigits;
+      const normalizedPhone = formatPhoneInput(phone);
+      const parsedPhone = parsePhoneNumberFromString(normalizedPhone);
+      const formattedPhone = parsedPhone ? parsedPhone.format('E.164') : normalizedPhone;
 
       // 3. Actualizar perfil de contacto en public.guests (dirección y celular)
       const { error: dbError } = await supabase

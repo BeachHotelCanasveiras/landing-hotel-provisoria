@@ -3,8 +3,7 @@
  * @file AuthContext.tsx
  * @description Proveedor de estado global de autenticación y roles de usuario.
  * - Satisface el tipado estricto (no-any-implícito) mediante anotación nativa de Supabase.
- * - Saneamiento: Resuelto el hoisting de fetchUserRole declarándola de forma clásica.
- * - Saneamiento: Exclusión de Fast Refresh para el hook personalizado para lograr compilación limpia.
+ * - Smart Identity Manifesto: Añadido método 'refreshUser' para hidratación en caliente sin parpadeo de recarga de página.
  * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida
  *   de autenticación usando macro-tasks (setTimeout 0) para evitar colgar las conexiones del cliente.
  */
@@ -20,6 +19,8 @@ interface AuthContextType {
   role: UserRole | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  /** Consulta el estado fresco del usuario en el servidor para actualizar metadatos en caliente */
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +53,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }
+
+  /**
+   * Consulta el estado del servidor de autenticación para hidratar metadatos en caliente
+   */
+  const refreshUser = async () => {
+    try {
+      const { data: { user: updatedUser }, error } = await supabase.auth.getUser();
+      if (error) throw error;
+      if (updatedUser) {
+        setUser(updatedUser);
+        console.log('[AuthContext] Metadatos del usuario actualizados en caliente.');
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Error de red';
+      console.error('[AuthContext] Fallo al refrescar usuario de forma silenciosa:', msg);
+    }
+  };
 
   useEffect(() => {
     // 1. Obtener la sesión activa al inicializar
@@ -95,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, signOut }}>
+    <AuthContext.Provider value={{ user, role, loading, signOut, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
