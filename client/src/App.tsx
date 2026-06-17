@@ -7,12 +7,14 @@
  * - Implementa el guardián de rutas protegidas (ProtectedRoute) con redirección automatizada.
  * - Registro de rutas para portal de acceso (/login), éxito de Stripe (/success) y panel multi-rol (/admin).
  * - Vercel Analytics: Inyección del visor transaccional y de performance en la raíz de la app.
+ * - Vercel Speed Insights: Monitoreo in-house de rendimiento y Core Web Vitals (LCP, CLS, INP) 100% gratuito.
  */
 
 import { useEffect } from "react";
 import { useLocation, Route, Switch } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react"; // 🚀 Integración Oficial de Analíticas Vercel
+import { SpeedInsights } from "@vercel/speed-insights/react"; // 🚀 Integración Oficial de Speed Insights Vercel
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
@@ -142,6 +144,7 @@ function App() {
                 />
                 <Router />
                 <Analytics /> {/* 🚀 Analíticas transversales de tráfico, velocidad y conversiones de Stripe */}
+                <SpeedInsights /> {/* 🚀 Diagnóstico en tiempo real de rendimiento y Core Web Vitals */}
               </AppInitializer>
             </TooltipProvider>
           </AuthProvider>

@@ -4,6 +4,7 @@
  * @description Proveedor de estado global de autenticación y roles de usuario.
  * - Satisface el tipado estricto (no-any-implícito) mediante anotación nativa de Supabase.
  * - Smart Identity Manifesto: Sincroniza e hidrata en caliente el perfil del huésped en cookies seguras.
+ * - Self-Healing Integrity Engine: Detecta y auto-repara de forma síncrona registros de huéspedes legacy huerfanos en public.guests.
  * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida
  *   de autenticación usando macro-tasks (setTimeout 0) para evitar colgar las conexiones del cliente.
  */
@@ -56,35 +57,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   /**
-   * 🚀 SINCRONIZACIÓN DE PERFIL: Consulta base de datos y guarda en cookies de forma asíncrona y segura
+   * 🚀 MOTOR DE AUTO-CURACIÓN (Self-Healing Engine):
+   * Comprueba la integridad del perfil, repara registros huérfanos de base de datos y cachea en cookies de forma segura.
    */
   async function syncUserProfileCookie(activeUser: User) {
     try {
-      const { data: guestData } = await supabase
+      const email = activeUser.email || '';
+      
+      // 1. Consultar si existe registro físico en public.guests para evitar "Byzantine Drift"
+      const { data: guestData, error: fetchError } = await supabase
         .from('guests')
-        .select('first_name, last_name')
+        .select('first_name, last_name, phone')
         .eq('id', activeUser.id)
         .maybeSingle();
 
-      const email = activeUser.email || '';
+      if (fetchError) {
+        throw fetchError;
+      }
+
       let firstName = '';
       let lastName = '';
 
-      if (guestData && guestData.first_name) {
-        firstName = guestData.first_name;
-        lastName = guestData.last_name || 'Huésped';
-      } else {
-        // Fallback robusto a partir de metadatos OAuth
+      // 🛠️ ACCIÓN DE AUTO-CURACIÓN: Si la fila no existe en public.guests (Usuario legacy/húmedo)
+      if (!guestData) {
+        console.warn(`[Self-Healing] Detectado usuario sin perfil en public.guests: ${email}. Auto-reparando base de datos en caliente...`);
+        
         const fullName = activeUser.user_metadata?.full_name || activeUser.user_metadata?.name || '';
         const parts = fullName.trim().split(/\s+/);
-        firstName = parts[0] || email.split('@')[0] || '';
+        firstName = parts[0] || email.split('@')[0] || 'Huésped';
         
         // Capitalización limpia del Nombre
         firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
         lastName = parts.slice(1).join(' ') || 'Huésped';
+
+        // Insertar síncronamente el registro de auto-curación para que no vuelva a fallar
+        const { error: insertError } = await supabase
+          .from('guests')
+          .insert([{
+            id: activeUser.id,
+            user_email: email,
+            first_name: firstName,
+            last_name: lastName
+          }]);
+
+        if (insertError) {
+          console.error('[Self-Healing Failure] No se pudo insertar perfil de auto-curación:', insertError.message);
+        } else {
+          console.log(`[Self-Healing Success] Registro de huésped reparado con éxito en public.guests para: ${email}`);
+        }
+      } else {
+        firstName = guestData.first_name || '';
+        lastName = guestData.last_name || '';
       }
 
-      // Escribimos de forma encriptada/ofuscada la cookie local
+      // Si por razones excepcionales sigue vacío, aplicamos la capa Failsafe
+      if (!firstName) {
+        const emailPart = email.split('@')[0] || '';
+        firstName = emailPart.charAt(0).toUpperCase() + emailPart.slice(1);
+        lastName = 'Huésped';
+      }
+
+      // 2. Sincronizar de forma instantánea la Cookie Ofuscada
       StorageService.setObfuscatedProfile({
         firstName,
         lastName,
@@ -124,7 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // WORKAROUND: Desacoplar consulta asíncrona del flujo de inicialización principal
         setTimeout(() => {
           fetchUserRole(session.user!.id);
-          syncUserProfileCookie(session.user!); // 🚀 Sincronización in-background de cookie de perfil
+          syncUserProfileCookie(session.user!); // 🚀 Sincronización in-background de cookie de perfil y auto-curación
         }, 0);
       } else {
         setLoading(false);
@@ -139,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // WORKAROUND: Prevenir deadlock (bloqueo mutuo) en supabase-js v2 liberando el hilo síncrono
           setTimeout(() => {
             fetchUserRole(session.user!.id);
-            syncUserProfileCookie(session.user!); // 🚀 Sincronización in-background de cookie de perfil
+            syncUserProfileCookie(session.user!); // 🚀 Sincronización in-background de cookie de perfil y auto-curación
           }, 0);
         } else {
           setUser(null);
