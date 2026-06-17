@@ -4,6 +4,7 @@
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Cero 'any': Tipado estricto en callbacks, estados y flujos de red.
  * - Smart Identity Manifesto: Auto-hidratación de datos en renderizado si hay sesión activa (React 19 Pattern).
+ * - Trinidad Atómica (i18n SSoT): Envío del locale activo del cliente (i18n.language) hacia Stripe Checkout.
  * - Desacoplado: Delega el cálculo de inventario a 'useBlockedDates'.
  */
 
@@ -144,6 +145,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
           guestName: `${firstName.trim()} ${lastName.trim()}`,
           email: email.trim(),
           guestsCount,
+          locale: i18n.language // Propagamos el locale activo del cliente para despachar vouchers bilingües
         }),
       });
 

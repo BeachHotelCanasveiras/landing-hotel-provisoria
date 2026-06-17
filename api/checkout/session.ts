@@ -4,14 +4,13 @@
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
  * - Lazy Initialization: Evita colapsos de cold start ante variables de entorno no configuradas.
  * - Timezone-Aware Validation: Permite reservas del mismo día (Walk-ins) en GMT-3 sin conflicto de servidor UTC.
- * - Algoritmo de asignación preventiva: Soporta múltiples habitaciones físicas del mismo tipo (limit 1).
+ * - Smart Identity Manifesto: Almacena el 'locale' de i18n del huésped en la metadata de Stripe de forma inmutable.
  * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Contrato de interfaz estricto para inicialización perezosa de Stripe
 let stripeInstance: Stripe | null = null;
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -52,7 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { roomType, roomName, checkIn, checkOut, guestName, email } = req.body;
+    const { roomType, roomName, checkIn, checkOut, guestName, email, locale } = req.body;
 
     if (!roomType || !checkIn || !checkOut || !email) {
       return res.status(400).json({ message: 'Datos de reserva o correo electrónico incompletos.' });
@@ -63,8 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'Dirección de correo electrónico con formato inválido.' });
     }
 
-    // 🚀 RESOLUCIÓN DE BUG DE ZONA HORARIA (Walk-in Bookings)
-    // Obtenemos la fecha actual exacta en el huso horario oficial del hotel (America/Sao_Paulo) en formato YYYY-MM-DD
+    // Obtener la fecha actual exacta en el huso horario oficial del hotel (America/Sao_Paulo) en formato YYYY-MM-DD
     const hotelTodayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
 
     if (checkIn < hotelTodayStr) {
@@ -84,11 +82,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'La fecha de salida debe ser estrictamente posterior a la entrada.' });
     }
 
+    // Saneamiento de idioma preferido (locale SSoT)
+    const targetLocale = ['es-ES', 'en-US', 'pt-BR'].includes(locale) ? locale : 'es-ES';
+
     // Carga de instancias de red seguras en caliente
     const stripe = getStripe();
     const supabase = getSupabase();
 
-    // 🚀 ASIGNACIÓN FÍSICA PREVENTIVA: Buscar el primer cuarto disponible para congelar tarifa
+    // ASIGNACIÓN FÍSICA PREVENTIVA: Buscar el primer cuarto disponible para congelar tarifa
     const { data: room, error: roomError } = await supabase
       .from('rooms')
       .select('id, price_per_night')
@@ -127,7 +128,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         room_id: room.id.toString(), 
         check_in: checkIn, 
         check_out: checkOut, 
-        guest_name: guestName ? guestName.trim() : 'Invitado'
+        guest_name: guestName ? guestName.trim() : 'Invitado',
+        locale: targetLocale // Almacenamiento inmutable del idioma preferido para envíos localizados
       },
     });
 
@@ -136,7 +138,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const errorMessage = error instanceof Error ? error.message : 'Error inesperado al inicializar pasarela';
     console.error('[Checkout Session Error Critical]:', errorMessage);
     
-    // Siempre responde en formato JSON (Garantiza lectura en BookingDialog)
     return res.status(500).json({ 
       message: errorMessage.includes('no configurada') || errorMessage.includes('Supabase')
         ? 'Error administrativo de entorno en el servidor.'

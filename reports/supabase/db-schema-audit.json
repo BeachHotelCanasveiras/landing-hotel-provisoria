@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-17T00:41:07.106Z",
+  "timestamp": "2026-06-17T04:42:23.380Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
-  "total_tables_audited": 10,
+  "total_tables_audited": 11,
   "schema_structure": [
     {
       "table_name": "guests",
@@ -224,6 +224,54 @@
       ]
     },
     {
+      "table_name": "email_templates",
+      "columns_count": 6,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "locale",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "subject",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "html_body",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "updated_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": false,
+          "description": null
+        }
+      ]
+    },
+    {
       "table_name": "housekeeping_audits",
       "columns_count": 7,
       "columns": [
@@ -431,7 +479,7 @@
     },
     {
       "table_name": "email_queue",
-      "columns_count": 12,
+      "columns_count": 15,
       "columns": [
         {
           "name": "id",
@@ -514,6 +562,27 @@
           "name": "updated_at",
           "type": "string",
           "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "sender_id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `users.id`.<fk table='users' column='id'/>"
+        },
+        {
+          "name": "sender_role",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "sender_name",
+          "type": "string",
+          "format": "text",
           "nullable": true,
           "description": null
         }
