@@ -1,22 +1,50 @@
 /**
  * @file session.ts
- * @description Endpoint para inicializar sesiones de pago en Stripe.
+ * @description Endpoint seguro para inicializar sesiones de pago en Stripe.
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * - Lazy Initialization: Evita colapsos de cold start ante variables de entorno no configuradas.
+ * - Timezone-Aware Validation: Permite reservas del mismo día (Walk-ins) en GMT-3 sin conflicto de servidor UTC.
  * - Algoritmo de asignación preventiva: Soporta múltiples habitaciones físicas del mismo tipo (limit 1).
  * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
-  apiVersion: '2026-05-27.dahlia' 
-});
+// Contrato de interfaz estricto para inicialización perezosa de Stripe
+let stripeInstance: Stripe | null = null;
+let supabaseInstance: SupabaseClient | null = null;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!, 
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+/**
+ * Inicialización defensiva de Stripe
+ */
+function getStripe(): Stripe {
+  if (!stripeInstance) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      throw new Error('STRIPE_SECRET_KEY no configurada en las variables de entorno de producción.');
+    }
+    stripeInstance = new Stripe(key, { 
+      apiVersion: '2026-05-27.dahlia' 
+    });
+  }
+  return stripeInstance;
+}
+
+/**
+ * Inicialización defensiva de Supabase
+ */
+function getSupabase(): SupabaseClient {
+  if (!supabaseInstance) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      throw new Error('Credenciales de base de datos Supabase ausentes o incompletas en producción.');
+    }
+    supabaseInstance = createClient(url, key);
+  }
+  return supabaseInstance;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -35,8 +63,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'Dirección de correo electrónico con formato inválido.' });
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 🚀 RESOLUCIÓN DE BUG DE ZONA HORARIA (Walk-in Bookings)
+    // Obtenemos la fecha actual exacta en el huso horario oficial del hotel (America/Sao_Paulo) en formato YYYY-MM-DD
+    const hotelTodayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+
+    if (checkIn < hotelTodayStr) {
+      return res.status(400).json({ message: 'La fecha de entrada no puede ser en el pasado.' });
+    }
 
     const start = new Date(`${checkIn}T00:00:00`);
     const end = new Date(`${checkOut}T00:00:00`);
@@ -45,18 +78,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ message: 'Formato de fecha inválido en el servidor.' });
     }
 
-    if (start < today) {
-      return res.status(400).json({ message: 'La fecha de entrada no puede ser en el pasado.' });
-    }
-
     const nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
     
     if (nights <= 0) {
       return res.status(400).json({ message: 'La fecha de salida debe ser estrictamente posterior a la entrada.' });
     }
 
-    // 🚀 OPTIMIZACIÓN DE PRÓXIMA GENERACIÓN: Asignación física preventiva
-    // Busca la primera habitación real disponible de esta categoría para anclar el precio inmutable.
+    // Carga de instancias de red seguras en caliente
+    const stripe = getStripe();
+    const supabase = getSupabase();
+
+    // 🚀 ASIGNACIÓN FÍSICA PREVENTIVA: Buscar el primer cuarto disponible para congelar tarifa
     const { data: room, error: roomError } = await supabase
       .from('rooms')
       .select('id, price_per_night')
@@ -66,7 +98,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .maybeSingle();
 
     if (roomError || !room) {
-      return res.status(404).json({ message: 'No hay habitaciones físicas disponibles para esta categoría en las fechas seleccionadas.' });
+      return res.status(404).json({ 
+        message: 'No hay habitaciones físicas disponibles para esta categoría en las fechas seleccionadas.' 
+      });
     }
 
     const totalPrice = Number(room.price_per_night) * nights;
@@ -99,7 +133,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(200).json({ url: session.url });
   } catch (error: unknown) {
-    console.error('[Checkout Session Error Critical]:', error);
-    return res.status(500).json({ message: 'Inconsistencia de red al procesar la solicitud de reserva.' });
+    const errorMessage = error instanceof Error ? error.message : 'Error inesperado al inicializar pasarela';
+    console.error('[Checkout Session Error Critical]:', errorMessage);
+    
+    // Siempre responde en formato JSON (Garantiza lectura en BookingDialog)
+    return res.status(500).json({ 
+      message: errorMessage.includes('no configurada') || errorMessage.includes('Supabase')
+        ? 'Error administrativo de entorno en el servidor.'
+        : 'Inconsistencia de red al procesar la solicitud de reserva.' 
+    });
   }
 }

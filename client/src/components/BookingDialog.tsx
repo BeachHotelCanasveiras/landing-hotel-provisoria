@@ -2,8 +2,8 @@
  * @file BookingDialog.tsx
  * @description Orquestador principal de reservas de 2 pasos.
  * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Cero 'any': Tipado estricto en callbacks y flujos.
- * - i18n Strict: Corrección de textos de error hardcodeados.
+ * - Cero 'any': Tipado estricto en callbacks, estados y flujos de red.
+ * - Smart Identity Manifesto: Auto-hidratación de datos en renderizado si hay sesión activa (React 19 Pattern).
  * - Desacoplado: Delega el cálculo de inventario a 'useBlockedDates'.
  */
 
@@ -16,6 +16,7 @@ import { DateRange } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/AuthContext'; // Consumo de identidad unificada
 import { BookingTranslationSchema } from '@/locales/schemas/booking.schema';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -32,6 +33,7 @@ interface BookingDialogProps {
 
 export default function BookingDialog({ isOpen, onClose, roomName, roomType }: BookingDialogProps) {
   const { t, i18n } = useTranslation(['booking', 'auth']);
+  const { user } = useAuth(); // Extraemos la sesión activa de forma síncrona
   
   // Consumo dinámico del inventario en Supabase (Cero sobre-reservas)
   const { data: blockedDates = [] } = useBlockedDates(roomType);
@@ -57,11 +59,21 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
     if (isOpen) {
       setStep(1);
       setRange(undefined);
-      setFirstName('');
-      setLastName('');
-      setEmail('');
       setErrors({});
       setPaymentLoading(false);
+      
+      // Auto-llenado inteligente si existe sesión activa (SaaS Elite Feature)
+      if (user) {
+        setEmail(user.email || '');
+        const fullName = user.user_metadata?.full_name || '';
+        const parts = fullName.trim().split(/\s+/);
+        setFirstName(parts[0] || '');
+        setLastName(parts.slice(1).join(' ') || '');
+      } else {
+        setFirstName('');
+        setLastName('');
+        setEmail('');
+      }
     }
   }
 
@@ -87,7 +99,6 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
     const tempErrors: typeof errors = {};
     let isValid = true;
 
-    // RESOLUCIÓN DE DEUDA TÉCNICA: Textos de error internacionalizados
     if (!firstName.trim()) {
       tempErrors.firstName = t('booking:error_first_name_required', { defaultValue: 'El nombre es obligatorio.' });
       isValid = false;
