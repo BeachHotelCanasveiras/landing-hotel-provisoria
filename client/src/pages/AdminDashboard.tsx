@@ -5,6 +5,7 @@
  * - Interceptor de Onboarding: Bloqueo perimetral reactivo con refresco en caliente de sesión.
  * - Saneamiento de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
  * - Smart Identity Manifesto: Reemplazado window.location.reload() por rehidratación silenciosa mediante refreshUser().
+ * - Saneado: Integración e inyección atómica de la consola de administración de vouchers y plantillas.
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -29,9 +30,10 @@ import { HousekeepingReport, type HousekeepingTask } from '@/components/dashboar
 import { HousekeeperPortal } from '@/components/dashboard/HousekeeperPortal';
 import { StaffManagement } from '@/components/dashboard/reception/StaffManagement';
 
-// Sincronización e importación de componentes de inventario y onboarding
+// Sincronización e importación de componentes de inventario, plantillas y onboarding
 import { RoomManagement } from '@/components/dashboard/reception/RoomManagement';
 import { OnboardingForm } from '@/components/dashboard/reception/OnboardingForm';
+import { TemplateManager } from '@/components/dashboard/reception/TemplateManager'; // Inyección del administrador de plantillas
 
 import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
 
@@ -88,7 +90,7 @@ interface RatesCategory {
 export default function AdminDashboard() {
   const { t } = useTranslation(['dashboard', 'housekeeping']);
   const [, setLocation] = useLocation();
-  const { user, role, signOut, refreshUser, loading: authLoading } = useAuth(); // Consumo del refreshUser
+  const { user, role, signOut, refreshUser, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const [currentView, setCurrentView] = useState<string>('overview');
@@ -309,7 +311,9 @@ export default function AdminDashboard() {
       />
     ),
     
-    staff: <StaffManagement />
+    staff: <StaffManagement />,
+    
+    settings_all: <TemplateManager /> // Inyección del gestor de plantillas y vouchers
   };
 
   useEffect(() => {

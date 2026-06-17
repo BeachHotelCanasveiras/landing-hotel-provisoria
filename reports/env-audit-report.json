@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-06-17T03:08:08.872Z",
+  "status": "SUCCESS",
+  "errors_count": 0,
+  "warnings_count": 0,
+  "details": [
+    {
+      "key": "STRIPE_SECRET_KEY",
+      "status": "SUCCESS",
+      "message": "[STRIPE_SECRET_KEY] estructurada correctamente. (Clave privada de Stripe (Test Mode))"
+    },
+    {
+      "key": "STRIPE_WEBHOOK_SECRET",
+      "status": "SUCCESS",
+      "message": "[STRIPE_WEBHOOK_SECRET] estructurada correctamente. (Secreto de firma para el webhook de Stripe)"
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "status": "SUCCESS",
+      "message": "[NEXT_PUBLIC_SUPABASE_URL] estructurada correctamente. (URL del proyecto de Supabase)"
+    },
+    {
+      "key": "SUPABASE_SERVICE_ROLE_KEY",
+      "status": "SUCCESS",
+      "message": "[SUPABASE_SERVICE_ROLE_KEY] estructurada correctamente. (Llave administrativa de Supabase (Service Role))"
+    },
+    {
+      "key": "RESEND_API_KEY",
+      "status": "SUCCESS",
+      "message": "[RESEND_API_KEY] estructurada correctamente. (API Key transaccional de Resend)"
+    }
+  ]
+}
