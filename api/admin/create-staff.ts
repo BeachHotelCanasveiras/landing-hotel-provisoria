@@ -7,6 +7,7 @@
  * - Validación con Zod: Estructura, formatos, códigos de país, estado y ficha de salud ocupacional analizados en tiempo de ejecución.
  * - Soporte Multilingüe: Mensajes de respuesta localizados en es-ES, en-US y pt-BR.
  * - Multipropósito: Soporta creación de cuentas, reset manual de password y generación de Magic Links de invitación.
+ * - Saneamiento de Redundancias: Resuelto el crash por desestructuración nula de Auth y provistas fechas obligatorias.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -47,7 +48,7 @@ const DICTIONARIES = {
     success_reset: 'Senha do funcionário atualizada com sucesso.',
     success_invite: 'Link de convite gerado com sucesso.',
     user_not_found: 'Nenhum usuário foi encontrado com o ID especificado.',
-    error_create: 'Falha ao registrar ficha trabalhista do funcionário no banco de dados.',
+    error_create: 'Falha ao registrar cartão trabalhista do funcionário no banco de dados.',
   }
 };
 
@@ -190,7 +191,7 @@ async function createStaffHandler(
     );
 
     // Crear cuenta en Supabase Auth (Email pre-confirmado)
-    const { data: newUser, error: createError } = await authAdmin.admin.createUser({
+    const { data: authData, error: createError } = await authAdmin.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
@@ -205,11 +206,13 @@ async function createStaffHandler(
       }
     });
 
-    if (createError || !newUser.user) {
+    // 🚀 SANEAMIENTO: Validación cortocircuitada defensiva para evitar excepciones Null Pointer
+    if (createError || !authData || !authData.user) {
+      console.error(`[Create Staff Error] [traceId: ${context.traceId}] Fallo al crear usuario en Auth:`, createError?.message);
       return res.status(400).json({ message: createError?.message || tLocal.error_create });
     }
 
-    const userId = newUser.user.id;
+    const userId = authData.user.id;
 
     // Sincronizar de forma atómica en public.users (RBAC)
     await supabaseAdmin.from('users').upsert([{ id: userId, email, role: payload.role }]);
@@ -231,7 +234,9 @@ async function createStaffHandler(
         allergies: payload.allergies,
         emergency_contact_name: payload.emergency_contact_name,
         emergency_contact_phone: payload.emergency_contact_phone,
-        labor_status: 'active'
+        labor_status: 'active',
+        created_at: new Date().toISOString(), // 🚀 Saneamiento: Provisión síncrona obligatoria para bypass de nulos
+        updated_at: new Date().toISOString()
       }]);
 
     if (staffError) {
