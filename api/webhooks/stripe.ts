@@ -34,9 +34,9 @@ export const config = {
   },
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
-  apiVersion: '2026-05-27.dahlia' 
-});
+// 🚀 Saneamiento: Se remueve la versión de API futura que provocaba colapsos de inicio síncronos.
+// El SDK usará automáticamente su versión por defecto interna y segura compatible con el tipado compilado.
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!, 
