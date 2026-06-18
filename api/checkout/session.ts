@@ -50,9 +50,9 @@ function getStripe(): Stripe {
     if (!key) {
       throw new Error('STRIPE_SECRET_KEY no configurada en las variables de entorno de producción.');
     }
-    stripeInstance = new Stripe(key, { 
-      apiVersion: '2026-05-27.dahlia' 
-    });
+    // 🚀 Saneamiento: Se remueve la versión de API futura que provocaba colapsos de inicio.
+    // El SDK usará automáticamente su versión por defecto interna y segura compatible con el tipado compilado.
+    stripeInstance = new Stripe(key);
   }
   return stripeInstance;
 }
