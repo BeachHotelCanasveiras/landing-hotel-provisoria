@@ -427,6 +427,94 @@ Implementamos una cookie temporal de 30 minutos llamada `beach_checkout_intent` 
 *   `api/checkout/session.ts` -> Serializa, encripta y escribe la cabecera `Set-Cookie` en la inicialización del pago.
 *   `api/checkout/retrieve.ts` -> Descifra la cookie en el bloque de excepciones del handler para garantizar redundancia y alta disponibilidad.
 
+---
+
+⚓ Registro de Bitácora Evolutiva: Consolidación PMS SaaS y Nivelación Estética de Marca Blanca
+Fecha: 17 de Junio, 2026 (10:24 PM America/Sao_Paulo)
+Estatus: Infraestructura Saneada, Telemetría Activa y Preparada para Despliegue de Producción (Vercel-Ready).
+1. Contexto y Antecedentes Técnicos
+Al iniciar esta fase de consolidación, el proyecto presentaba una madurez funcional avanzada (gestión de inventario físico, asignación heurística, control de limpieza de habitaciones, y una pasarela de pago "Checkout-First, Register-Later" integrada). Sin embargo, existían cuellos de botella de diseño que limitaban su escalabilidad, paridad tipográfica y estabilidad en compilación de producción:
+Acoplamiento de Estilos: Colores de fondo, bordes e indicadores estaban hardcodeados de forma rígida en la mayoría de los componentes de la interfaz. Esto impedía la alternancia de temas en el PMS y bloqueaba la parametrización de marca blanca para la landing page.
+Fugas de Memoria y Renders en Cascada: Múltiples componentes usaban temporizadores y escuchas de eventos del navegador sin lógica de limpieza al desmontar, además de registrar sincronizaciones de estado síncronas que provocaban renderizados en cascada redundantes.
+Fallas de Compilación Estática (ESLint v9 & TS): Existían advertencias de tipos implícitos y explícitos any en capturas de excepciones de red, y errores específicos de resolución de módulos relacionales (TS2307 en el Router, TS2304 por helpers faltantes y TS2554 en firmas de traducción).
+2. Decisiones Críticas de Arquitectura (Justificación de Ingeniería)
+A. Desacoplamiento de Ámbitos Visuales (Dual-Scope Theme System)
+Decisión: Separar drásticamente el hilo estilístico de la Landing Page pública de la gobernanza de temas operativos del PMS Dashboard.
+Implementación:
+El Webportal (Público) se refactorizó para consumir de forma exclusiva variables semánticas de Tailwind v4 (bg-card, bg-muted, border-border, text-foreground, text-muted-foreground). Si una cadena hotelera requiere personalizar el portal con sus colores corporativos, solo debe alterar el bloque :root de index.css sin tocar el código.
+El PMS Dashboard (Personal) responde de forma aislada al atributo HTML data-dashboard-theme inyectado en el nodo raíz por el ThemeProvider de forma síncrona, alternando entre tres preajustes específicos: light (Recepción diurna), sovereign-dark (Turno nocturno) y gemini-dark (Consola de alta tecnología inspirada en AI Studio) [2].
+B. Corrección de Rendimiento en Reservas (Yield Management Optimization)
+Decisión: Eliminar el bloqueo síncrono del día de Check-Out en el motor de disponibilidad e importadores iCal.
+Implementación: En useBlockedDates.ts y en el cron ical-import.ts, se modificó el rango devuelto por eachDayOfInterval. Al restar un día de estancia a la fecha de salida (subDays(end, 1)), el sistema asume de forma correcta que el día de salida queda libre para ingresos. Esto libera el slot de check-out a las 11:00 AM para un check-in a las 2:00 PM del mismo día, erradicando fugas de conversión y sobre-reservas.
+C. Capa de Observabilidad Serverless Silenciosa (Zero-Overhead Logging)
+Decisión: Evitar la instalación de agentes de telemetría pesados (como OpenTelemetry) en el backend, los cuales incrementan drásticamente los cold starts de las funciones serverless de Vercel.
+Implementación: Se diseñó el decorador de orden superior withObservability. Este middleware encapsula todas las funciones de la carpeta api/, calcula la latencia con alta resolución (performance.now()), captura direcciones IP de origen (ISO 27001), inyecta un identificador de transacciones único (traceId) y vuelca logs estructurados JSON a stdout [2]. Vercel captura estos búferes asíncronamente y los redirige a Axiom con impacto de rendimiento cero en el cliente.
+D. Profiling Seguro en Concurrent Mode (React 19)
+Decisión: Evitar el antipatrón de acceso y mutación de Refs durante la fase de renderizado para medir el rendimiento de carga visual.
+Implementación: El hook usePerformanceProfiler.ts realiza la captura e indexación del tiempo transcurrido desde la carga de la página (Time to Mount) estrictamente dentro del ciclo de vida asíncrono de un useEffect, despachando la telemetría mediante requestIdleCallback para no congelar el hilo de interacciones del cliente.
+3. Mapeo de Refactorizaciones y Saneamiento Realizado
+Se detalla la intervención atómica y granular realizada sobre cada archivo del proyecto:
+A. Capa de Servidor y Endpoints Serverless (/api)
+api/utils/observability.ts: Middleware de observabilidad. Se añadió importación nativa de performance desde perf_hooks para compatibilidad de tipos e inyección de captura de IP de origen de manera conforme a normas ISO [2].
+api/checkout/session.ts: Inicializador seguro de sesiones de Stripe. Envuelto en withObservability e instrumentado con trazas de cálculo de tarifas.
+api/checkout/claim-account.ts: Controlador de activación de perfiles. Implementa un bloque de resiliencia activa: si el webhook de Stripe se retrasa por latencia de red, el endpoint crea proactivamente el usuario en GoTrue para mitigar la carrera de datos.
+api/checkout/retrieve.ts: Recuperador de metadatos de checkout. Implementa un bloque de contingencia de doble ruta; ante la caída de la API de Stripe, descifra en caliente la cookie HttpOnly beach_checkout_intent (AES-256-GCM) para presentar el resumen al huésped.
+api/checkout/send-copy.ts: Despachador de duplicados. Consulta el locale inmutable de la metadata de Stripe, extrae la plantilla localizada en Supabase (email_templates) y la encola en email_queue.
+api/cron/ical-import.ts: Sincronizador de agendas de Booking.com. Se corrigió un gap crítico de disponibilidad: ahora lee el campo type de la habitación y lo inyecta como room_type al realizar el upsert idempotente, permitiendo que el motor de reservas reconozca estos bloqueos de forma inmaculada.
+api/cron/process-mails.ts: Trabajador de despacho de correos. Se corrigió un error de compilación crítico: se importó síncronamente el módulo crypto de Node.js para evitar fallos al generar la cabecera X-Entity-Ref-ID. Inyecta el traceId en las cabeceras del correo (X-Trace-Id) para trazabilidad de soporte.
+api/ical/rooms/export.ts: Exportador de disponibilidad iCal individual. Envuelto en withObservability y protegido por token de acceso criptográfico UUID por habitación.
+api/ota/export.ts: Exportador iCal multicanal para OTAs aliadas. Saneados tipos de retorno y verificado contra conexiones activas en room_ota_connections.
+api/ota/sync.ts: Importador entrante iCal multicanal. Realiza un join PostgREST nativo con la tabla rooms para inyectar de forma atómica el tipo de habitación en las reservas importadas, previniendo sobre-reservas de forma transversal.
+B. Capa del Cliente y Layout del PMS (/admin)
+client/src/index.css: Se simplificó la directiva de Tailwind CSS v4 de @theme inline a su nomenclatura oficial de producción @theme, inyectando las variables de los tres presets operativos del PMS.
+client/src/contexts/ThemeContext.tsx: Orquestador de estado de temas duales. Se inyectó // eslint-disable-next-line react-refresh/only-export-components para evitar advertencias de HMR y se añadió telemetría de auditoría de transiciones estéticas (ISO 27001).
+client/src/pages/AdminDashboard.tsx: Contenedor maestro inteligente del panel PMS. Se eliminaron colores de fondo fijos, se inyectó el envoltorio data-dashboard-theme e instrumentó con el profiler de montaje.
+client/src/components/dashboard/PMSSidebar.tsx: Sidebar colapsable del PMS. Refactorizado con variables de tema. Inyecta una píldora segmentada de tres botones para cambiar el tema en caliente de forma visible o un botón único cíclico si el panel está colapsado.
+client/src/components/dashboard/reception/RoomMatrix.tsx: Matriz visual de ocupación (15 días). Saneado de colores de celdas y bloques de check-in utilizando opacidades adaptativas seguras.
+client/src/components/dashboard/reception/HousekeepingReport.tsx: Panel de control de pisos de ama de llaves. Saneado e instrumentado.
+client/src/components/dashboard/reception/BookingSearch.tsx: CRM de recepción. Se rediseñaron los badges de estado para utilizar opacidades de color consistentes en interfaces claras y oscuras (ej: bg-green-500/10 text-green-500).
+client/src/components/dashboard/reception/RoomManagement.tsx: Módulo físico de inventario de habitaciones. Standardizado con variables semánticas.
+client/src/components/dashboard/reception/TemplateManager.tsx: Editor de vouchers corporativos. Implementa el patrón de remontado por llave de React 19 para evitar renders en cascada y habilitar la exportación PDF nativa de vouchers.
+client/src/components/dashboard/reception/RatesAvailability.tsx: Carga masiva de tarifas. Se resolvió la falla TS2554 de coincidencia de argumentos en funciones de traducción agregando la firma correcta a las propiedades.
+client/src/components/dashboard/reception/StaffManagement.tsx: Altas de personal. Se resolvió la falla crítica TS2304 importando explícitamente el helper cn de utilidades.
+client/src/components/dashboard/reception/OnboardingForm.tsx: Onboarding de primer acceso de empleados. Integra libphonenumber-js para validar y estructurar números en formato E.164.
+client/src/components/dashboard/HousekeeperPortal.tsx: Interfaz móvil de limpieza. Standardizada e inyectada con la cámara trasera nativa en el input de carga de evidencias.
+client/src/components/dashboard/AgencyPortal.tsx: Portal de operadores. Se removió la importación huérfana de cn resolviendo el aviso de ESLint.
+client/src/components/dashboard/DeveloperConsole.tsx: Consola DevOps. Se eliminó la mutación de fechas en renderizado, extrayendo los logs estáticamente.
+client/src/components/dashboard/GuestPortal.tsx: Portal de huéspedes. Saneado y unificado.
+C. Capa del Cliente: Landing Page Pública y Componentes
+client/src/components/BookingDialog.tsx: Orquestador de reservas de la landing. Desacoplado visualmente de colores fijos para operar como un aparato de marca blanca modular que hereda la paleta institucional del hotel.
+client/src/components/booking/BookingDatePicker.tsx: Sub-componente de calendario. Nivelado a tokens de marca blanca.
+client/src/components/booking/BookingDetailsForm.tsx: Formulario de captura de datos del huésped. Nivelado a tokens de marca blanca.
+client/src/components/ContactSection.tsx: Formulario de contacto. Cumple con la regla react-hooks/immutability al usar window.open(..., '_self').
+client/src/components/AboutSection.tsx: Sección de pilares de valor. Nivelado a tokens semánticos de la landing page.
+client/src/components/Testimonials.tsx: Carrusel de opiniones de Google Places. Implementa un borde adaptativo dinámico en hover que consume la variable CSS activa de la landing (borderColor: 'var(--accent)'), adaptándose al rebranding de cualquier hotel.
+client/src/components/WhatsAppButton.tsx: Botón flotante. Integra su foco de anillo de forma responsiva con la variable del acento activo.
+client/src/components/Logo.tsx: Componente de logotipo. Se reemplazó la propiedad en minúsculas por fetchPriority="high" nativa en React 19, removiendo la directiva @ts-expect-error para un tipado 100% puro.
+client/src/pages/Home.tsx: Raíz de la landing page. Nivelados los contenedores de mapas y headers a variables semánticas.
+client/src/pages/Login.tsx: Portal de acceso. Se resolvieron dos advertencias de ESLint de tipo any explícito en los bloques catch de las mutaciones de Supabase Auth, evaluando de forma segura mediante guardas instanceof Error.
+client/src/pages/NotFound.tsx: Vista de error 404. Traducida asíncronamente con i18next e inyectada con un log de auditoría de ruteo muerto.
+client/src/pages/Success.tsx: Confirmación posventa. Se resolvió la advertencia react-hooks/exhaustive-deps agregando de forma estricta los despachadores de estado estable en el efecto de carga de la sesión de Stripe.
+client/src/App.tsx: Enrutador principal. Se resolvió el error de compilación TS2307 de resolución de rutas relativas mediante el uso de alias absolutos de nuestro espacio de nombres @/. Integra analíticas oficiales y diagnóstico de performance de Vercel.
+client/src/const.ts: Constantes del cliente. Saneado utilizando safeBtoa para garantizar una compilación e hidratación síncrona libre de colapsos en pre-renderizados híbridos (SSR).
+client/src/lib/i18n.ts: Configuración de i18next. Se inyectó telemetría pasiva de arranque y análisis de diccionarios JSON.
+client/src/lib/mail.ts: Encolador de correos. Se eliminó el bypass de linter para la variable de remitente fromName tras auditar la base de datos relacional y descubrir que la tabla email_queue cuenta con el campo sender_name, inyectándola directamente en la transacción relacional (ISO 27001).
+client/src/lib/storage.ts: Gestor de persistencia. Se reemplazó el parseador genérico de LocalStorage por la interfaz contractual StorageItem<T>, eliminando aserciones any implícitas y consumiendo las constantes de @shared/const.
+client/src/lib/supabase.ts: Singleton de Supabase. Se removieron todas las aserciones any en la construcción del Proxy de resiliencia mediante el uso seguro de unknown y firmas estrictas del manejador.
+server/index.ts: Servidor Express de producción local. Se inyectaron de forma no de dependencias cabeceras HTTP de protección (HSTS, clickjacking, sniffing) para PCI-DSS y un middleware de logs de red estructurados en JSON.
+shared/const.ts: Silo unificado de constantes. Centraliza los identificadores de cookies de sesión, temas y perfiles en un solo archivo inmutable.
+4. Próximos Pasos de Optimización (Fase Vercel-Post-Deploy)
+Una vez ejecutado el despliegue a producción mediante el comando de compilación unificado, se recomiendan las siguientes tareas preventivas y de afinación:
+Auditoría de Entregabilidad de Correo (DKIM/SPF):
+Verificar en Google Postmaster Tools que las quejas de spam sobre el dominio beachcanasvieiras.com se mantengan por debajo del 0.10% (límite de seguridad de entregabilidad) [1.1.4, 1.2.8].
+Validar que el Worker /api/cron/process-mails.ts procese de forma secuencial y sin fallas de concurrencia la tabla email_queue.
+Monitoreo de Webhooks Financieros:
+Inspeccionar el panel de desarrolladores de Stripe para asegurar que el endpoint /api/webhooks/stripe retorne códigos de estado 200 OK de forma instantánea y verificar la idempotencia de reintentos mediante el identificador de sesión.
+Monitoreo de Core Web Vitals:
+Verificar los reportes reales de velocidad en el dashboard de Vercel Speed Insights para auditar que el cambio de Viewports mediante useSyncExternalStore mantenga el Cumulative Layout Shift (CLS) en 0 y el Interaction to Next Paint (INP) por debajo de 100ms [1.1.3].
+
+---
+
 
 
 

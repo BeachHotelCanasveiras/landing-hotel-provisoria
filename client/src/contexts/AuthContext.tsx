@@ -2,14 +2,15 @@
 /**
  * @file AuthContext.tsx
  * @description Proveedor de estado global de autenticación y roles de usuario.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Cumplimiento Estricto: Estabilización de dependencias con useCallback para evitar fallos de ESLint.
  * - Satisface el tipado estricto (no-any-implícito) mediante anotación nativa de Supabase.
  * - Smart Identity Manifesto: Sincroniza e hidrata en caliente el perfil del huésped en cookies seguras.
- * - Self-Healing Integrity Engine: Detecta y auto-repara de forma síncrona registros de huéspedes legacy huerfanos en public.guests.
- * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida
- *   de autenticación usando macro-tasks (setTimeout 0) para evitar colgar las conexiones del cliente.
+ * - Self-Healing Integrity Engine: Detecta y auto-repara de forma síncrona registros de huéspedes legacy huérfanos en public.guests.
+ * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida de autenticación.
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { StorageService } from '@/lib/storage'; // 🚀 Importación del servicio de persistencia segura
@@ -32,8 +33,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Declaración clásica para que se eleve al inicio de la compilación de forma segura (Hoisting)
-  async function fetchUserRole(userId: string) {
+  /**
+   * Obtiene de forma asíncrona el rol relacional asignado al identificador del usuario.
+   */
+  const fetchUserRole = useCallback(async (userId: string) => {
     try {
       const { data: userData, error } = await supabase
         .from('users')
@@ -54,13 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   /**
    * 🚀 MOTOR DE AUTO-CURACIÓN (Self-Healing Engine):
    * Comprueba la integridad del perfil, repara registros huérfanos de base de datos y cachea en cookies de forma segura.
    */
-  async function syncUserProfileCookie(activeUser: User) {
+  const syncUserProfileCookie = useCallback(async (activeUser: User) => {
     try {
       const email = activeUser.email || '';
       
@@ -129,12 +132,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const msg = e instanceof Error ? e.message : 'Error de red';
       console.warn('[AuthContext] Error al guardar caché de perfil local:', msg);
     }
-  }
+  }, []);
 
   /**
    * Consulta el estado del servidor de autenticación para actualizar metadatos en caliente
    */
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       const { data: { user: updatedUser }, error } = await supabase.auth.getUser();
       if (error) throw error;
@@ -147,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const msg = e instanceof Error ? e.message : 'Error de red';
       console.error('[AuthContext] Fallo al refrescar usuario de forma silenciosa:', msg);
     }
-  };
+  }, [syncUserProfileCookie]);
 
   useEffect(() => {
     // 1. Obtener la sesión activa al inicializar
@@ -185,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserRole, syncUserProfileCookie]);
 
   const signOut = async () => {
     setLoading(true);

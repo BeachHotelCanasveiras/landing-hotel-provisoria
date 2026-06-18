@@ -7,7 +7,7 @@
  * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-background, border-border, text-foreground y borderColor dinámico var(--accent) de la landing.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje, carga del SDK de Google Maps e inyección de reviews.
  * - Tipado estricto: Declaración global de la interfaz Window para evitar casteos a 'any'.
- * - Resiliencia: Modelo de fusión híbrida Google Places + Diccionarios locales con caché TTL.
+ * - Resiliencia Absoluta: Modelo de fusión híbrida Google Places + Diccionarios locales con protección tipo guardián (Failsafe) y caché TTL.
  */
 
 import { useState, useEffect } from 'react';
@@ -61,7 +61,34 @@ export default function Testimonials() {
     const loadReviews = async () => {
       // 1. Intentar cargar desde el LocalStorage con TTL (7 días)
       const cachedData = StorageService.getLocalWithTTL<TestimonialItem[]>(REVIEWS_CACHE_KEY);
-      const fallbackList = t('fallback_reviews', { returnObjects: true }) as TestimonialItem[];
+      
+      // 🛡️ Guardián de Tipo (Failsafe): Evita de raíz que diccionarios corruptos o caídas de i18n rompan el renderizado
+      const fallbackListRaw = t('fallback_reviews', { returnObjects: true });
+      const fallbackList: TestimonialItem[] = Array.isArray(fallbackListRaw)
+        ? (fallbackListRaw as TestimonialItem[])
+        : [
+            {
+              author_name: "Carlos Rodríguez",
+              profile_photo_url: "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-chile.webp",
+              rating: 5,
+              text: "La ubicación es perfecta, a pasos de todo y con una calidez que nos hizo sentir como en casa en todo momento.",
+              relative_time_description: "Hace un mes"
+            },
+            {
+              author_name: "María López",
+              profile_photo_url: "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-argentina.webp",
+              rating: 5,
+              text: "Desayuno delicioso y atención impecable. Es el lugar ideal para desconectarse en familia.",
+              relative_time_description: "Hace dos semanas"
+            },
+            {
+              author_name: "Juan Martínez",
+              profile_photo_url: "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/testimonials/avatar-cliente-uruguay.webp",
+              rating: 5,
+              text: "Excelente relación calidad-precio. La atención de todo el equipo fue maravillosa, volveremos pronto.",
+              relative_time_description: "Hace tres meses"
+            }
+          ];
       
       if (cachedData && cachedData.length > 0) {
         // Fusión e instantaneidad
@@ -127,12 +154,20 @@ export default function Testimonials() {
       }
     };
 
-    const mergeAndDeduplicate = (apiList: TestimonialItem[], fallbackList: TestimonialItem[]): TestimonialItem[] => {
-      const merged = [...apiList, ...fallbackList];
+    const mergeAndDeduplicate = (
+      apiList: TestimonialItem[] | undefined | null, 
+      fallbackList: TestimonialItem[] | undefined | null
+    ): TestimonialItem[] => {
+      const safeApiList = Array.isArray(apiList) ? apiList : [];
+      const safeFallbackList = Array.isArray(fallbackList) ? fallbackList : [];
+      
+      const merged = [...safeApiList, ...safeFallbackList];
       const seen = new Set();
       return merged.filter(item => {
-        const duplicate = seen.has(item.author_name);
-        seen.add(item.author_name);
+        if (!item || typeof item !== 'object' || !('author_name' in item)) return false;
+        const author = item.author_name;
+        const duplicate = seen.has(author);
+        seen.add(author);
         return !duplicate;
       });
     };
