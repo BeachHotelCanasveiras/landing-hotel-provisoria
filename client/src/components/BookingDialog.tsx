@@ -3,7 +3,7 @@
  * @description Orquestador principal de reservas de 3 pasos (Calendario -> Datos -> Revisión -> Pago).
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y las normas de rendimiento de React 19:
  * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, border-border y text-foreground de la landing page.
- * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y transiciones del motor de reservas.
+ * - Observabilidad: Trazas pasivas con usePerformanceProfiler y extracción diagnóstica de errores no-JSON en caliente.
  * - Cero 'any': Tipado estricto en callbacks, estados y flujos de red.
  * - Saneamiento react-hooks/set-state-in-effect: Sincronización procesada de forma atómica en el manejador de eventos.
  * - Smart SSoT Auto-Hydration: Sistema dinámico de auto-hidratación de 3 capas en tiempo real (Stripe + Guests DB).
@@ -261,7 +261,13 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
 
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('El servidor de pagos no devolvió una respuesta válida.');
+        // 🚀 DIAGNÓSTICO EN CALIENTE: Lee la página HTML de error de Vercel/VPS y la imprime en consola
+        const rawText = await response.text();
+        console.error(
+          `[BookingDialog API Error] Non-JSON response received. HTTP Status: ${response.status}. Response Body:`,
+          rawText
+        );
+        throw new Error(`Inconsistencia en el servidor de transacciones (${response.status}). Intente de nuevo.`);
       }
 
       const data = await response.json();
