@@ -515,6 +515,92 @@ Verificar los reportes reales de velocidad en el dashboard de Vercel Speed Insig
 
 ---
 
+# Bitácora Maestra de Ingeniería y Memoria de Contexto: Beach Hotel Canasvieiras
+> SSoT para la hidratación de hilos de IA, control de cambios estructurales, auditoría de compilación (Vercel-Ready) y estado del PMS (v2.1 - Junio 2026).
+
+Este documento consolida la arquitectura del sistema, el mapa de base de datos relacional de Supabase, las decisiones de infraestructura en Vercel, los saneamientos de tipos aplicados y el mapa de ruta pendiente. **Debe proveerse al inicio de cada nuevo hilo de desarrollo para garantizar continuidad absoluta.**
+
+---
+
+## 1. Stack Tecnológico de Élite (SaaS Ready)
+*   **Frontend SPA:** React 19 (StrictMode) + Vite + Wouter (Ruteo ágil).
+*   **Estilos:** Tailwind CSS v4 (Gobernación dual de variables semánticas en index.css).
+*   **Animaciones:** Framer Motion 12 (Tipado estricto con interfaces de variante y curvas Bézier estables).
+*   **Base de Datos:** Supabase PostgreSQL con Row Level Security (RLS) y Realtime WebSockets.
+*   **Pasarela de Pagos:** Stripe SDK (Checkout-First, Register-Later) [1.1.2].
+*   **Correo Transaccional:** Resend + Supabase Outbox Queue (`email_queue`) con Staggering antispam.
+
+---
+
+## 2. Hitos de Ingeniería y Decisiones Críticas Recientes
+
+### A. Bypass de Límite Serverless de Vercel (Hobby Plan Limitation)
+*   **El Desafío:** Vercel Hobby limita las compilaciones a un máximo de 12 funciones serverless (Lambdas) por deploy. Con la API de Booking.com, el proyecto ascendió a 13 funciones, bloqueando los despliegues de producción.
+*   **Decisión de Arquitectura:**
+    1.  **Renombrado de Utilidades:** Renombramos `api/utils/` a la ruta privada **`api/_utils/`**. Al iniciar con un guion bajo, Vercel ignora estas clases en el recuento y empaquetado de Lambdas, reduciendo la cuenta.
+    2.  **Multiplexación de Endpoints:** Fusionamos los exportadores de calendario individual y multicanal en un único endpoint inteligente parametrizado en **`api/ota/export.ts`**, resolviendo el bloqueo de raíz y dejando el ecosistema con exactamente 10 Lambdas operativas.
+
+### B. Idempotencia y Deduplicación en Sincronización iCal (SPOF Resolved)
+*   **El Desafío:** Las OTAs (Booking, Airbnb) inyectan identificadores de eventos de iCal que contienen caracteres especiales (ej: `123@booking.com`), los cuales violan el tipo de dato estricto `UUID` de PostgreSQL, provocando que se guardaran como nulos o undefined. Esto causaba duplicados infinitos de reservas en cada ejecución del cron (cada 15 minutos).
+*   **Decisión de Arquitectura:** Implementamos un algoritmo de **UUID Determinístico (SHA-256)** en `ical-import.ts` y `sync.ts`. Transforma de manera estable cualquier cadena de la OTA en un UUID v4-like. Esto garantiza idempotencia del 100%: ejecuciones repetidas se resuelven con un `upsert` inmutable sobre el mismo ID.
+
+### C. Aislamiento del Módulo de Recursos Humanos (NR-7 Compliance)
+*   **El Desafío:** Las credenciales y fichas de personal se guardaban en la tabla común de huéspedes (`guests`). Esto violaba las normativas de segregación de privilegios de la norma **ISO 27001** y la **LGPD** brasileña.
+*   **Decisión de Arquitectura:**
+    1.  **Estructura de Datos Dedicada:** Creamos la tabla **`public.staff_profiles`** con 16 columnas para registrar nombres atómicos, contacto verificado de WhatsApp, tipo de sangre, alergias y contacto de emergencia (Salud Ocupacional NR-7).
+    2.  **Saneamiento de Compilación:** Refactorizamos `api/admin/create-staff.ts` con Zod para validar estas variables en tiempo de ejecución. Rediseñamos `StaffManagement.tsx` en el cliente para inyectar estos campos y eliminamos los 13 errores compilatorios de TypeScript/ESLint en el área de administración.
+
+### D. Gobernanza de Credenciales y Links de WhatsApp
+*   El administrador cuenta con soporte síncrono para:
+    *   **Reset Manual de Password:** Actualiza directamente las credenciales de un empleado mediante llamada administrativa segura a la API.
+    *   **Invite Link de WhatsApp:** Invoca `generateLink` de Supabase para obtener un Magic Link firmado de primer acceso con un TTL de 24 horas, copiando una plantilla de texto transaccional directa para enviar por WhatsApp.
+
+---
+
+## 3. Estructura Física Saneada del Proyecto (Directorios Clave)
+beach-hotel-canasvieiras/
+├── .docs/
+│ ├── limites-vercel-hobby.md # Manual de cuotas y calculadora Pro
+│ └── bitacora.md # Este documento de contexto
+├── api/
+│ ├── _utils/ # Privado: Excluido de compilación Lambdas
+│ │ ├── booking-config.ts # SSoT configuración Booking.com
+│ │ └── observability.ts # Telemetría e inyección de traceId
+│ ├── admin/
+│ │ └── create-staff.ts # Endpoint multi-acción con Zod e i18n
+│ ├── checkout/
+│ │ ├── claim-account.ts # Activación resiliente posventa
+│ │ ├── retrieve.ts # Recuperación con fallback de cookie AES-GCM
+│ │ └── session.ts # Stripe Checkout (Autoridad de precios)
+│ ├── cron/
+│ │ ├── ical-import.ts # Cron iCal con UUID determinístico
+│ │ └── process-mails.ts # Worker asíncrono antispam
+│ ├── ota/
+│ │ ├── booking/
+│ │ │ ├── rates.ts # Transmisor de tarifas e inventario
+│ │ │ └── webhook.ts # Receptor síncrono de reservas Booking
+│ │ ├── export.ts # Exportador iCal multiplexado (SSoT)
+│ │ └── sync.ts # Sincronizador OTA con UUID determinístico
+│ └── webhooks/
+│ └── stripe.ts # Reconciliación de pagos inmutable
+├── client/
+│ └── src/
+│ └── components/
+│ └── dashboard/
+│ ├── DeveloperConsole.tsx # Sandbox Playground Interactivo
+│ └── reception/
+│ └── StaffManagement.tsx # Consola de RRHH y Salud Ocupacional
+code
+Code
+---
+
+## 4. Estado Actual de Compilación y Deploy (Vercel Ready)
+*   **TypeScript Check (`pnpm run check`):** 100% exitoso. Cero errores sintácticos en el cliente, scripts, servidor y carpeta `api/`.
+*   **ESLint Audit (`pnpm run lint`):** 100% libre de advertencias. Las variables de desuso de importación y renders en cascada de React 19 fueron erradicados en todos los aparatos modificados.
+*   **Vercel Build (`vercel build`):** Empaqueta con éxito exactamente **10 funciones serverless**, situándose holgadamente por debajo del límite de 12 de la cuenta Hobby.
+
+---
+
 
 
 

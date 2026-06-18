@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-18T03:08:49.711Z",
+  "timestamp": "2026-06-18T20:13:58.903Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
-  "total_tables_audited": 11,
+  "total_tables_audited": 13,
   "schema_structure": [
     {
       "table_name": "guests",
@@ -40,6 +40,60 @@
           "type": "string",
           "format": "text",
           "nullable": true,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "ota_sync_logs",
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "connection_id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": "Note:\nThis is a Foreign Key to `room_ota_connections.id`.<fk table='room_ota_connections' column='id'/>"
+        },
+        {
+          "name": "event_type",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "payload",
+          "format": "jsonb",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "latency_ms",
+          "type": "number",
+          "format": "numeric",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
           "description": null
         },
         {
@@ -177,7 +231,7 @@
     },
     {
       "table_name": "room_ota_connections",
-      "columns_count": 7,
+      "columns_count": 9,
       "columns": [
         {
           "name": "id",
@@ -225,6 +279,20 @@
           "name": "created_at",
           "type": "string",
           "format": "timestamp with time zone",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "channel_manager_room_id",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "sync_status",
+          "type": "string",
+          "format": "text",
           "nullable": true,
           "description": null
         }
@@ -329,6 +397,124 @@
           "type": "string",
           "format": "timestamp with time zone",
           "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "staff_profiles",
+      "columns_count": 16,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": false,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "middle_name",
+          "type": "string",
+          "format": "character varying",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "paternal_last_name",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "maternal_last_name",
+          "type": "string",
+          "format": "character varying",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "phone",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "country",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "state_code",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "blood_type",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "allergies",
+          "type": "string",
+          "format": "text",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "emergency_contact_name",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "emergency_contact_phone",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "labor_status",
+          "type": "string",
+          "format": "character varying",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "created_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": false,
+          "description": null
+        },
+        {
+          "name": "updated_at",
+          "type": "string",
+          "format": "timestamp with time zone",
+          "nullable": false,
           "description": null
         }
       ]
