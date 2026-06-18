@@ -59,6 +59,32 @@ const CONFIG_RULES: EnvRule[] = [
     prefix: 're_',
     minLength: 25,
     description: 'API Key transaccional de Resend'
+  },
+  /* 🏨 VALIDACIONES INCORPORADAS PARA LA API DE CONECTIVIDAD DE BOOKING.COM */
+  {
+    key: 'BOOKING_API_URL',
+    required: true,
+    prefix: 'https://',
+    minLength: 15,
+    description: 'URL base del endpoint de conexión o Sandbox de Booking.com'
+  },
+  {
+    key: 'BOOKING_API_USERNAME',
+    required: true,
+    minLength: 5,
+    description: 'Nombre de la cuenta de máquina de Booking.com (XML/REST)'
+  },
+  {
+    key: 'BOOKING_API_PASSWORD',
+    required: true,
+    minLength: 12,
+    description: 'Contraseña segura de la cuenta de máquina de Booking.com'
+  },
+  {
+    key: 'BOOKING_HOTEL_ID',
+    required: true,
+    minLength: 5,
+    description: 'Identificador numérico de la propiedad del hotel en Booking.com'
   }
 ];
 

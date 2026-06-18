@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-18T02:02:30.596Z",
+  "timestamp": "2026-06-18T03:08:51.061Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -160,6 +160,14 @@
         "last_name": "russo",
         "phone": null,
         "created_at": "2026-06-18T01:59:43.280255+00:00"
+      },
+      {
+        "id": "c8f84be4-a489-42e9-92ec-2fbe57cf5705",
+        "user_email": "razpodesta@gmail.com",
+        "first_name": "Raz",
+        "last_name": "Podestá",
+        "phone": null,
+        "created_at": "2026-06-18T02:14:59.428589+00:00"
       }
     ],
     "rooms": [

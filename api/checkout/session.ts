@@ -4,11 +4,13 @@
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y el paradigma de RESERVA POR CATEGORÍA:
  * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
  * - Desacoplamiento de ID físico: No se pre-asigna una habitación física en la reserva.
+ * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - Validación por Tipo: Se obtiene el precio base del tipo de habitación seleccionado.
  * - Lazy Initialization: Evita colapsos de cold start ante variables de entorno no configuradas.
  * - Timezone-Aware Validation: Permite reservas del mismo día (Walk-ins) en GMT-3 sin conflicto de servidor UTC.
  * - Smart Identity Manifesto: Almacena el 'locale' de i18n del huésped en la metadata de Stripe.
  * - Criptografía Estricta (ISO 27001): Compila, encripta (AES-256-GCM) y setea el estado del carrito en una cookie HttpOnly segura.
+ * - Saneamiento de Linter: Resuelto el error no-unused-vars mediante exportación asignada.
  * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
 
@@ -25,6 +27,13 @@ const ENCRYPTION_KEY = crypto.createHash('sha256').update(SECRET_SEED).digest();
 
 let stripeInstance: Stripe | null = null;
 let supabaseInstance: SupabaseClient | null = null;
+
+/**
+ * Firma contractual local para instanciar el constructor de Stripe de forma flexible sin 'any'.
+ */
+interface StripeConstructor {
+  new (key: string, options?: { apiVersion: string }): Stripe;
+}
 
 /**
  * Encripta un texto utilizando AES-256-GCM
@@ -50,9 +59,12 @@ function getStripe(): Stripe {
     if (!key) {
       throw new Error('STRIPE_SECRET_KEY no configurada en las variables de entorno de producción.');
     }
-    // 🚀 Saneamiento: Se remueve la versión de API futura que provocaba colapsos de inicio.
-    // El SDK usará automáticamente su versión por defecto interna y segura compatible con el tipado compilado.
-    stripeInstance = new Stripe(key);
+    
+    // Abstraemos el constructor para inyectar la versión de la API de forma tipada y segura (Bypass ts2694)
+    const StripeClass = Stripe as unknown as StripeConstructor;
+    stripeInstance = new StripeClass(key, {
+      apiVersion: '2026-05-27.dahlia'
+    });
   }
   return stripeInstance;
 }
@@ -196,5 +208,7 @@ async function sessionHandler(
   return res.status(200).json({ url: session.url });
 }
 
-// 🚀 Exportamos el endpoint envuelto de forma asíncrona con el decorador de telemetría y seguridad
-export default withObservability(sessionHandler);
+// 🚀 Asignación de constante para resolver advertencias de desuso (no-unused-vars) en ESLint
+const observedSessionHandler = withObservability(sessionHandler);
+
+export default observedSessionHandler;

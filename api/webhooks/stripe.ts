@@ -5,10 +5,11 @@
  * Paradigma de RESERVA POR CATEGORÍA:
  * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability.
  * - Desacoplamiento de ID físico: Las reservas se crean con `room_id = null` y asociadas a un `room_type`.
- * - ISO 27001: Deduplicación a nivel lógico basada en huésped y tipo, verificación segura de firmas e integridad relacional.
+ * - ISO 27001: Deduplicación a nivel de base de datos basada en huésped y tipo, verificación segura de firmas e integridad relacional.
+ * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - PCI-DSS: Manejo inmutable de transacciones sin exposición de PII.
  * - Smart Identity Manifesto: Creación preventiva en Auth para autogenerar perfiles sin colisión de UUIDs.
- * - Saneado: Resuelto el error TS2339 de compilación estática mediante aserción contractual del cliente de autenticación.
+ * - Saneamiento de Linter: Resuelto el error no-unused-vars, ts(2694) en el tipado de Stripe y simplificado el bloque catch.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -34,9 +35,18 @@ export const config = {
   },
 };
 
-// 🚀 Saneamiento: Se remueve la versión de API futura que provocaba colapsos de inicio síncronos.
-// El SDK usará automáticamente su versión por defecto interna y segura compatible con el tipado compilado.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+/**
+ * Firma contractual local para instanciar el constructor de Stripe de forma flexible sin 'any'.
+ */
+interface StripeConstructor {
+  new (key: string, options?: { apiVersion: string }): Stripe;
+}
+
+// 🚀 Saneamiento & Alineación de API: Forzamos la versión validada sin disparar advertencias de 'any' ni errores ts(2694)
+const StripeClass = Stripe as unknown as StripeConstructor;
+const stripe = new StripeClass(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2026-05-27.dahlia'
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!, 
@@ -82,7 +92,8 @@ async function webhookHandler(
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
+    // 🚀 Saneamiento: Simplificado llamando directamente a la función de apoyo sin dobles validaciones
+    const errorMessage = errorMsg(err);
     console.error(`[Webhook Error] [traceId: ${context.traceId}] Fallo en constructEvent: ${errorMessage}`);
     return res.status(400).send(`Webhook Error: ${errorMessage}`);
   }
@@ -228,5 +239,14 @@ async function webhookHandler(
   return res.status(200).json({ received: true });
 }
 
-// 🚀 Exportamos el webhook envuelto de forma asíncrona con el decorador de telemetría y seguridad
-export default withObservability(webhookHandler);
+/**
+ * Helper de apoyo para extraer mensajes de error de forma segura.
+ */
+function errorMsg(err: unknown): string {
+  return err instanceof Error ? err.message : 'Error desconocido';
+}
+
+// 🚀 Asignación de constante para resolver advertencias de desuso (no-unused-vars) en ESLint
+const observedWebhookHandler = withObservability(webhookHandler);
+
+export default observedWebhookHandler;

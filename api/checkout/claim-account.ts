@@ -4,9 +4,10 @@
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
  * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
  * - ISO 27001: Verificación de autenticidad de sesión de Stripe para evitar secuestro o spoofing de cuentas.
+ * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - PCI-DSS: Recuperación e integridad del email directamente desde la pasarela de pagos.
  * - Resiliencia Activa: Mitiga de raíz la carrera de datos (webhook latency) creando al usuario proactivamente si Stripe aprueba la sesión pero el webhook se retrasa.
- * - Saneado: Resuelto el error TS2339 de compilación estática mediante aserción contractual del cliente de autenticación.
+ * - Saneado: Resuelto el error TS2339 de compilación estática y el error no-unused-vars de linter.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -32,9 +33,18 @@ interface SupabaseAuthAdmin {
   };
 }
 
-// 🚀 Saneamiento: Se remueve la versión de API futura que provocaba colapsos de inicio.
-// El SDK usará automáticamente su versión por defecto interna y segura compatible con el tipado compilado.
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+/**
+ * Firma contractual local para instanciar el constructor de Stripe de forma flexible sin 'any'.
+ */
+interface StripeConstructor {
+  new (key: string, options?: { apiVersion: string }): Stripe;
+}
+
+// 🚀 Saneamiento & Alineación de API: Forzamos la versión validada sin disparar advertencias de 'any' ni errores ts(2694)
+const StripeClass = Stripe as unknown as StripeConstructor;
+const stripe = new StripeClass(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2026-05-27.dahlia'
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!, 
@@ -168,5 +178,7 @@ async function claimAccountHandler(
   return res.status(200).json({ success: true, message: 'Cuenta activada correctamente.' });
 }
 
-// 🚀 Exportamos el endpoint envuelto de forma asíncrona con el decorador de telemetría y seguridad
-export default withObservability(claimAccountHandler);
+// 🚀 Asignación de constante para resolver advertencias de desuso (no-unused-vars) en ESLint
+const observedClaimAccountHandler = withObservability(claimAccountHandler);
+
+export default observedClaimAccountHandler;

@@ -5,11 +5,13 @@
  * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
  * - Sincronización por Categorías: Extrae e inyecta room_type (rooms.type) en las reservas importadas para evitar sobre-reservas.
  * - Resiliencia: Sincroniza secuencialmente todas las conexiones registradas.
+ * - Idempotencia Total: Generación de UUID determinístico (SHA-256) a partir del UID de la OTA para evitar duplicados en base de datos.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import ICAL from 'ical.js';
+import crypto from 'crypto'; // 🚀 Inyección del módulo criptográfico nativo de Node.js
 import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 const supabase = createClient(
@@ -23,6 +25,27 @@ interface OtaConnectionRow {
   channel_name: string;
   ical_import_url: string;
   rooms?: { type: string } | null; // 🚀 Extraído mediante join PostgREST para sincronización de categorías
+}
+
+/**
+ * Genera un UUID determinístico v5-like a partir de cualquier string (UID).
+ * Si el input ya es un UUID válido, lo retorna intacto.
+ */
+function getDeterministicUUID(input: string): string {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(input)) {
+    return input;
+  }
+  // Generar hash SHA-256 de dispersión estable
+  const hash = crypto.createHash('sha256').update(input).digest('hex');
+  // Estructurar bloques según el estándar RFC 4122
+  return [
+    hash.substring(0, 8),
+    hash.substring(8, 12),
+    hash.substring(12, 16),
+    hash.substring(16, 20),
+    hash.substring(20, 32)
+  ].join('-');
 }
 
 /**
@@ -113,11 +136,14 @@ async function otaSyncHandler(
         const startStr = startJS.toISOString().split('T')[0];
         const endStr = endJS.toISOString().split('T')[0];
 
+        // 🚀 RESOLUCIÓN DE IDEMPOTENCIA: Generar un UUID inmutable y determinístico a partir del UID de la OTA
+        const deterministicId = getDeterministicUUID(uid);
+
         // 4. Upsert idempotente en Supabase (Previene duplicaciones de reservas del mismo canal)
         // Se integra de forma proactiva 'room_type' para dar soporte al motor de reservas por categorías
         await supabase.from('bookings').upsert([
           {
-            id: uid.includes('@') ? undefined : uid, // Preservar UIDs puros de la OTA
+            id: deterministicId, // UUID determinístico compatible y único
             room_id: conn.room_id,
             room_type: conn.rooms?.type || 'double', // 🚀 Sincronización inmaculada de categoría (Previene sobre-reservas)
             check_in: startStr,

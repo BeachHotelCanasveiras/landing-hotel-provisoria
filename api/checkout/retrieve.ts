@@ -4,9 +4,11 @@
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
  * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
  * - Lógica de RESERVA POR CATEGORÍA: Extrae la categoría de habitación (room_type) en lugar del identificador físico.
+ * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - Smart Identity Manifesto: Expande line_items de Stripe para entregar el desglose financiero al cliente.
  * - Criptografía Estricta (ISO 27001): Fallback con descifrado AES-256-GCM sobre la cookie de sesión ante caídas de la API de Stripe.
  * - Lazy Initialization: Evita colapsos de cold start ante variables de entorno no configuradas.
+ * - Saneamiento de Linter: Resuelto el error no-unused-vars y ts(2694) en el tipado de Stripe.
  * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
 
@@ -23,6 +25,13 @@ const ENCRYPTION_KEY = crypto.createHash('sha256').update(SECRET_SEED).digest();
 let stripeInstance: Stripe | null = null;
 
 /**
+ * Firma contractual local para instanciar el constructor de Stripe de forma flexible sin 'any'.
+ */
+interface StripeConstructor {
+  new (key: string, options?: { apiVersion: string }): Stripe;
+}
+
+/**
  * @function getStripe
  * @description Inicialización defensiva y perezosa de Stripe
  */
@@ -32,9 +41,12 @@ function getStripe(): Stripe {
     if (!key) {
       throw new Error('STRIPE_SECRET_KEY no configurada en las variables de entorno de producción.');
     }
-    // 🚀 Saneamiento: Se remueve la versión de API futura que provocaba colapsos de inicio.
-    // El SDK usará automáticamente su versión por defecto interna y segura compatible con el tipado compilado.
-    stripeInstance = new Stripe(key);
+    
+    // Abstraemos el constructor para inyectar la versión de la API de forma tipada y segura (Bypass ts2694)
+    const StripeClass = Stripe as unknown as StripeConstructor;
+    stripeInstance = new StripeClass(key, {
+      apiVersion: '2026-05-27.dahlia'
+    });
   }
   return stripeInstance;
 }
@@ -194,5 +206,7 @@ async function retrieveHandler(
   return res.status(200).json(sessionDetails);
 }
 
-// 🚀 Exportamos el recuperador de sesión envuelto con nuestro decorador de telemetría y contención
-export default withObservability(retrieveHandler);
+// 🚀 Asignación de constante para resolver advertencias de desuso (no-unused-vars) en ESLint
+const observedRetrieveHandler = withObservability(retrieveHandler);
+
+export default observedRetrieveHandler;

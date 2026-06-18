@@ -1,0 +1,59 @@
+{
+  "meta": {
+    "last_updated": "18 de Junio de 2026",
+    "corporate_name": "METASHARK INOVA SIMPLES (I.S.)",
+    "cnpj": "53.947.948/0001-15",
+    "address": "Avenida Mauro Ramos, 436, Centro, Florianópolis, SC, CEP 88.020-300, Brasil",
+    "email": "adm@metashark.tech"
+  },
+  "terms": {
+    "title": "Términos de Uso del Servicio",
+    "introduction": "Estos términos regulan el uso de la plataforma de software PMS y del motor de reservas provisto por METASHARK INOVA SIMPLES (I.S.). Al acceder o utilizar el sistema, usted acepta cumplir íntegramente las condiciones descritas.",
+    "clauses": [
+      {
+        "title": "1. Alcance de la Licencia",
+        "content": "Se otorga una licencia de uso limitada, no exclusiva, revocable y no transferible para operar el software PMS. El uso del sistema está restringido al límite de unidades físicas y usuarios autorizados contratados."
+      },
+      {
+        "title": "2. Limitación de Responsabilidad por Overbooking",
+        "content": "METASHARK no será responsable por pérdidas de ingresos, costos de realojamiento o daños causados por sobre-reservas (overbookings) resultantes de latencias o fallos de sincronización asíncrona de las APIs de terceros (como Booking.com o Airbnb)."
+      },
+      {
+        "title": "3. Cobros y Cancelaciones",
+        "content": "Los pagos se procesan de forma recurrente a través de Stripe. La cancelación de la suscripción debe solicitarse con 30 días de anticipación, no habiendo reembolso de valores proporcionales ya liquidados."
+      },
+      {
+        "title": "4. Legislación y Jurisdicción",
+        "content": "Este acuerdo se rige por las leyes de la República Federativa del Brasil. Se elige el foro de la ciudad de Florianópolis, SC, para resolver cualquier duda o litigio derivado de este contrato."
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Política de Privacidad y LGPD",
+    "introduction": "Esta política describe cómo METASHARK trata la información recopilada. Estamos totalmente comprometidos con el cumplimiento de la Ley General de Protección de Datos (LGPD - Ley nº 13.709/18).",
+    "sections": [
+      {
+        "title": "1. Recopilación de Información",
+        "content": "Recopilamos nombres, correos electrónicos, teléfonos y registros de acceso a la red para la gestión de reservas y control de check-in operacional del hotel."
+      },
+      {
+        "title": "2. Rol de Encargado de Datos",
+        "content": "METASHARK actúa exclusivamente como Encargado de Datos en el tratamiento de la PII del huésped, mientras que el Hotel contratante actúa como Controlador de Datos, siendo el único responsable de obtener el consentimiento de los titulares."
+      },
+      {
+        "title": "3. Protección y Retención de Tarjetas (PCI-DSS)",
+        "content": "Los datos de tarjetas de crédito de los huéspedes están encriptados y se mantienen bajo el estándar PCI-DSS. Se eliminan de forma automatizada 7 días después de la fecha de check-out."
+      },
+      {
+        "title": "4. Derechos de los Titulares",
+        "content": "Los titulares de los datos tienen derecho a confirmar la existencia del tratamiento, acceder a sus datos y solicitar la eliminación de los mismos mediante petición expresa al correo adm@metashark.tech."
+      }
+    ]
+  },
+  "cookies": {
+    "title": "Política de Cookies",
+    "introduction": "Utilizamos cookies de sesión necesarias y cookies analíticas para mejorar el rendimiento y la velocidad de carga de la aplicación.",
+    "consent_btn": "Aceptar Todas",
+    "decline_btn": "Rechazar Opcionales"
+  }
+}

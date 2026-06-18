@@ -6,6 +6,7 @@
  * - Latencia: Medición de alta resolución importando nativamente "performance" desde perf_hooks.
  * - Contención: Enmascaramiento preventivo de excepciones unhandled hacia el cliente para evitar fugas de secretos.
  * - Zero-Overhead: Vuelca JSON estructurado a stdout para ser consumido de forma asíncrona por Vercel Log Drains.
+ * - Saneamiento ESLint & TS: Resuelto conflicto de tipos ts(2430) y eliminado 'as any' usando aserciones seguras.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -19,6 +20,15 @@ export type ServerlessHandler = (
 ) => Promise<unknown>;
 
 /**
+ * Interfaz de respaldo para resolver propiedades de conexión heredadas (legacy) sin herencia conflictiva ni tipo 'any'.
+ */
+interface LegacyConnection {
+  connection?: {
+    remoteAddress?: string;
+  };
+}
+
+/**
  * @function withObservability
  * @description Encapsulador de seguridad, observabilidad y rendimiento para funciones Serverless en Vercel.
  */
@@ -27,13 +37,18 @@ export function withObservability(handler: ServerlessHandler) {
     const start = performance.now();
     const traceId = (req.headers['x-trace-id'] as string) || randomUUID();
     
-    // Obtener metadatos básicos del request para contextualizar la traza
-    const path = req.url || 'unknown';
-    const method = req.method || 'unknown';
+    // Obtener metadatos básicos de forma segura y defensiva
+    const path = req?.url || 'unknown';
+    const method = req?.method || 'unknown';
 
-    // 🚀 ISO 27001: Captura de dirección IP de origen de forma segura (Edge-Aware)
-    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0].trim() || 
-                     req.socket.remoteAddress || 
+    // Conversión segura de dos pasos para resolver connection de forma limpia
+    const legacyReq = req as unknown as LegacyConnection;
+
+    // 🚀 ISO 27001: Captura de dirección IP de origen de forma segura y tolerante a entornos Serverless (Safe Fallbacks)
+    const clientIp = (req?.headers?.['x-forwarded-for'] as string)?.split(',')[0].trim() || 
+                     (req?.headers?.['x-real-ip'] as string)?.trim() ||
+                     req?.socket?.remoteAddress || 
+                     legacyReq?.connection?.remoteAddress ||
                      'unknown';
 
     try {
@@ -46,7 +61,7 @@ export function withObservability(handler: ServerlessHandler) {
           method,
           path,
           clientIp,
-          userAgent: req.headers['user-agent'] || 'unknown',
+          userAgent: req?.headers?.['user-agent'] || 'unknown',
         })
       );
 
@@ -64,7 +79,7 @@ export function withObservability(handler: ServerlessHandler) {
           method,
           path,
           latencyMs: parseFloat(duration.toFixed(3)),
-          status: res.statusCode || 200,
+          status: res?.statusCode || 200,
         })
       );
 
@@ -90,7 +105,7 @@ export function withObservability(handler: ServerlessHandler) {
       );
 
       // Enmascarar error hacia el cliente para evitar fugas de información de tablas o secretos (ISO 27001)
-      if (!res.writableEnded) {
+      if (res && !res.writableEnded) {
         res.status(500).json({
           message: 'Ocurrió una inconsistencia de red en el servidor de transacciones.',
           traceId, // El cliente recibe el ID para que soporte técnico ubique el log de error de inmediato en Axiom
