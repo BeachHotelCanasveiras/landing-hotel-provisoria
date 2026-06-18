@@ -1,48 +1,72 @@
 /**
- * @file i18n.ts
- * @description Configuración centralizada de i18next de alto rendimiento.
+ * @file mail.ts
+ * @description Servicio de encolamiento de correos transaccionales para el ecosistema Beach Hotel.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad: Instrumentación con performance.now() para auditar la latencia de análisis e hidratación de diccionarios JSON (DevOps logs).
- * - Trinidad Atómica: Mapea los namespaces de forma dinámica a partir de los diccionarios unificados 'translation.json'
- *   autogenerados por el compilador automático en cada ciclo de compilación/desarrollo (dev, build, check).
+ * - Gobernación SSoT: Inyección de sender_name (fromName) en la tabla email_queue, eliminando bypasses de linter.
+ * - Observabilidad: Registra un log estructurado JSON de encolado (Database Insert Latency) con precisión del performance.now() global.
+ * - Desacoplamiento total: Inserta en `email_queue` para procesamiento asíncrono.
+ * - Resiliencia: La transacción de reserva nunca se bloquea por fallos en el servicio de correo.
  */
 
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import { performance } from 'perf_hooks'; // 🚀 Saneamiento: Importación nativa para evitar advertencias de tipado ambiental
+import { supabase } from '@/lib/supabase';
 
-// --- IMPORTACIONES UNIFICADAS DE RENDIMIENTO (EVITA PARPADEO DE TEXTOS Y CARGAS REDUNDANTES) ---
-import esESTranslation from '../locales/es-ES/translation.json';
-import enUSTranslation from '../locales/en-US/translation.json';
-import ptBRTranslation from '../locales/pt-BR/translation.json';
+interface EmailPayload {
+  to: string;
+  subject: string;
+  html: string;
+  fromName?: string;
+}
 
-const startTimer = performance.now();
+/**
+ * Encola un correo electrónico para su procesamiento asíncrono.
+ * @param {EmailPayload} payload - Datos del correo a encolar.
+ * @returns {Promise<{success: boolean, id?: string, error?: string}>}
+ */
+export async function sendEmail({ to, subject, html, fromName = 'Concierge' }: EmailPayload) {
+  // Invocación síncrona del objeto global nativo del navegador (Zero-Import Compatibility)
+  const startTimer = performance.now();
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources: {
-      'es-ES': esESTranslation, // Contiene dinámicamente nav, hero, rooms, about, attractions, contact, excursions y pms namespaces
-      'en-US': enUSTranslation,
-      'pt-BR': ptBRTranslation
-    },
-    lng: 'es-ES', // Idioma por defecto inicializado bajo norma regional
-    fallbackLng: 'es-ES',
-    interpolation: {
-      escapeValue: false // React ya protege nativamente contra XSS (Data Sanitization)
+  try {
+    // 1. Inserción inmutable en la cola de mensajes de Supabase (Outbox Pattern)
+    // Garantiza disponibilidad (ISO 27001) al no depender de la API de Resend en el cliente.
+    const { data, error } = await supabase
+      .from('email_queue')
+      .insert([{
+        recipient_email: to,
+        subject: subject,
+        html_content: html,
+        sender_name: fromName, // 🚀 Sincronización inmaculada de columna:fromName inyectado
+        status: 'pending',
+        attempts: 0,
+        max_attempts: 3,
+        scheduled_at: new Date().toISOString()
+      }])
+      .select('id')
+      .single();
+
+    if (error) {
+      throw error;
     }
-  });
 
-const duration = performance.now() - startTimer;
+    const duration = performance.now() - startTimer;
 
-// 📊 Registro de telemetría pasiva para auditoría de inicio multilingüe
-console.log(
-  JSON.stringify({
-    event: 'I18N_INITIALIZATION_SUCCESS',
-    timestamp: new Date().toISOString(),
-    latencyMs: parseFloat(duration.toFixed(3)),
-    fallbackLang: 'es-ES',
-  })
-);
+    // 📊 Registro de telemetría pasiva para auditoría de base de datos
+    console.log(
+      JSON.stringify({
+        event: 'MAIL_ENQUEUED_SUCCESS',
+        timestamp: new Date().toISOString(),
+        emailId: data.id,
+        recipient: to,
+        senderName: fromName,
+        insertLatencyMs: parseFloat(duration.toFixed(3)),
+      })
+    );
 
-export default i18n;
+    return { success: true, id: data.id };
+
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido al encolar correo';
+    console.error('[Mail Service] Error crítico al encolar:', errorMessage);
+    return { success: false, error: errorMessage };
+  }
+}
