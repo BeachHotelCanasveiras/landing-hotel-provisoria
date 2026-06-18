@@ -10,7 +10,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 // Inicialización de Supabase con privilegios de súper usuario (Service Role)
 const supabaseAdmin = createClient(

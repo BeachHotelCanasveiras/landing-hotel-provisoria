@@ -15,7 +15,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 // Configuración criptográfica de grado bancario (Sincrónica con session.ts)
 const ALGORITHM = 'aes-256-gcm';

@@ -12,7 +12,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 let stripeInstance: Stripe | null = null;
 let supabaseInstance: SupabaseClient | null = null;

@@ -15,7 +15,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 // Contrato de interfaz estricto para mapear la API de autenticación administrativa (Bypass TS2339)
 interface SupabaseAuthAdmin {

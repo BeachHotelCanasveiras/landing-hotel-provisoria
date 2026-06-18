@@ -9,7 +9,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

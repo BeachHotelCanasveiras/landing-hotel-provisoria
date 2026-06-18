@@ -13,7 +13,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto'; // 🚀 Saneamiento de Bug: Importación nativa agregada de forma segura
-import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 // Inicialización segura del cliente de base de datos con rol de servicio (Bypass RLS)
 const supabase = createClient(
