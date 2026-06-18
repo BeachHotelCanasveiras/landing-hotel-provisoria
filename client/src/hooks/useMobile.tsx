@@ -1,38 +1,50 @@
 /**
- * @file useIsMobile.ts
- * @description Hook reactivo para la detección del punto de quiebre (breakpoint) móvil.
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Evita renderizados en cascada síncronos inicializando el estado de forma perezosa (Lazy State).
- * - Satisface plenamente las directivas de pureza de efectos de React 19.
- * - Soporte seguro para entornos híbridos/SSR.
+ * @file useMobile.tsx
+ * @description Hook de alto rendimiento para la detección del punto de quiebre (breakpoint) móvil.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y las mejores prácticas de React 19:
+ * - useSyncExternalStore: Utiliza el gancho oficial de React 18+ para sincronizar con APIs externas del navegador,
+ *   erradicando de raíz renderizados en cascada, tearing visual en Concurrent Mode y fugas de suscripción.
+ * - Soporte SSR/SSG Seguro: Inyecta getServerSnapshot para evitar de raíz advertencias de hidratación en producción.
+ * - Zero Redundant Listeners: Centraliza la suscripción al matchMedia del navegador de forma ultra-ligera.
  */
 
-import * as React from "react";
+import { useSyncExternalStore } from "react";
 
 const MOBILE_BREAKPOINT = 768;
+const query = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
-export function useIsMobile() {
-  // Inicialización perezosa: Calcula el estado correcto en el primer renderizado
-  const [isMobile, setIsMobile] = React.useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`).matches;
-    }
-    return false; // Fallback seguro para Server-Side Rendering (SSR)
-  });
+// 1. Snapshot: Leer el estado del viewport de forma síncrona e inmutable
+const getSnapshot = () => {
+  if (typeof window !== "undefined") {
+    return window.matchMedia(query).matches;
+  }
+  return false;
+};
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    
-    const onChange = () => {
-      setIsMobile(mql.matches);
-    };
+// 2. Server Snapshot: Fallback estático seguro para Server-Side Rendering (Evita de raíz errores de hidratación)
+const getServerSnapshot = () => false;
 
-    mql.addEventListener("change", onChange);
-    
-    // Eliminada la llamada síncrona a setIsMobile aquí para evitar el renderizado en cascada síncrono
+// 3. Subscribe: Sincronizar e instrumentar el escuchador de eventos de cambio del navegador
+const subscribe = (callback: () => void) => {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+  const mql = window.matchMedia(query);
+  
+  // Soporte universal para navegadores antiguos y modernos
+  mql.addEventListener("change", callback);
+  return () => mql.removeEventListener("change", onChange);
 
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
+  function onChange() {
+    callback();
+  }
+};
 
-  return isMobile;
+/**
+ * @function useIsMobile
+ * @description Hook reactivo que detecta de forma pura si la ventana física se encuentra bajo el breakpoint móvil.
+ */
+export function useIsMobile(): boolean {
+  // useSyncExternalStore maneja de manera nativa la caché, suscripción y re-renderizado concurrente
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

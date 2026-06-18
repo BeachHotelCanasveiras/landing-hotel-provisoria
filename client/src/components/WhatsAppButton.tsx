@@ -1,19 +1,24 @@
 /**
  * @file WhatsAppButton.tsx
  * @description Botón flotante global de contacto directo (Fase de Conversión).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Eliminación de texto hardcodeado. Consume el namespace centralizado 'whatsapp'.
- * - Accesibilidad (A11y) mejorada con aria-labels.
- * - Validación Zod en tiempo de desarrollo.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: Integración del foco de anillo mediante focus:ring-accent/30 preservando el color CRO de WhatsApp.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del botón flotante.
+ * - Trinidad Atómica: Localización total y validación sintáctica de copys con esquemas Zod en desarrollo.
+ * - Accesibilidad (A11y) optimizada con etiquetas descriptivas aria-labels.
  */
 
 import { motion, Variants } from 'framer-motion';
 import { MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { HOTEL_CONFIG } from '@/const';
 import { WhatsappTranslationSchema } from '@/locales/schemas/whatsapp.schema';
 
 export default function WhatsAppButton() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del botón flotante
+  usePerformanceProfiler('WhatsAppButton');
+
   const { t, i18n } = useTranslation('whatsapp');
 
   // ============================================================================
@@ -55,7 +60,7 @@ export default function WhatsAppButton() {
       animate="pulse"
       whileHover={{ scale: 1.15 }}
       whileTap={{ scale: 0.95 }}
-      className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors focus:outline-none focus:ring-4 focus:ring-green-500/30"
+      className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-green-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition-colors focus:outline-none focus:ring-4 focus:ring-accent/30 border-none cursor-pointer"
       aria-label="Contactar por WhatsApp"
       title="Contacta por WhatsApp"
     >

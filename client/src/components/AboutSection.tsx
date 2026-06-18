@@ -1,13 +1,17 @@
 /**
  * @file AboutSection.tsx
  * @description Componente de propuesta de valor (Fase 2 del Embudo: Conexión).
- * Diseñado bajo estética de Lujo Silencioso y Confort.
- * Utiliza validación Zod y desacoplamiento de i18n total.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje de la sección de propuesta de valor.
+ * - Estética: Diseñado bajo estética de Lujo Silencioso y Confort.
+ * - Trinidad Atómica: Utiliza validación Zod y desacoplamiento de i18n total.
  */
 
 import { motion, Variants } from 'framer-motion';
 import { MapPin, Coffee, HeartHandshake } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { AboutTranslationSchema } from '@/locales/schemas/about.schema';
 
 const containerVariants: Variants = {
@@ -28,6 +32,9 @@ const cardVariants: Variants = {
 };
 
 export default function AboutSection() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de la sección de propuesta de valor
+  usePerformanceProfiler('AboutSection');
+
   const { t, i18n } = useTranslation('about');
 
   // Validación de contrato Zod en DEV
@@ -57,18 +64,18 @@ export default function AboutSection() {
   ];
 
   return (
-    <section id="about" className="py-24 bg-white border-b border-gray-100/50">
+    <section id="about" className="py-24 bg-background border-b border-border transition-colors duration-300">
       <div className="container px-4 sm:px-6">
         
         {/* Cabecera del Bloque */}
         <div className="text-center mb-16">
-          <span className="inline-block px-5 py-1.5 bg-gray-50 text-gray-700 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
+          <span className="inline-block px-5 py-1.5 bg-muted text-muted-foreground rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-border">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-5 tracking-tight">
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 tracking-tight">
             {t('title')}
           </h2>
-          <p className="font-body text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+          <p className="font-body text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
             {t('subtitle')}
           </p>
         </div>
@@ -88,17 +95,17 @@ export default function AboutSection() {
                 key={item.key}
                 variants={cardVariants}
                 whileHover={{ y: -5 }}
-                className="flex flex-col items-center text-center p-8 bg-gray-50/50 rounded-[2.5rem] border border-gray-100 transition-all duration-300 hover:border-accent hover:bg-white hover:shadow-[0_20px_50px_rgba(212,165,116,0.05)]"
+                className="flex flex-col items-center text-center p-8 bg-muted/50 border border-border rounded-[2.5rem] transition-all duration-300 hover:border-accent hover:bg-card hover:shadow-[0_20px_50px_rgba(212,165,116,0.05)]"
               >
                 {/* Círculo contenedor del Icono */}
                 <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center text-accent mb-6">
                   <IconComponent className="w-7 h-7" strokeWidth={1.5} />
                 </div>
                 
-                <h3 className="font-display text-xl text-gray-900 mb-3 tracking-tight">
+                <h3 className="font-display text-xl text-foreground mb-3 tracking-tight">
                   {t(`features.${item.key}.title`)}
                 </h3>
-                <p className="font-body text-sm text-gray-500 leading-relaxed font-light">
+                <p className="font-body text-sm text-muted-foreground leading-relaxed font-light">
                   {t(`features.${item.key}.description`)}
                 </p>
               </motion.div>

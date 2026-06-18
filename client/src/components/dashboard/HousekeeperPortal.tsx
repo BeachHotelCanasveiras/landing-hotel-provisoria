@@ -1,20 +1,21 @@
 /**
  * @file HousekeeperPortal.tsx
  * @description Portal Mobile-First de uso rudo para los auxiliares de limpieza.
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - SSS (Single Source of Truth) para variables e importación segura de 'cn' desde lib/utils.
- * - Saneamiento estricto de ESLint v9 (0% variables huérfanas o sin uso).
- * - Internacionalización (i18n) completa de la interfaz móvil.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface, pms-surface-high y border-pms-border.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y flujos en tiempo real.
+ * - Trinidad Atómica: Localización total del texto de control (housekeeping namespace).
  */
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Camera, CheckCircle2, AlertTriangle, Play, Check, RefreshCw, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils'; // <-- CORRECCIÓN: Importación de la utilidad cn agregada de forma segura
+import { cn } from '@/lib/utils';
 
 interface Room {
   id: number;
@@ -37,6 +38,9 @@ interface GuestRequest {
 }
 
 export const HousekeeperPortal: React.FC = () => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del portal móvil
+  usePerformanceProfiler('HousekeeperPortal');
+
   const { t } = useTranslation('housekeeping');
   
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -56,7 +60,6 @@ export const HousekeeperPortal: React.FC = () => {
         setRooms(roomsData || []);
         setTasks(tasksData || []);
       } catch (err: unknown) {
-        // CORRECCIÓN: Auditoría del error capturado de forma estricta (no-unused-vars)
         const errorMessage = err instanceof Error ? err.message : 'Error desconocido';
         console.error('[HousekeeperPortal] Error de sincronización:', errorMessage);
         toast.error('Error al sincronizar con la base de datos.');
@@ -108,21 +111,21 @@ export const HousekeeperPortal: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-[#141517]"><Spinner className="w-8 h-8 text-accent" /></div>;
+  if (loading) return <div className="h-screen w-full flex items-center justify-center bg-pms-bg"><Spinner className="w-8 h-8 text-pms-accent animate-spin" /></div>;
 
   return (
-    <div className="min-h-screen bg-[#141517] text-gray-100 p-4 font-body selection:bg-accent/30 max-w-md mx-auto">
+    <div className="min-h-screen bg-pms-bg text-pms-text p-4 font-body selection:bg-pms-accent/30 max-w-md mx-auto transition-colors duration-300">
       
       {/* Cabecera Móvil - Totalmente internacionalizada */}
-      <header className="flex items-center justify-between pb-6 border-b border-gray-800 pt-4">
+      <header className="flex items-center justify-between pb-6 border-b border-pms-border pt-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-[10px] font-bold text-accent uppercase tracking-widest mt-0.5">{t('badge')}</p>
+          <h1 className="text-xl font-bold tracking-tight text-pms-text">{t('title')}</h1>
+          <p className="text-[10px] font-bold text-pms-accent uppercase tracking-widest mt-0.5">{t('badge')}</p>
         </div>
         <div className="relative">
-          <Bell className="w-6 h-6 text-gray-400" />
+          <Bell className="w-6 h-6 text-pms-text-muted" />
           {guestRequests.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[9px] font-bold animate-pulse">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold animate-pulse">
               {guestRequests.length}
             </span>
           )}
@@ -143,12 +146,12 @@ export const HousekeeperPortal: React.FC = () => {
               <AlertTriangle className="text-red-500 shrink-0 w-5 h-5 animate-bounce" />
               <div>
                 <p className="text-xs font-bold text-white">Llamada de Huésped</p>
-                <p className="text-[10px] text-gray-400">Habitación {req.room_name} solicita {req.request_type}</p>
+                <p className="text-[10px] text-pms-text-muted">Habitación {req.room_name} solicita {req.request_type}</p>
               </div>
             </div>
             <button 
               onClick={() => setGuestRequests(prev => prev.filter(r => r.id !== req.id))}
-              className="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold cursor-pointer"
+              className="text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold cursor-pointer border-none"
             >
               OK
             </button>
@@ -159,7 +162,7 @@ export const HousekeeperPortal: React.FC = () => {
       {/* Lista de Habitaciones */}
       <div className="space-y-4 mt-6">
         {rooms.map((room) => {
-          const roomTasks = tasks.filter(t => t.room_id === room.id);
+          const roomTasks = tasks.filter(tRow => tRow.room_id === room.id);
           const isSelected = activeRoomId === room.id;
 
           return (
@@ -167,13 +170,13 @@ export const HousekeeperPortal: React.FC = () => {
               key={room.id}
               className={cn(
                 "rounded-3xl border transition-all duration-300 p-5",
-                isSelected ? "bg-[#1C1D1F] border-accent" : "bg-[#18191B] border-gray-800"
+                isSelected ? "bg-pms-surface-high border-pms-accent shadow-lg" : "bg-pms-surface border-pms-border"
               )}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-white">{room.name}</h3>
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-gray-500">{room.type}</span>
+                  <h3 className="text-lg font-bold text-pms-text">{room.name}</h3>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-pms-text-muted">{room.type}</span>
                 </div>
                 
                 {/* Control de Estados Móvil - Internacionalizado */}
@@ -181,7 +184,7 @@ export const HousekeeperPortal: React.FC = () => {
                   {room.housekeeping_status === 'dirty' && (
                     <button 
                       onClick={() => handleStartCleaning(room.id)}
-                      className="h-10 px-4 bg-accent text-accent-foreground rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer border-none"
+                      className="h-10 px-4 bg-pms-accent text-pms-accent-foreground rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer border-none shadow-md hover:opacity-90 transition-all active:scale-95"
                     >
                       <Play size={14} strokeWidth={2.5} /> {t('btn_start', { defaultValue: 'Comenzar' })}
                     </button>
@@ -189,7 +192,7 @@ export const HousekeeperPortal: React.FC = () => {
                   {room.housekeeping_status === 'cleaning' && !isSelected && (
                     <button 
                       onClick={() => setActiveRoomId(room.id)}
-                      className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer border-none"
+                      className="h-10 px-4 bg-pms-accent text-pms-accent-foreground rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 cursor-pointer border-none shadow-md hover:opacity-90 transition-all active:scale-95"
                     >
                       <RefreshCw size={14} className="animate-spin" /> {t('btn_view_checklist', { defaultValue: 'Ver Checklist' })}
                     </button>
@@ -209,9 +212,9 @@ export const HousekeeperPortal: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden space-y-4 pt-5 border-t border-gray-800 mt-4"
+                    className="overflow-hidden space-y-4 pt-5 border-t border-pms-border mt-4"
                   >
-                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
+                    <p className="text-[9px] font-bold text-pms-text-muted uppercase tracking-widest">
                       {t('tasks_mandatory', { defaultValue: 'Tareas Obligatorias' })}
                     </p>
                     
@@ -222,24 +225,24 @@ export const HousekeeperPortal: React.FC = () => {
                           onClick={() => handleToggleTask(task.id, !task.is_completed)}
                           className={cn(
                             "flex items-center gap-3 p-3.5 rounded-xl border transition-all cursor-pointer select-none text-xs",
-                            task.is_completed ? "bg-green-500/5 border-green-500/20 text-gray-500 line-through" : "bg-[#141517] border-gray-800 text-gray-200"
+                            task.is_completed ? "bg-green-500/5 border-green-500/20 text-pms-text-muted line-through" : "bg-pms-surface border-pms-border text-pms-text"
                           )}
                         >
                           <div className={cn(
                             "w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-all",
-                            task.is_completed ? "bg-green-500 border-green-500 text-white" : "border-gray-600"
+                            task.is_completed ? "bg-green-500 border-green-500 text-white" : "border-pms-border"
                           )}>
                             {task.is_completed && <Check size={12} strokeWidth={3} />}
                           </div>
-                          <span className="font-semibold">{task.task_name}</span>
+                          <span className="font-semibold text-pms-text">{task.task_name}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Reporte de Incidencias con Cámara Nativa */}
                     <div className="pt-2 flex gap-3">
-                      <label className="flex-1 h-12 bg-[#141517] hover:bg-gray-800 border border-gray-800 rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 text-xs text-gray-300 font-semibold">
-                        <Camera size={16} className="text-accent" />
+                      <label className="flex-1 h-12 bg-pms-surface border border-pms-border rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 text-xs text-pms-text-muted font-semibold hover:bg-pms-surface-high">
+                        <Camera size={16} className="text-pms-accent" />
                         {t('btn_report_issue', { defaultValue: 'Reportar Falla' })}
                         <input 
                           type="file" 
@@ -253,7 +256,7 @@ export const HousekeeperPortal: React.FC = () => {
                       <button 
                         onClick={() => handleFinishCleaning(room.id)}
                         disabled={roomTasks.some(tRow => !tRow.is_completed)}
-                        className="flex-1 h-12 bg-green-600 disabled:bg-gray-800 disabled:text-gray-600 text-white rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 cursor-pointer border-none"
+                        className="flex-1 h-12 bg-green-600 disabled:bg-pms-surface-high/50 disabled:text-pms-text-muted/50 text-white rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 cursor-pointer border-none shadow-md hover:opacity-90"
                       >
                         <CheckCircle2 size={16} /> {t('btn_finish', { defaultValue: 'Terminar' })}
                       </button>

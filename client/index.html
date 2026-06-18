@@ -15,20 +15,20 @@
     <link rel="canonical" href="https://beachcanasvieiras.com" />
     <meta name="author" content="Raz Podestá - MetaShark Tech" />
 
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph / Facebook (Sincronizado con assets optimizados de Cloudinary) -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Hotel Beach Canasvieiras" />
     <meta property="og:locale" content="es_ES" />
     <meta property="og:url" content="https://beachcanasvieiras.com" />
     <meta property="og:title" content="Hotel Beach Canasvieiras | Momentos para Compartir y Desconectar" />
     <meta property="og:description" content="Descubre un rincón acogedor donde el tiempo se detiene. Ubicación privilegiada sobre la Avenida das Nações, confort absoluto y la calidez de sentirte bienvenido a pasos de la playa." />
-    <meta property="og:image" content="https://beachcanasvieiras.com/images/hotel/entrada-principal-hotel-beach-canasvieiras.webp" />
+    <meta property="og:image" content="https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto,w_1200/v1/beach-hotel/hotel/hero-1.webp" />
 
-    <!-- Twitter Cards -->
+    <!-- Twitter Cards (Sincronizado con assets optimizados de Cloudinary) -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Hotel Beach Canasvieiras | Tu Refugio Costero" />
     <meta name="twitter:description" content="El punto de encuentro perfecto para tus días de descanso en Canasvieiras. Comodidad, hospitalidad genuina y desayuno buffet artesanal a solo dos cuadras del mar." />
-    <meta name="twitter:image" content="https://beachcanasvieiras.com/images/hotel/entrada-principal-hotel-beach-canasvieiras.webp" />
+    <meta name="twitter:image" content="https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto,w_1200/v1/beach-hotel/hotel/hero-1.webp" />
 
     <!-- Datos Estructurados JSON-LD (Google Hotel Search Optimization) -->
     <script type="application/ld+json">
@@ -36,7 +36,7 @@
         "@context": "https://schema.org",
         "@type": "Hotel",
         "name": "Hotel Beach Canasvieiras",
-        "image": "https://beachcanasvieiras.com/images/hotel/entrada-principal-hotel-beach-canasvieiras.webp",
+        "image": "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/hotel/hero-1.webp",
         "description": "Tu refugio de hospitalidad y descanso en Canasvieiras, Florianópolis. Desayuno buffet artesanal y atmósfera de hogar.",
         "priceRange": "$$",
         "url": "https://beachcanasvieiras.com",
@@ -70,22 +70,5 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Inyección Defensiva de Analíticas (Resiliencia de Compilación) -->
-    <script>
-      (function() {
-        var endpoint = "%VITE_ANALYTICS_ENDPOINT%";
-        var websiteId = "%VITE_ANALYTICS_WEBSITE_ID%";
-        
-        // Ejecutar solo si el build de Vite reemplazó los marcadores de posición reales de producción
-        if (endpoint && endpoint.indexOf('%') === -1 && websiteId && websiteId.indexOf('%') === -1) {
-          var script = document.createElement('script');
-          script.defer = true;
-          script.src = endpoint + "/umami";
-          script.setAttribute('data-website-id', websiteId);
-          document.head.appendChild(script);
-        }
-      })();
-    </script>
   </body>
 </html>

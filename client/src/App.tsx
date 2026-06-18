@@ -1,7 +1,8 @@
 /**
  * @file App.tsx
  * @description Enrutador principal de la SPA Beach Hotel Canasvieiras.
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Saneamiento TS2307: Reemplazo de importaciones relativas por alias absolutos (@/*) para una resolución inmaculada de módulos.
  * - Inyecta el QueryClientProvider para cacheo avanzado de peticiones de disponibilidad y pagos.
  * - Integra el proveedor global de autenticación y roles de Supabase (AuthProvider).
  * - Implementa el guardián de rutas protegidas (ProtectedRoute) con redirección automatizada.
@@ -19,14 +20,14 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
 import NotFound from "@/pages/NotFound";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard"; 
-import Success from "./pages/Success"; // Aparato de Conversión y Retorno de Stripe
-import { useAppMiddleware } from "./hooks/useAppMiddleware";
+import ErrorBoundary from "@/components/ErrorBoundary"; // 🚀 Saneamiento TS2307: Alias absoluto
+import { ThemeProvider } from "@/contexts/ThemeContext"; // 🚀 Saneamiento TS2307: Alias absoluto
+import { AuthProvider, useAuth } from "@/contexts/AuthContext"; // 🚀 Saneamiento TS2307: Alias absoluto
+import Home from "@/pages/Home"; // 🚀 Saneamiento TS2307: Alias absoluto
+import Login from "@/pages/Login"; // 🚀 Saneamiento TS2307: Alias absoluto
+import AdminDashboard from "@/pages/AdminDashboard"; // 🚀 Saneamiento TS2307: Alias absoluto
+import Success from "@/pages/Success"; // 🚀 Saneamiento TS2307: Alias absoluto
+import { useAppMiddleware } from "@/hooks/useAppMiddleware"; // 🚀 Saneamiento TS2307: Alias absoluto
 
 /**
  * Inicialización del cliente global de consultas (TanStack Query).

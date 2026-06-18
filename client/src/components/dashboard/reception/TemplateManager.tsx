@@ -1,8 +1,9 @@
 /**
  * @file TemplateManager.tsx
  * @description Panel administrativo de alta fidelidad para la edición, previsualización e impresión de plantillas de correo.
- * - ISO 27001: Validación sintáctica de marcas de posición e integridad referencial de variables.
- * - Failsafe: Sistema de degradación elegante a localStorage si la tabla de base de datos no está migrada.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface, pms-surface-high y border-pms-border.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en compilación e iframes.
  * - React 19: Declarado FormEditor fuera de renderizado para evitar fugas de memoria y remontado por llave (react-hooks/static-components resuelto).
  * - Saneado: Satisface ESLint v9 al 100% (cero 'any' y cero importaciones o variables huérfanas) e incluye impresión PDF con logo.
  */
@@ -12,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Save, Sparkles, AlertTriangle, FileText, CheckCircle2, Printer } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -166,18 +168,18 @@ const FormEditor: React.FC<FormEditorProps> = ({
   return (
     <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Editor Form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4 flex flex-col justify-between">
+      <form onSubmit={handleSubmit} className="bg-pms-surface rounded-[2rem] border border-pms-border p-6 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4 flex flex-col justify-between">
         <div className="space-y-4">
-          <div className="border-b border-gray-50 pb-3 flex items-center justify-between">
-            <span className="text-xs font-body font-bold text-gray-800">
+          <div className="border-b border-pms-border pb-3 flex items-center justify-between">
+            <span className="text-xs font-body font-bold text-pms-text">
               {t('templates.editor_title', { defaultValue: 'Editor de Plantilla' })}
             </span>
-            <span className="text-[10px] text-accent font-mono font-bold">{template.id}</span>
+            <span className="text-[10px] text-pms-accent font-mono font-bold">{template.id}</span>
           </div>
 
           {/* Asunto */}
-          <div className="p-3.5 rounded-2xl border border-gray-150 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 transition-all">
-            <label className="block text-[9px] font-body font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <div className="p-3.5 rounded-2xl border border-pms-border bg-pms-surface-high focus-within:border-pms-accent focus-within:bg-pms-surface focus-within:ring-2 focus-within:ring-pms-accent/15 transition-all">
+            <label className="block text-[9px] font-body font-bold text-pms-text-muted uppercase tracking-widest mb-1">
               {t('templates.subject_label', { defaultValue: 'Asunto del Correo' })}
             </label>
             <input 
@@ -186,13 +188,13 @@ const FormEditor: React.FC<FormEditorProps> = ({
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Asunto"
-              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-gray-900 outline-none"
+              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-pms-text outline-none"
             />
           </div>
 
           {/* HTML Body */}
-          <div className="p-3.5 rounded-2xl border border-gray-150 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 transition-all">
-            <label className="block text-[9px] font-body font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <div className="p-3.5 rounded-2xl border border-pms-border bg-pms-surface-high focus-within:border-pms-accent focus-within:bg-pms-surface focus-within:ring-2 focus-within:ring-pms-accent/15 transition-all">
+            <label className="block text-[9px] font-body font-bold text-pms-text-muted uppercase tracking-widest mb-1">
               {t('templates.body_label', { defaultValue: 'Cuerpo del Correo (HTML)' })}
             </label>
             <textarea 
@@ -201,19 +203,19 @@ const FormEditor: React.FC<FormEditorProps> = ({
               value={htmlBody}
               onChange={(e) => setHtmlBody(e.target.value)}
               placeholder="<h1>Hola</h1>"
-              className="w-full bg-transparent border-none p-0 focus:ring-0 font-mono text-xs text-gray-800 outline-none resize-none"
+              className="w-full bg-transparent border-none p-0 focus:ring-0 font-mono text-xs text-pms-text outline-none resize-none"
             />
           </div>
 
           {/* Leyenda de Variables Permitidas */}
-          <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-2">
-            <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-              <Sparkles size={11} className="text-accent" />
+          <div className="p-4 bg-pms-surface-high rounded-2xl border border-pms-border space-y-2">
+            <div className="flex items-center gap-1.5 text-[9px] font-bold text-pms-text-muted uppercase tracking-widest">
+              <Sparkles size={11} className="text-pms-accent" />
               {t('templates.variables_title', { defaultValue: 'Variables Dinámicas Permitidas' })}
             </div>
             <div className="flex flex-wrap gap-1.5">
               {template.allowed_variables.map(v => (
-                <code key={v} className="bg-white border border-gray-150 px-2 py-0.5 rounded font-mono text-[9px] text-gray-700 font-bold">
+                <code key={v} className="bg-pms-surface border border-pms-border px-2 py-0.5 rounded font-mono text-[9px] text-pms-text font-bold">
                   {`{{${v}}}`}
                 </code>
               ))}
@@ -224,24 +226,24 @@ const FormEditor: React.FC<FormEditorProps> = ({
         <Button
           type="submit"
           disabled={isSaving}
-          className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-body font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+          className="w-full h-12 bg-pms-accent text-pms-accent-foreground hover:opacity-90 rounded-xl text-xs font-body font-bold uppercase tracking-wider flex items-center justify-center gap-2 border-none"
         >
-          {isSaving ? <Spinner className="w-4 h-4 text-white" /> : <Save size={13} />}
+          {isSaving ? <Spinner className="w-4 h-4 text-pms-accent-foreground" /> : <Save size={13} />}
           {t('templates.save_btn', { defaultValue: 'Guardar Cambios' })}
         </Button>
       </form>
 
       {/* Sandbox Preview */}
-      <div className="bg-white rounded-[2rem] border border-gray-100 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4 flex flex-col justify-between">
+      <div className="bg-pms-surface rounded-[2rem] border border-pms-border p-6 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4 flex flex-col justify-between">
         <div className="space-y-4">
-          <div className="border-b border-gray-50 pb-3 flex items-center justify-between">
-            <span className="text-xs font-body font-bold text-gray-800">
+          <div className="border-b border-pms-border pb-3 flex items-center justify-between">
+            <span className="text-xs font-body font-bold text-pms-text">
               {t('templates.preview_title', { defaultValue: 'Previsualización' })}
             </span>
             <button
               type="button"
               onClick={handlePrintPreview}
-              className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 border border-green-100/50 hover:bg-green-100 rounded-lg text-[10px] font-body font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-500/10 text-green-500 border border-green-500/20 hover:bg-green-500/20 rounded-lg text-[10px] font-body font-bold uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
               title="Imprimir / Exportar a PDF"
             >
               <Printer size={11} /> PDF / Imprimir
@@ -249,13 +251,13 @@ const FormEditor: React.FC<FormEditorProps> = ({
           </div>
 
           {/* Asunto Renderizado */}
-          <div className="p-3 bg-gray-50 border border-gray-100 rounded-xl text-xs font-body font-semibold text-gray-700">
-            <span className="text-gray-400 font-bold mr-1">Asunto:</span> 
+          <div className="p-3 bg-pms-surface-high border border-pms-border rounded-xl text-xs font-body font-semibold text-pms-text">
+            <span className="text-pms-text-muted font-bold mr-1">Asunto:</span> 
             {subject.replace(/{{guest_name}}/g, 'Karla Valeska').replace(/{{room_name}}/g, 'Suite Standard 102')}
           </div>
 
           {/* Iframe del HTML Renderizado en Caliente */}
-          <div className="h-64 rounded-2xl border border-gray-150 overflow-hidden bg-white relative">
+          <div className="h-64 rounded-2xl border border-pms-border overflow-hidden bg-white relative">
             <iframe
               title="Mock Email Sandbox"
               srcDoc={`
@@ -270,7 +272,7 @@ const FormEditor: React.FC<FormEditorProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-wider justify-center">
+        <div className="flex items-center gap-2 text-[10px] text-pms-text-muted font-bold uppercase tracking-wider justify-center">
           <CheckCircle2 size={11} className="text-green-500" />
           {t('templates.synchronized_label', { defaultValue: 'Sincronizado con variables de Stripe' })}
         </div>
@@ -281,12 +283,14 @@ const FormEditor: React.FC<FormEditorProps> = ({
 
 // --- 3. COMPONENTE ORQUESTRADOR PRINCIPAL ---
 export const TemplateManager: React.FC = () => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en módulo administrador de plantillas
+  usePerformanceProfiler('TemplateManager');
+
   const { t } = useTranslation('dashboard');
 
   const [templates, setTemplates] = useState<EmailTemplate[]>(DEFAULT_TEMPLATES);
   const [activeTemplateId, setActiveTemplateId] = useState<string>('booking_confirmation');
   
-  // Variables de Control de Estado Saneadas (Se eliminó 'loading' para evitar no-unused-vars)
   const [isSaving, setIsSaving] = useState(false);
   const [isLocalMode, setIsLocalMode] = useState(false); 
 
@@ -343,12 +347,12 @@ export const TemplateManager: React.FC = () => {
       
       {/* 🛡️ BANNER ALERTA LOCAL MODE */}
       {isLocalMode && (
-        <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex items-center justify-between">
-          <div className="flex items-center gap-3 text-amber-800">
+        <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center justify-between text-amber-500">
+          <div className="flex items-center gap-3">
             <AlertTriangle size={18} className="text-amber-500 animate-pulse" />
             <div>
               <p className="text-xs font-bold font-body">Modo Fallback: LocalStorage Activo</p>
-              <p className="text-[10px] text-amber-700/80 font-body leading-tight">La tabla email_templates no existe. Las plantillas se guardan en este navegador de forma local.</p>
+              <p className="text-[10px] text-amber-500/80 font-body leading-tight">La tabla email_templates no existe en base de datos. Las plantillas se guardarán localmente.</p>
             </div>
           </div>
           <span className="text-[9px] bg-amber-500 text-white font-bold uppercase px-2.5 py-1 rounded-md tracking-wider">Modo Local</span>
@@ -359,12 +363,12 @@ export const TemplateManager: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Columna Izquierda: Listado de Plantillas */}
-        <div className="lg:col-span-4 bg-white rounded-[2rem] border border-gray-100 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4">
+        <div className="lg:col-span-4 bg-pms-surface rounded-[2rem] border border-pms-border p-6 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-4">
           <div>
-            <span className="inline-block px-3 py-1 bg-gray-50 text-gray-700 rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-gray-200/50">
+            <span className="inline-block px-3 py-1 bg-pms-surface-high text-pms-text-muted rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-pms-border">
               SaaS Document Template
             </span>
-            <h3 className="font-display text-xl text-gray-900 tracking-tight">Vouchers y Plantillas</h3>
+            <h3 className="font-display text-xl text-pms-text tracking-tight">Vouchers y Plantillas</h3>
           </div>
 
           <div className="space-y-2.5">
@@ -375,15 +379,15 @@ export const TemplateManager: React.FC = () => {
                 className={cn(
                   "p-4 rounded-2xl border transition-all cursor-pointer text-left space-y-2 select-none",
                   activeTemplateId === temp.id 
-                    ? "bg-gray-950 border-gray-950 text-white shadow-lg" 
-                    : "bg-gray-50/50 border-gray-100 hover:border-accent/40 hover:bg-white"
+                    ? "bg-pms-accent border-pms-accent text-pms-accent-foreground shadow-lg" 
+                    : "bg-pms-surface-high/50 border-pms-border hover:border-pms-accent/40 hover:bg-pms-surface"
                 )}
               >
                 <div className="flex items-center gap-2">
-                  <FileText size={14} className={activeTemplateId === temp.id ? 'text-accent' : 'text-gray-400'} />
+                  <FileText size={14} className={activeTemplateId === temp.id ? 'text-pms-accent-foreground' : 'text-pms-text-muted'} />
                   <span className="font-body text-xs font-bold truncate">{temp.name}</span>
                 </div>
-                <p className={cn("font-body text-[10px] leading-relaxed font-light line-clamp-2", activeTemplateId === temp.id ? 'text-gray-300' : 'text-gray-400')}>
+                <p className={cn("font-body text-[10px] leading-relaxed font-light line-clamp-2", activeTemplateId === temp.id ? 'text-pms-accent-foreground/80' : 'text-pms-text-muted')}>
                   {temp.description}
                 </p>
               </div>

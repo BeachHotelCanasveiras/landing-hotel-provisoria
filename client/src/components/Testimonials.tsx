@@ -3,7 +3,9 @@
 /**
  * @file Testimonials.tsx
  * @description Sección de Prueba Social con integración nativa a la API oficial de Google Places.
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-background, border-border, text-foreground y borderColor dinámico var(--accent) de la landing.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje, carga del SDK de Google Maps e inyección de reviews.
  * - Tipado estricto: Declaración global de la interfaz Window para evitar casteos a 'any'.
  * - Resiliencia: Modelo de fusión híbrida Google Places + Diccionarios locales con caché TTL.
  */
@@ -12,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { HOTEL_CONFIG } from '@/const';
 import { StorageService } from '@/lib/storage';
 import { TestimonialsTranslationSchema, type TestimonialItem } from '@/locales/schemas/testimonials.schema';
@@ -35,6 +38,9 @@ const REVIEWS_CACHE_KEY = 'google_reviews_cache';
 const CACHE_TTL_7_DAYS = 7 * 24 * 60 * 60 * 1000; // 7 días de vida útil en caché
 
 export default function Testimonials() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del carrusel de opiniones
+  usePerformanceProfiler('Testimonials');
+
   const { t, i18n } = useTranslation('testimonials');
   const [reviews, setReviews] = useState<TestimonialItem[]>([]);
   const [api, setApi] = useState<CarouselApi>();
@@ -76,7 +82,7 @@ export default function Testimonials() {
 
       // 3. Consultar a la API de Google Places de forma asíncrona
       try {
-        if (!window.google) { // <-- CORRECCIÓN: Llamada segura sin casteo a 'any'
+        if (!window.google) {
           await new Promise<void>((resolve, reject) => {
             const script = document.createElement("script");
             script.src = `${mapsProxyUrl}/maps/api/js?key=${apiKey}&v=weekly&libraries=places`;
@@ -146,15 +152,15 @@ export default function Testimonials() {
   }, [api]);
 
   return (
-    <section id="testimonials" className="py-20 bg-white overflow-hidden border-t border-gray-50">
+    <section id="testimonials" className="py-20 bg-background overflow-hidden border-t border-border transition-colors duration-300">
       <div className="container px-4">
         
         {/* Cabecera */}
         <div className="text-center mb-12">
-          <span className="inline-block px-5 py-1.5 bg-gray-100 text-gray-800 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
+          <span className="inline-block px-5 py-1.5 bg-muted text-muted-foreground rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-border">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-6 tracking-tight">
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-6 tracking-tight">
             {t('title')}
           </h2>
         </div>
@@ -169,9 +175,8 @@ export default function Testimonials() {
             {reviews.map((testimonial, index) => (
               <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
                 <motion.div 
-                  className="bg-gray-50 p-8 rounded-3xl border border-gray-100 h-full flex flex-col justify-between"
-                  whileHover={{ y: -5, borderColor: '#d4a574' }}
-                  transition={{ duration: 0.3 }}
+                  className="bg-muted/50 p-8 rounded-3xl border border-border h-full flex flex-col justify-between transition-all duration-300"
+                  whileHover={{ y: -5, borderColor: 'var(--accent)' }} // 🚀 Borde dinámico de marca blanca
                 >
                   <div className="mb-6">
                     <div className="flex gap-0.5 mb-4">
@@ -179,25 +184,25 @@ export default function Testimonials() {
                         <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                       ))}
                     </div>
-                    <p className="font-body text-gray-700 text-sm leading-relaxed italic line-clamp-6">
+                    <p className="font-body text-muted-foreground text-sm leading-relaxed italic line-clamp-6 text-left">
                       "{testimonial.text}"
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-4 pt-6 border-t border-gray-200">
+                  <div className="flex items-center gap-4 pt-6 border-t border-border">
                     <img 
                       src={testimonial.profile_photo_url} 
                       alt={testimonial.author_name} 
-                      className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                      className="w-12 h-12 rounded-full object-cover border-2 border-card shadow-sm"
                       loading="lazy"
                       referrerPolicy="no-referrer"
                       onError={(e) => (e.currentTarget.src = 'https://ui.shadcn.com/avatars/01.png')}
                     />
-                    <div>
-                      <h4 className="font-display text-base text-gray-900 font-semibold leading-tight">{testimonial.author_name}</h4>
+                    <div className="text-left">
+                      <h4 className="font-display text-base text-foreground font-semibold leading-tight">{testimonial.author_name}</h4>
                       {testimonial.relative_time_description && (
                         <p className="font-body text-[10px] text-accent font-semibold uppercase tracking-wider mt-1 flex items-center gap-1.5">
-                          <Globe size={10} className="text-gray-400" />
+                          <Globe size={10} className="text-muted-foreground" />
                           {testimonial.relative_time_description}
                         </p>
                       )}

@@ -1,8 +1,10 @@
 /**
  * @file HousekeepingReport.tsx
  * @description Componente atómico y de alto rendimiento para la gestión de limpieza y tareas de habitaciones (Ama de Llaves).
- * - UX/UI: Filtros de búsqueda avanzados, selectores de estado interactivos, progreso de tareas y envío de reportes.
- * - SaaS Ready: Altamente desacoplado, configurable y libre de textos hardcodeados.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface, pms-surface-high y border-pms-border.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
+ * - Trinidad Atómica: Soporte total para traducción y esquemas de validación Zod.
  * - RBAC: Restringe acciones en tiempo real evaluando el prop 'userRole' (ISO 27001).
  */
 
@@ -16,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { HousekeepingTranslationSchema } from '@/locales/schemas/housekeeping.schema';
 
 export interface RoomHousekeepingData {
@@ -74,6 +77,9 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
   onToggleTask,
   onAddCustomTask,
 }) => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en módulo operativo pesado
+  usePerformanceProfiler('HousekeepingReport');
+
   const { t, i18n } = useTranslation('housekeeping');
 
   // Estados locales para los filtros del reporte (Mini Hotel Style)
@@ -119,17 +125,17 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
     <div className="space-y-6">
       
       {/* 1. SECCIÓN DE FILTROS Y CONTROL DE CABECERA (Estilo Mini Hotel) */}
-      <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+      <div className="bg-pms-surface rounded-[2rem] border border-pms-border p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] grid grid-cols-1 lg:grid-cols-12 gap-6 items-center transition-colors duration-300">
         
         {/* Información del Bloque */}
         <div className="lg:col-span-4">
-          <span className="inline-block px-4 py-1.5 bg-gray-50 text-gray-700 rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-gray-200/50">
+          <span className="inline-block px-4 py-1.5 bg-pms-surface-high text-pms-text-muted rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-pms-border">
             {t('badge')}
           </span>
-          <h3 className="font-display text-2xl text-gray-900 tracking-tight">
+          <h3 className="font-display text-2xl text-pms-text tracking-tight">
             {t('title')}
           </h3>
-          <p className="font-body text-xs text-gray-400 font-light mt-1">
+          <p className="font-body text-xs text-pms-text-muted font-light mt-1">
             {t('subtitle')}
           </p>
         </div>
@@ -137,23 +143,23 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
         {/* Buscador e Inputs de Filtro */}
         <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Campo de Búsqueda */}
-          <div className="p-3.5 rounded-2xl border border-gray-150 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 transition-all flex items-center gap-2">
-            <Search size={14} className="text-gray-400 shrink-0" />
+          <div className="p-3.5 rounded-2xl border border-pms-border bg-pms-surface-high focus-within:border-pms-accent focus-within:bg-pms-surface focus-within:ring-2 focus-within:ring-pms-accent/15 transition-all flex items-center gap-2">
+            <Search size={14} className="text-pms-text-muted shrink-0" />
             <input 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar Hab. o Huésped..."
-              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-gray-900 placeholder:text-gray-300 outline-none"
+              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-pms-text placeholder:text-pms-text-muted outline-none"
             />
           </div>
 
           {/* Selector de Estado de Limpieza */}
-          <div className="p-3.5 rounded-2xl border border-gray-150 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 transition-all">
+          <div className="p-3.5 rounded-2xl border border-pms-border bg-pms-surface-high focus-within:border-pms-accent focus-within:bg-pms-surface focus-within:ring-2 focus-within:ring-pms-accent/15 transition-all">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-gray-700 font-medium outline-none cursor-pointer"
+              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-pms-text font-medium outline-none cursor-pointer"
             >
               <option value="all">Todas las habitaciones</option>
               <option value="clean">Solo Limpias</option>
@@ -167,18 +173,18 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
         <div className="lg:col-span-3 flex justify-end gap-3 w-full">
           <button
             onClick={handlePrint}
-            className="flex-1 lg:flex-none h-12 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer text-xs font-semibold"
+            className="flex-1 lg:flex-none h-12 px-4 rounded-xl border border-pms-border bg-pms-surface hover:bg-pms-surface-high text-pms-text flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer text-xs font-semibold"
             title="Imprimir reporte del día"
           >
-            <Printer size={14} strokeWidth={1.5} className="text-gray-500" />
+            <Printer size={14} strokeWidth={1.5} className="text-pms-text-muted" />
             Imprimir
           </button>
           <button
             onClick={handleSendEmailReport}
-            className="flex-1 lg:flex-none h-12 px-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer text-xs font-semibold"
+            className="flex-1 lg:flex-none h-12 px-4 rounded-xl border border-pms-border bg-pms-surface hover:bg-pms-surface-high text-pms-text flex items-center justify-center gap-2 transition-all active:scale-95 cursor-pointer text-xs font-semibold"
             title="Enviar reporte por email"
           >
-            <Mail size={14} strokeWidth={1.5} className="text-gray-500" />
+            <Mail size={14} strokeWidth={1.5} className="text-pms-text-muted" />
             Email
           </button>
         </div>
@@ -204,28 +210,30 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
             <div 
               key={room.id}
               className={cn(
-                "bg-white rounded-[2rem] border p-6 transition-all duration-300 flex flex-col justify-between",
-                room.housekeeping_status === 'dirty' ? 'border-orange-100 hover:border-orange-200' : 'border-gray-100 hover:border-accent/40'
+                "bg-pms-surface rounded-[2rem] border p-6 transition-all duration-300 flex flex-col justify-between",
+                room.housekeeping_status === 'dirty' 
+                  ? 'border-orange-500/20 hover:border-orange-500/40' 
+                  : 'border-pms-border hover:border-pms-accent/40'
               )}
             >
               <div>
                 {/* Cabecera de la Tarjeta */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <span className="font-display text-2xl text-gray-900 font-bold">
+                    <span className="font-display text-2xl text-pms-text font-bold">
                       {room.name}
                     </span>
-                    <span className="text-[10px] text-gray-400 font-body font-medium uppercase tracking-wider bg-gray-50 border border-gray-100 px-2.5 py-1 rounded-md">
+                    <span className="text-[10px] text-pms-text-muted font-body font-medium uppercase tracking-wider bg-pms-surface-high border border-pms-border px-2.5 py-1 rounded-md">
                       {room.type}
                     </span>
                   </div>
 
-                  {/* Selector del Estado de Limpieza (Mini Hotel Style) */}
+                  {/* Selector del Estado de Limpieza */}
                   <div className="flex items-center gap-2">
                     <span className={cn(
                       "w-2.5 h-2.5 rounded-full inline-block animate-pulse",
                       room.housekeeping_status === 'clean' ? 'bg-green-500' : 
-                      room.housekeeping_status === 'cleaning' ? 'bg-blue-500' : 'bg-orange-500'
+                      room.housekeeping_status === 'cleaning' ? 'bg-pms-accent' : 'bg-orange-500'
                     )} />
                     <select
                       value={room.housekeeping_status}
@@ -233,8 +241,8 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                       onChange={(e) => onUpdateRoomStatus(room.id, e.target.value as 'clean' | 'dirty' | 'cleaning')}
                       className={cn(
                         "border-none bg-transparent p-0 focus:ring-0 font-body text-xs font-bold uppercase tracking-wider outline-none cursor-pointer",
-                        room.housekeeping_status === 'clean' ? 'text-green-600' : 
-                        room.housekeeping_status === 'cleaning' ? 'text-blue-600' : 'text-orange-600'
+                        room.housekeeping_status === 'clean' ? 'text-green-500' : 
+                        room.housekeeping_status === 'cleaning' ? 'text-pms-accent' : 'text-orange-500'
                       )}
                     >
                       <option value="clean">{t('status.clean')}</option>
@@ -245,15 +253,15 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                 </div>
 
                 {/* Resumen del Huésped */}
-                <div className="py-3 px-4 bg-gray-50/50 rounded-xl border border-gray-100/50 flex items-center justify-between mb-4 text-xs font-body text-gray-600">
+                <div className="py-3 px-4 bg-pms-surface-high/50 rounded-xl border border-pms-border/50 flex items-center justify-between mb-4 text-xs font-body text-pms-text-muted">
                   <div className="flex items-center gap-2">
-                    <User size={13} className="text-gray-400" />
-                    <span className="font-medium text-gray-800">
+                    <User size={13} className="text-pms-text-muted" />
+                    <span className="font-medium text-pms-text">
                       {room.current_occupant || 'Habitación Vacante'}
                     </span>
                   </div>
                   {room.current_occupant && (
-                    <div className="flex items-center gap-1.5 text-gray-400">
+                    <div className="flex items-center gap-1.5 text-pms-text-muted">
                       <Users size={12} />
                       <span>{room.adults_count || 0}a / {room.children_count || 0}n</span>
                     </div>
@@ -263,15 +271,15 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                 {/* Barra de Progreso de Tareas */}
                 {totalTasksCount > 0 && (
                   <div className="space-y-2 mb-4">
-                    <div className="flex justify-between items-center text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest">
+                    <div className="flex justify-between items-center text-[10px] font-body font-bold text-pms-text-muted uppercase tracking-widest">
                       <span>Aseo y Preparación</span>
-                      <span className="text-accent">{completedTasksCount}/{totalTasksCount} {t('tasks_completed_suffix')}</span>
+                      <span className="text-pms-accent">{completedTasksCount}/{totalTasksCount} {t('tasks_completed_suffix')}</span>
                     </div>
-                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-pms-surface-high h-1.5 rounded-full overflow-hidden">
                       <div 
                         className={cn(
                           "h-full transition-all duration-500",
-                          progressPercentage === 100 ? 'bg-green-500' : 'bg-accent'
+                          progressPercentage === 100 ? 'bg-green-500' : 'bg-pms-accent'
                         )}
                         style={{ width: `${progressPercentage}%` }}
                       />
@@ -281,11 +289,11 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
               </div>
 
               {/* Botón para expandir y ver la Lista de Tareas (Checklist) */}
-              <div className="border-t border-gray-50 pt-4 mt-2">
+              <div className="border-t border-pms-border pt-4 mt-2">
                 <button
                   type="button"
                   onClick={() => setExpandedRoomId(isExpanded ? null : room.id)}
-                  className="w-full flex items-center justify-between text-[11px] font-body font-bold text-gray-400 hover:text-gray-600 uppercase tracking-wider transition-colors"
+                  className="w-full flex items-center justify-between text-[11px] font-body font-bold text-pms-text-muted hover:text-pms-text uppercase tracking-wider transition-colors border-none bg-transparent"
                 >
                   <span>Verificar Lista de Tareas</span>
                   {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -310,28 +318,28 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                               className={cn(
                                 "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none text-xs font-body",
                                 task.is_completed 
-                                  ? "bg-green-50/30 border-green-100 text-gray-400 line-through" 
-                                  : "bg-white border-gray-100 text-gray-700 hover:border-accent/40"
+                                  ? "bg-green-500/10 border-green-500/20 text-pms-text-muted line-through" 
+                                  : "bg-pms-surface border-pms-border text-pms-text hover:border-pms-accent/40"
                               )}
                             >
                               <div className={cn(
                                 "w-4.5 h-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all",
                                 task.is_completed 
                                   ? "bg-green-500 border-green-500 text-white" 
-                                  : "border-gray-300"
+                                  : "border-pms-border"
                               )}>
                                 {task.is_completed && <CheckCircle2 size={12} strokeWidth={2.5} />}
                               </div>
                               <span className="flex-1 font-medium">{task.task_name}</span>
                               {task.is_custom && (
-                                <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">
+                                <span className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md">
                                   <AlertCircle size={8} /> Mantenimiento
                                 </span>
                               )}
                             </div>
                           ))
                         ) : (
-                          <p className="text-[10px] text-gray-400 italic text-center py-2">
+                          <p className="text-[10px] text-pms-text-muted italic text-center py-2">
                             No hay tareas de limpieza asociadas a este cuarto hoy.
                           </p>
                         )}
@@ -340,13 +348,13 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                       {/* Input para agregar tarea de mantenimiento personalizada (Solo para roles con privilegios) */}
                       {canManageMaintenance && (
                         <div className="flex gap-2 pt-2">
-                          <div className="flex-1 p-3 rounded-xl border border-gray-150 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-2 focus-within:ring-accent/15 transition-all">
+                          <div className="flex-1 p-3 rounded-xl border border-pms-border bg-pms-surface-high focus-within:border-pms-accent focus-within:bg-pms-surface focus-within:ring-2 focus-within:ring-pms-accent/15 transition-all">
                             <input 
                               type="text"
                               value={newCustomTaskName}
                               onChange={(e) => setNewCustomTaskName(e.target.value)}
                               placeholder={t('add_custom_task_placeholder')}
-                              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-gray-900 placeholder:text-gray-300 outline-none"
+                              className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-pms-text placeholder:text-pms-text-muted outline-none"
                             />
                           </div>
                           <Button
@@ -356,7 +364,7 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                               await onAddCustomTask(room.id, newCustomTaskName.trim());
                               setNewCustomTaskName('');
                             }}
-                            className="px-4 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-body font-semibold transition-all active:scale-95 shrink-0"
+                            className="px-4 bg-pms-accent hover:opacity-90 text-pms-accent-foreground rounded-xl text-xs font-body font-semibold transition-all active:scale-95 shrink-0"
                           >
                             {t('add_button')}
                           </Button>

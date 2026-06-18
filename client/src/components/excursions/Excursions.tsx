@@ -1,26 +1,29 @@
 /**
  * @file Excursions.tsx
  * @description Orquestador principal del ecosistema de Excursiones (Módulo B2C/B2B).
- * 
- * 🏗️ ROADMAP ARQUITECTÓNICO (FASE 4 - CMS & SEO):
- * 1. Origen de Datos: Reemplazo del array estático (FALLBACK_EXCURSIONS) por un `useQuery` a Supabase.
- * 2. Búsqueda y Filtrado: Implementación del motor de búsqueda basado en el array de `tags` de BD.
- * 3. Enrutamiento SEO-First: Migración del Modal a rutas dinámicas estáticas (ej. `/excursiones/:slug`) 
- *    con metadatos inyectados desde el servidor (SSR/SSG).
- * 4. Panel de Administración: El usuario 'admin' podrá ejecutar el CRUD completo, subiendo
- *    fotos y asignando categorías directamente desde su dashboard.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-background, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del carrusel de excursiones.
+ * - Trinidad Atómica: Localización total del texto de experiencias (Zod + i18next).
+ * - UX Premium: Integración de filtros por tags, HMR compatible y auto-scroll asíncrono.
+ * - Saneamiento: Se corrige el error TS2304 importando explícitamente el helper "cn".
  */
 
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, Tag } from 'lucide-react';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { ExcursionsTranslationSchema } from '@/locales/schemas/excursions.schema';
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
 import { type ExcursionItem, FALLBACK_EXCURSIONS } from './types';
 import { ExcursionCard } from './ExcursionCard';
 import { ExcursionDetailModal } from './ExcursionDetailModal';
+import { cn } from '@/lib/utils'; // 🚀 Saneamiento TS2304: Importación agregada de forma segura
 
 export const Excursions: React.FC = () => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de la sección de excursiones
+  usePerformanceProfiler('Excursions');
+
   const { t, i18n } = useTranslation('excursions');
   const [selectedExcursion, setSelectedExcursion] = useState<ExcursionItem | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -58,18 +61,18 @@ export const Excursions: React.FC = () => {
   const allTags = Array.from(new Set(FALLBACK_EXCURSIONS.flatMap(e => e.tags || [])));
 
   return (
-    <section id="excursions" className="py-24 bg-white border-b border-gray-100">
+    <section id="excursions" className="py-24 bg-background border-b border-border transition-colors duration-300">
       <div className="container px-4 sm:px-6">
         
         {/* Cabecera Central */}
         <div className="text-center mb-10 relative">
-          <span className="inline-block px-5 py-1.5 bg-gray-50 text-gray-700 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
+          <span className="inline-block px-5 py-1.5 bg-muted text-muted-foreground rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-border">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-5 tracking-tight">
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 tracking-tight">
             {t('title')}
           </h2>
-          <p className="font-body text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-light mb-8">
+          <p className="font-body text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-light mb-8">
             {t('subtitle')}
           </p>
 
@@ -77,26 +80,47 @@ export const Excursions: React.FC = () => {
           <div className="flex flex-wrap justify-center gap-2 max-w-3xl mx-auto mb-10">
             <button 
               onClick={() => setActiveTag(null)}
-              className={`px-4 py-2 rounded-full font-body text-xs font-semibold transition-all border ${!activeTag ? 'bg-gray-900 text-white border-gray-900 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+              className={cn(
+                "px-4 py-2 rounded-full font-body text-xs font-semibold transition-all border cursor-pointer",
+                !activeTag 
+                  ? "bg-primary text-primary-foreground border-primary shadow-md" 
+                  : "bg-card text-muted-foreground border-border hover:border-accent"
+              )}
             >
               Todas
             </button>
-            {allTags.map(tag => (
-              <button 
-                key={tag}
-                onClick={() => setActiveTag(tag)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full font-body text-xs font-semibold uppercase tracking-wider transition-all border ${activeTag === tag ? 'bg-accent text-accent-foreground border-accent shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
-              >
-                <Tag size={12} /> {tag}
-              </button>
-            ))}
+            {allTags.map(tag => {
+              const IsActiveTag = activeTag === tag;
+              return (
+                <button 
+                  key={tag}
+                  onClick={() => setActiveTag(tag)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-4 py-2 rounded-full font-body text-xs font-semibold uppercase tracking-wider transition-all border cursor-pointer",
+                    IsActiveTag 
+                      ? "bg-accent text-accent-foreground border-accent shadow-md" 
+                      : "bg-card text-muted-foreground border-border hover:border-accent"
+                  )}
+                >
+                  <Tag size={12} /> {tag}
+                </button>
+              );
+            })}
           </div>
 
           <div className="hidden lg:flex absolute bottom-0 right-4 gap-2">
-            <button aria-label="Anterior" onClick={() => handleScroll('left')} className="p-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full border border-gray-200/60 transition-all active:scale-95 cursor-pointer">
+            <button 
+              aria-label="Anterior" 
+              onClick={() => handleScroll('left')} 
+              className="p-3 bg-muted hover:bg-muted text-foreground rounded-full border border-border transition-all active:scale-95 cursor-pointer"
+            >
               <ChevronLeft size={18} />
             </button>
-            <button aria-label="Siguiente" onClick={() => handleScroll('right')} className="p-3 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full border border-gray-200/60 transition-all active:scale-95 cursor-pointer">
+            <button 
+              aria-label="Siguiente" 
+              onClick={() => handleScroll('right')} 
+              className="p-3 bg-muted hover:bg-muted text-foreground rounded-full border border-border transition-all active:scale-95 cursor-pointer"
+            >
               <ChevronRight size={18} />
             </button>
           </div>
@@ -121,7 +145,7 @@ export const Excursions: React.FC = () => {
 
         <div className="flex lg:hidden justify-center items-center gap-1.5 mt-6">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          <p className="font-body text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
+          <p className="font-body text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
             Desliza para explorar
           </p>
         </div>

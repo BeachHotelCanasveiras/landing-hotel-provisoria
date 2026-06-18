@@ -1,14 +1,11 @@
 /**
  * @file AdminDashboard.tsx
- * @description Orquestador Maestro del Panel de Control (PMS & Portales).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA y la lógica de RESERVA POR CATEGORÍA:
- * - Interceptor de Onboarding: Bloqueo perimetral reactivo con refresco en caliente de sesión.
- * - Saneamiento de ESLint v9: Cero aserciones implícitas o explícitas de tipo 'any'.
- * - Smart Identity Manifesto: Reemplazado window.location.reload() por rehidratación silenciosa mediante refreshUser().
- * - Saneado: Integración e inyección atómica de la consola de administración de vouchers y plantillas.
- * - Ciclo Transaccional Inteligente: Auto-asignación de habitación física libre y limpia al hacer Check-In (IN),
- *   y liberación a estado Sucio (dirty) al hacer Check-Out (OUT).
- * - Saneamiento TS2322: Exclusión lógica de reservas sin habitación asignada en el mapa matricial (RoomMatrix).
+ * @description Orquestador Maestro de Paneles de Control (PMS & Portales).
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica: 100% desacoplado de colores rígidos mediante bg-pms-bg, bg-pms-surface y border-pms-border.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
+ * - Trinidad Atómica: Localización total del texto institucional de cabeceras.
+ * - Saneamiento: Cero aserciones implícitas de tipo 'any' para ESLint v9.
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -21,6 +18,8 @@ import { LogOut } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth, type UserRole } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -92,9 +91,13 @@ interface RatesCategory {
 }
 
 export default function AdminDashboard() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia de montaje
+  usePerformanceProfiler('AdminDashboard');
+
   const { t } = useTranslation(['dashboard', 'housekeeping']);
   const [, setLocation] = useLocation();
   const { user, role, signOut, refreshUser, loading: authLoading } = useAuth();
+  const { dashboardTheme } = useTheme(); // Sincronizador de tema reactivo
   const queryClient = useQueryClient();
 
   const [currentView, setCurrentView] = useState<string>('overview');
@@ -391,7 +394,7 @@ export default function AdminDashboard() {
   }, [user, authLoading, setLocation]);
 
   if (authLoading || !user) {
-    return <div className="h-screen w-full flex items-center justify-center bg-gray-50"><Spinner className="w-8 h-8 text-accent animate-spin" /></div>;
+    return <div className="h-screen w-full flex items-center justify-center bg-pms-bg"><Spinner className="w-8 h-8 text-pms-accent animate-spin" /></div>;
   }
 
   // INTERCEPTOR DE ONBOARDING: Fuerza cambio de contraseña y datos personales si es el primer acceso
@@ -414,24 +417,24 @@ export default function AdminDashboard() {
 
   if (isStaff) {
     return (
-      <div className="flex h-screen bg-gray-50 overflow-hidden font-body selection:bg-accent/30">
+      <div className="flex h-screen bg-pms-bg overflow-hidden font-body selection:bg-pms-accent/30" data-dashboard-theme={dashboardTheme}>
         <PMSSidebar currentView={currentView} onNavigate={setCurrentView} onSignOut={signOut} />
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
-          <header className="bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between shrink-0 shadow-sm z-10">
+          <header className="bg-pms-surface border-b border-pms-border px-8 py-4 flex items-center justify-between shrink-0 shadow-sm z-10 transition-colors duration-300">
             <div>
-              <h1 className="font-display text-2xl font-bold text-gray-900 tracking-tight">
-                {currentView === 'overview' ? `Olá, ${user.user_metadata?.full_name?.split(' ')[0] || 'User'}` : 'Gestão do Hotel'}
+              <h1 className="font-display text-2xl font-bold text-pms-text tracking-tight">
+                {currentView === 'overview' ? `Olá, ${user.user_metadata?.full_name?.split(' ')[0] || 'User'}` : t('brand_dashboard_title', { defaultValue: 'Gestão do Hotel' })}
               </h1>
-              <p className="font-body text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">
-                Beach Core PMS • <span className="text-accent">{userRole}</span>
+              <p className="font-body text-[10px] text-pms-text-muted font-bold uppercase tracking-widest mt-0.5">
+                Beach Core PMS • <span className="text-pms-accent">{userRole}</span>
               </p>
             </div>
-            <Avatar className="w-10 h-10 border-2 border-gray-100 shadow-sm cursor-pointer hover:border-accent transition-colors">
+            <Avatar className="w-10 h-10 border-2 border-pms-border shadow-sm cursor-pointer hover:border-pms-accent transition-colors">
               <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-              <AvatarFallback className="bg-gray-900 text-white font-bold">{userInitial}</AvatarFallback>
+              <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
             </Avatar>
           </header>
-          <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50/50">
+          <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-pms-bg transition-colors duration-300">
             <AnimatePresence mode="wait">
               <motion.div 
                 key={currentView} 
@@ -442,8 +445,10 @@ export default function AdminDashboard() {
               >
                 {isGlobalLoading ? (
                   <div className="flex flex-col items-center justify-center min-h-[40vh] opacity-50">
-                    <Spinner className="w-8 h-8 text-accent mb-4 animate-spin" />
-                    <p className="font-body text-[10px] font-bold uppercase tracking-widest">Sincronizando</p>
+                    <Spinner className="w-8 h-8 text-pms-accent mb-4 animate-spin" />
+                    <p className="font-body text-[10px] font-bold uppercase tracking-widest text-pms-text-muted">
+                      {t('loading_sync', { defaultValue: 'Sincronizando' })}
+                    </p>
                   </div>
                 ) : (
                   VIEWS[currentView] || VIEWS.overview
@@ -457,22 +462,24 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-body flex flex-col">
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm">
+    <div className="min-h-screen bg-pms-bg text-pms-text font-body flex flex-col" data-dashboard-theme={dashboardTheme}>
+      <header className="border-b border-pms-border bg-pms-surface sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm transition-colors duration-300">
         <div className="flex items-center gap-4">
-          <div className="w-8 h-8 rounded-lg bg-gray-900 flex items-center justify-center text-white font-brand text-base font-bold shadow-sm">B</div>
-          <span className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">{userRole}</span>
+          <div className="w-8 h-8 rounded-lg bg-pms-accent flex items-center justify-center text-pms-accent-foreground font-brand text-base font-bold shadow-sm">B</div>
+          <span className="text-xs font-bold uppercase tracking-[0.2em] text-pms-text-muted">{userRole}</span>
         </div>
         <div className="flex items-center gap-4">
-          <Avatar className="w-9 h-9 border border-gray-100 shadow-xs">
+          <Avatar className="w-9 h-9 border border-pms-border shadow-xs">
             <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-            <AvatarFallback className="bg-gray-950 text-white font-bold">{userInitial}</AvatarFallback>
+            <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
           </Avatar>
-          <button onClick={() => signOut()} className="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Sair"><LogOut size={20} /></button>
+          <button onClick={() => signOut()} className="p-2 text-pms-text-muted hover:text-red-500 transition-colors border-none bg-transparent" title="Sair"><LogOut size={20} /></button>
         </div>
       </header>
-      <main className="flex-1 container px-6 py-12 max-w-5xl mx-auto">
-        <h2 className="font-display text-4xl text-gray-900 mb-8 tracking-tight">Bienvenido, {user.user_metadata?.full_name || user.email?.split('@')[0]}</h2>
+      <main className="flex-1 container px-6 py-12 max-w-5xl mx-auto transition-colors duration-300">
+        <h2 className="font-display text-4xl text-pms-text mb-8 tracking-tight">
+          {t('welcome_message', { defaultValue: 'Bienvenido' })}, {user.user_metadata?.full_name || user.email?.split('@')[0]}
+        </h2>
         {VIEWS[currentView] || VIEWS.overview}
       </main>
     </div>

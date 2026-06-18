@@ -1,16 +1,18 @@
 /**
  * @file Gallery.tsx
  * @description Sección de Galería de Imágenes (Fase 4 del Embudo: Validación Visual).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
- * - Textos traducidos dinámicamente desde el namespace 'gallery'.
- * - Validación defensiva de esquemas con Zod en DEV.
- * - Tipado estricto e inmutable de assets para prevenir excepciones de runtime.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-popover, bg-muted, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje de la galería y lightbox.
+ * - Saneamiento de ESLint: Cero variables de tipo 'any' mediante el contrato LocalizedGalleryItem.
+ * - Trinidad Atómica: Textos traducidos dinámicamente desde el namespace 'gallery' con validación Zod.
  */
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { GalleryTranslationSchema } from '@/locales/schemas/gallery.schema';
 
 const CLOUDINARY_BASE = "https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto/v1/beach-hotel/";
@@ -20,6 +22,11 @@ interface GalleryImage {
   id: number;
   key: string;
   image: string;
+  title: string;
+  category: string;
+}
+
+interface LocalizedGalleryItem {
   title: string;
   category: string;
 }
@@ -35,6 +42,9 @@ const GALLERY_CONFIG = [
 ];
 
 export default function Gallery() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de la galería
+  usePerformanceProfiler('Gallery');
+
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const { t, i18n } = useTranslation('gallery');
 
@@ -56,24 +66,27 @@ export default function Gallery() {
   const images: GalleryImage[] = GALLERY_CONFIG.map((config) => {
     const rawData = t(`items.${config.key}`, { returnObjects: true });
     const isObject = typeof rawData === 'object' && rawData !== null;
+    
+    // 🚀 Saneamiento ESLint (Zero 'any'): Asignación de contrato limpio y seguro
+    const typedData = isObject ? (rawData as unknown as LocalizedGalleryItem) : null;
 
     return {
       ...config,
-      title: isObject ? (rawData as any).title || '' : '',
-      category: isObject ? (rawData as any).category || '' : '',
+      title: typedData?.title || '',
+      category: typedData?.category || '',
     };
   });
 
   return (
-    <section id="gallery" className="py-20 bg-white">
+    <section id="gallery" className="py-20 bg-background transition-colors duration-300">
       <div className="container px-4">
         
         {/* Cabecera del Bloque */}
         <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4">
+          <span className="inline-block px-4 py-2 bg-accent/10 text-accent rounded-full text-sm font-body font-medium mb-4 border border-accent/20">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4">
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-4">
             {t('title')}
           </h2>
         </div>
@@ -85,7 +98,7 @@ export default function Gallery() {
               key={image.id}
               layoutId={`img-${image.id}`}
               onClick={() => setSelectedImage(image)}
-              className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all bg-gray-100"
+              className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer group shadow-sm hover:shadow-xl transition-all bg-muted"
             >
               <img
                 src={image.image}
@@ -94,9 +107,9 @@ export default function Gallery() {
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-                <div className="text-white">
-                  <p className="font-display text-lg">{image.title}</p>
-                  <p className="font-body text-xs text-white/80 uppercase tracking-widest">{image.category}</p>
+                <div className="text-white text-left">
+                  <p className="font-display text-lg leading-tight mb-1">{image.title}</p>
+                  <p className="font-body text-[10px] text-white/80 uppercase tracking-widest font-semibold">{image.category}</p>
                 </div>
               </div>
             </motion.div>
@@ -115,7 +128,7 @@ export default function Gallery() {
             className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 md:p-10 backdrop-blur-sm"
           >
             <button 
-              className="absolute top-6 right-6 text-white hover:text-blue-400 transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-full p-2"
+              className="absolute top-6 right-6 text-white hover:text-accent transition-colors focus:outline-none focus:ring-2 focus:ring-accent rounded-full p-2 border-none bg-transparent"
               onClick={() => setSelectedImage(null)}
               aria-label="Cerrar vista"
             >

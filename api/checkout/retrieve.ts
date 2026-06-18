@@ -1,16 +1,19 @@
 /**
  * @file retrieve.ts
  * @description Recupera de forma enriquecida y segura los datos de una sesión de Stripe para pre-llenar y mostrar el resumen de compra.
- * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse) y libre de 'any' para ESLint v9.
- * Lógica de RESERVA POR CATEGORÍA:
- * - Desacoplamiento de ID físico: Extrae la categoría de habitación (`room_type`) en lugar del identificador físico.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Lógica de RESERVA POR CATEGORÍA: Extrae la categoría de habitación (room_type) en lugar del identificador físico.
  * - Smart Identity Manifesto: Expande line_items de Stripe para entregar el desglose financiero al cliente.
- * - Criptografía Estricta (ISO 27001): Implementa fallback con descifrado AES-256-GCM sobre la cookie de sesión ante caídas de la API de Stripe.
- * - Lazy Initialization: Evita colapsos de importación ante variables no configuradas en producción.
+ * - Criptografía Estricta (ISO 27001): Fallback con descifrado AES-256-GCM sobre la cookie de sesión ante caídas de la API de Stripe.
+ * - Lazy Initialization: Evita colapsos de cold start ante variables de entorno no configuradas.
+ * - Vercel Serverless (VercelRequest/VercelResponse) + ESLint v9 Compliant.
  */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import crypto from 'crypto';
+import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 // Configuración criptográfica de grado bancario (Sincrónica con session.ts)
 const ALGORITHM = 'aes-256-gcm';
@@ -57,96 +60,139 @@ function decryptData(encryptedText: string): string {
   return decrypted;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
+/**
+ * @function retrieveHandler
+ * @description Handler interno que gestiona la recuperación de sesión de checkout con tracing
+ */
+async function retrieveHandler(
+  req: VercelRequest,
+  res: VercelResponse,
+  context: { traceId: string }
+) {
   const sessionId = req.query.session_id as string;
   
   if (!sessionId) {
     return res.status(400).json({ message: 'Missing session_id' });
   }
 
+  let sessionDetails;
+
   try {
-    let sessionDetails;
+    // 🚀 RUTA A: Intento de consulta en caliente de la API de Stripe
+    const stripe = getStripe();
+    
+    // 📊 Traza de Observabilidad: Registro asíncrono del inicio de llamada a Stripe
+    console.log(
+      JSON.stringify({
+        event: 'RETRIEVE_HOT_STRIPE_QUERY_START',
+        traceId: context.traceId,
+        timestamp: new Date().toISOString(),
+        sessionId,
+      })
+    );
 
-    try {
-      // 🚀 RUTA A: Intento de consulta en caliente de la API de Stripe
-      const stripe = getStripe();
-      const session = await stripe.checkout.sessions.retrieve(sessionId, {
-        expand: ['line_items']
-      });
-      
-      const lineItem = session.line_items?.data[0];
-      const amountTotal = (session.amount_total || 0) / 100;
-      const currency = session.currency?.toUpperCase() || 'BRL';
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items']
+    });
+    
+    const lineItem = session.line_items?.data[0];
+    const amountTotal = (session.amount_total || 0) / 100;
+    const currency = session.currency?.toUpperCase() || 'BRL';
 
-      sessionDetails = {
-        customer_email: session.customer_details?.email,
-        customer_name: session.customer_details?.name || session.metadata?.guest_name || 'Huésped',
-        room_id: null, // Ya no se asocia un cuarto físico a la sesión de pago
-        room_type: session.metadata?.room_type || null, // 🚀 Exponemos la categoría reservada
-        room_name: lineItem?.description || 'Habitación Reservada',
-        check_in: session.metadata?.check_in,
-        check_out: session.metadata?.check_out,
-        total_price: amountTotal,
-        currency: currency,
-        fallback_active: false
-      };
-    } catch (stripeError: unknown) {
-      // 🚀 RUTA B (FALLBACK): Caída de Stripe. Desciframos la Cookie de Intención
-      console.warn('[Retrieve Session] Stripe API inaccesible. Activando redundancia de cookie segura:', stripeError);
+    sessionDetails = {
+      customer_email: session.customer_details?.email,
+      customer_name: session.customer_details?.name || session.metadata?.guest_name || 'Huésped',
+      room_id: null, // Ya no se asocia un cuarto físico a la sesión de pago
+      room_type: session.metadata?.room_type || null, // 🚀 Exponemos la categoría reservada
+      room_name: lineItem?.description || 'Habitación Reservada',
+      check_in: session.metadata?.check_in,
+      check_out: session.metadata?.check_out,
+      total_price: amountTotal,
+      currency: currency,
+      fallback_active: false
+    };
 
-      // Extraer cookie del request (soporta tanto el parser de Vercel como parsing manual defensivo)
-      const rawCookie = req.cookies?.beach_checkout_intent || 
-        req.headers.cookie?.split(';').map(c => c.trim()).find(c => c.startsWith('beach_checkout_intent='))?.split('=')[1];
+    // 📊 Traza de Observabilidad: Registro de éxito de llamada síncrona
+    console.log(
+      JSON.stringify({
+        event: 'RETRIEVE_HOT_STRIPE_QUERY_SUCCESS',
+        traceId: context.traceId,
+        timestamp: new Date().toISOString(),
+        room_type: sessionDetails.room_type,
+        total_price: sessionDetails.total_price,
+      })
+    );
 
-      if (!rawCookie) {
-        throw stripeError; // Si no hay cookie de respaldo, propagamos la falla original de Stripe
-      }
+  } catch (stripeError: unknown) {
+    // 🚀 RUTA B (FALLBACK): Caída de Stripe o exceso de tasa de peticiones. Desciframos la Cookie de Intención
+    console.warn(
+      `[Retrieve Session] [traceId: ${context.traceId}] Stripe API inaccesible. Activando redundancia de cookie segura:`,
+      stripeError instanceof Error ? stripeError.message : stripeError
+    );
 
-      try {
-        const decryptedData = decryptData(decodeURIComponent(rawCookie));
-        // Mapeo contractual estricto libre de 'any'
-        const cart = JSON.parse(decryptedData) as {
-          email: string;
-          guestName: string;
-          roomType: string;
-          roomName: string;
-          checkIn: string;
-          checkOut: string;
-          totalPrice: number;
-          currency: string;
-        };
+    // 📊 Traza de Observabilidad: Registro de activación de la ruta de redundancia local
+    console.log(
+      JSON.stringify({
+        event: 'RETRIEVE_FALLBACK_COOKIE_DECRYPTION_START',
+        traceId: context.traceId,
+        timestamp: new Date().toISOString(),
+      })
+    );
 
-        sessionDetails = {
-          customer_email: cart.email,
-          customer_name: cart.guestName,
-          room_id: null,
-          room_type: cart.roomType || null, // 🚀 Exponemos la categoría en el fallback decrypted
-          room_name: cart.roomName,
-          check_in: cart.checkIn,
-          check_out: cart.checkOut,
-          total_price: cart.totalPrice,
-          currency: cart.currency,
-          fallback_active: true // Sello para monitoreo DevOps
-        };
-      } catch (decryptError) {
-        console.error('[Retrieve Session Error] Fallo al descifrar cookie de intención:', decryptError);
-        throw stripeError; // En caso de corrupción, reportamos el error original
-      }
+    // Extraer cookie del request (soporta tanto el parser de Vercel como parsing manual defensivo)
+    const rawCookie = req.cookies?.beach_checkout_intent || 
+      req.headers.cookie?.split(';').map(c => c.trim()).find(c => c.startsWith('beach_checkout_intent='))?.split('=')[1];
+
+    if (!rawCookie) {
+      throw stripeError; // Si no hay cookie de respaldo, propagamos la falla original de Stripe
     }
 
-    return res.status(200).json(sessionDetails);
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-    console.error('[Retrieve Session Error Critical]:', errorMessage);
-    
-    return res.status(500).json({ 
-      message: errorMessage.includes('no configurada')
-        ? 'Error administrativo de entorno en el servidor.'
-        : errorMessage 
-    });
+    try {
+      const decryptedData = decryptData(decodeURIComponent(rawCookie));
+      
+      // Mapeo contractual estricto libre de 'any'
+      const cart = JSON.parse(decryptedData) as {
+        email: string;
+        guestName: string;
+        roomType: string;
+        roomName: string;
+        checkIn: string;
+        checkOut: string;
+        totalPrice: number;
+        currency: string;
+      };
+
+      sessionDetails = {
+        customer_email: cart.email,
+        customer_name: cart.guestName,
+        room_id: null,
+        room_type: cart.roomType || null, // 🚀 Exponemos la categoría en el fallback decrypted
+        room_name: cart.roomName,
+        check_in: cart.checkIn,
+        check_out: cart.checkOut,
+        total_price: cart.totalPrice,
+        currency: cart.currency,
+        fallback_active: true // Sello para monitoreo DevOps
+      };
+
+      // 📊 Traza de Observabilidad: Finalización de descifrado exitoso
+      console.log(
+        JSON.stringify({
+          event: 'RETRIEVE_FALLBACK_COOKIE_DECRYPTION_SUCCESS',
+          traceId: context.traceId,
+          timestamp: new Date().toISOString(),
+          room_type: sessionDetails.room_type,
+        })
+      );
+
+    } catch (decryptError) {
+      console.error(`[Retrieve Session Error] [traceId: ${context.traceId}] Fallo al descifrar cookie de intención:`, decryptError);
+      throw stripeError; // En caso de corrupción, reportamos el error original
+    }
   }
+
+  return res.status(200).json(sessionDetails);
 }
+
+// 🚀 Exportamos el recuperador de sesión envuelto con nuestro decorador de telemetría y contención
+export default withObservability(retrieveHandler);

@@ -1,11 +1,16 @@
 /**
  * @file Home.tsx
- * @description Página principal optimizada con Lazy Loading (Code Splitting).
- * Implementación de Suspense para mitigar CLS y mejorar el rendimiento de carga inicial.
+ * @description Página principal optimizada con Lazy Loading (Code Splitting) de marca blanca.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y pintura del orquestador principal.
+ * - Trinidad Atómica: Localización total y validación con esquemas Zod en desarrollo.
+ * - Performance: Implementación de Suspense para mitigar CLS y mejorar el rendimiento de carga inicial.
  */
 
 import React, { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Spinner } from "@/components/ui/spinner";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
@@ -25,12 +30,15 @@ const MapView = lazy(() => import("@/components/Map").then(m => ({ default: m.Ma
 
 // Componente fallback ligero para mantener la jerarquía visual
 const SectionFallback = () => (
-  <div className="py-20 flex justify-center">
+  <div className="py-20 flex justify-center bg-transparent">
     <Spinner className="w-8 h-8 text-accent opacity-50" />
   </div>
 );
 
 export default function Home() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del layout principal de la landing
+  usePerformanceProfiler('Home');
+
   const { t, i18n } = useTranslation('home');
 
   if (import.meta.env.DEV) {
@@ -43,7 +51,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
       <Header />
       <main>
         <Hero />
@@ -56,23 +64,23 @@ export default function Home() {
           <Excursions />
         </Suspense>
         
-        <section className="py-20 bg-white border-t border-gray-100">
+        <section className="py-20 bg-background border-t border-border transition-colors duration-300">
           <div className="container px-4">
             <div className="text-center mb-12">
-              <span className="inline-block px-5 py-1.5 bg-gray-100 text-gray-800 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-4">
+              <span className="inline-block px-5 py-1.5 bg-muted text-muted-foreground rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-4 border border-border">
                 {t('map_badge')}
               </span>
-              <h2 className="font-display text-3xl md:text-4xl text-gray-900 mb-4 tracking-tight">
+              <h2 className="font-display text-3xl md:text-4xl text-foreground mb-4 tracking-tight">
                 {t('map_title')}
               </h2>
-              <p className="font-body text-gray-500 max-w-xl mx-auto text-base leading-relaxed">
+              <p className="font-body text-muted-foreground max-w-xl mx-auto text-base leading-relaxed">
                 {t('map_subtitle')}
               </p>
             </div>
             
             <div className="max-w-4xl mx-auto">
-              <Suspense fallback={<div className="w-full h-[400px] bg-gray-100 animate-pulse rounded-[2.5rem]" />}>
-                <MapView className="w-full h-[400px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100" />
+              <Suspense fallback={<div className="w-full h-[400px] bg-muted animate-pulse rounded-[2.5rem] border border-border" />}>
+                <MapView className="w-full h-[400px] md:h-[450px] rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-border" />
               </Suspense>
             </div>
           </div>

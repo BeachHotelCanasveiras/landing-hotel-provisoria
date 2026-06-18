@@ -1,8 +1,10 @@
 /**
  * @file RoomMatrix.tsx
  * @description Matriz interactiva de ocupación (Y: Habitaciones, X: Tiempo).
- * - SaaS Multi-Tenant: Desacoplado de ID o números fijos de habitación.
- * - Algoritmo AI: Calcula asignaciones sin fragmentación de inventario.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica: 100% desacoplado de colores rígidos mediante bg-pms-surface, bg-pms-bg y border-pms-border.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
+ * - Trinidad Atómica: Soporte total para traducciones localizadas (Zod + i18next).
  */
 
 import React, { useState, useMemo } from 'react';
@@ -12,6 +14,7 @@ import { es, enUS, ptBR } from 'date-fns/locale';
 import { Sparkles, CalendarRange, User, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { RoomMatrixTranslationSchema } from '@/locales/schemas/room_matrix.schema';
 
 interface Room {
@@ -41,6 +44,9 @@ export const RoomMatrix: React.FC<RoomMatrixProps> = ({
   bookings,
   onManualAllocate,
 }) => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en matriz bidimensional
+  usePerformanceProfiler('RoomMatrix');
+
   const { t, i18n } = useTranslation('room_matrix');
   const [isAllocating, setIsAllocating] = useState(false);
 
@@ -134,19 +140,19 @@ export const RoomMatrix: React.FC<RoomMatrixProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-6">
+    <div className="bg-pms-surface rounded-[2rem] border border-pms-border p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-6">
       
       {/* Cabecera del Control */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-50 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-pms-border pb-5">
         <div>
-          <span className="inline-block px-4 py-1.5 bg-gray-50 text-gray-700 rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-gray-200/50">
+          <span className="inline-block px-4 py-1.5 bg-pms-surface-high text-pms-text-muted rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-pms-border">
             {t('badge')}
           </span>
-          <h3 className="font-display text-2xl text-gray-900 tracking-tight flex items-center gap-2">
+          <h3 className="font-display text-2xl text-pms-text tracking-tight flex items-center gap-2">
             {t('title')}
-            <CalendarRange size={20} className="text-accent" strokeWidth={1.5} />
+            <CalendarRange size={20} className="text-pms-accent" strokeWidth={1.5} />
           </h3>
-          <p className="font-body text-xs text-gray-400 font-light mt-1">
+          <p className="font-body text-xs text-pms-text-muted font-light mt-1">
             {t('subtitle')}
           </p>
         </div>
@@ -155,25 +161,25 @@ export const RoomMatrix: React.FC<RoomMatrixProps> = ({
         <button
           disabled={isAllocating}
           onClick={() => handleSmartAllocation('double')}
-          className="px-5 py-3.5 bg-gray-900 hover:bg-gray-800 text-white font-body text-xs font-semibold uppercase tracking-wider rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer self-start"
+          className="px-5 py-3.5 bg-pms-accent hover:opacity-90 text-pms-accent-foreground font-body text-xs font-semibold uppercase tracking-wider rounded-xl flex items-center gap-2 shadow-md transition-all active:scale-95 disabled:opacity-50 cursor-pointer self-start border-none"
         >
-          <Sparkles size={14} className="text-accent animate-pulse" />
+          <Sparkles size={14} className="text-pms-accent-foreground animate-pulse" />
           {t('smart_allocate_btn')}
         </button>
       </div>
 
       {/* Rejilla de Ocupación Desplazable (GPU Accelerated) */}
-      <div className="overflow-x-auto rounded-2xl border border-gray-100 scrollbar-thin">
+      <div className="overflow-x-auto rounded-2xl border border-pms-border scrollbar-thin">
         <table className="w-full border-collapse">
           {/* Eje X: Cabecera Temporal de Días */}
           <thead>
-            <tr className="bg-gray-50/50 border-b border-gray-100 text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest">
+            <tr className="bg-pms-surface-high/50 border-b border-pms-border text-[10px] font-body font-bold text-pms-text-muted uppercase tracking-widest">
               <th className="p-4 text-left min-w-[100px]">{t('columns.room')}</th>
               <th className="p-4 text-center min-w-[70px]">{t('columns.type')}</th>
               {timelineDates.map(date => (
-                <th key={date.toISOString()} className="p-3 text-center min-w-[50px] border-l border-gray-100/50">
-                  <span className="block text-gray-900 font-medium">{format(date, 'd')}</span>
-                  <span className="text-[8px] text-gray-400 font-light">{format(date, 'EEE', { locale: currentLocale })}</span>
+                <th key={date.toISOString()} className="p-3 text-center min-w-[50px] border-l border-pms-border">
+                  <span className="block text-pms-text font-medium">{format(date, 'd')}</span>
+                  <span className="text-[8px] text-pms-text-muted font-light">{format(date, 'EEE', { locale: currentLocale })}</span>
                 </th>
               ))}
             </tr>
@@ -183,14 +189,14 @@ export const RoomMatrix: React.FC<RoomMatrixProps> = ({
           <tbody>
             {rooms.length > 0 ? (
               rooms.map(room => (
-                <tr key={room.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/20 transition-colors">
+                <tr key={room.id} className="border-b border-pms-border last:border-0 hover:bg-pms-surface-high/50 transition-colors">
                   {/* Celda de Habitación */}
-                  <td className="p-4 font-display text-base text-gray-900 font-bold">
+                  <td className="p-4 font-display text-base text-pms-text font-bold">
                     {room.name}
                   </td>
                   {/* Celda de Tipo */}
                   <td className="p-3 text-center">
-                    <span className="inline-block px-2 py-0.5 bg-gray-100 text-gray-500 rounded-md text-[9px] font-body font-bold uppercase tracking-wider border border-gray-200/30">
+                    <span className="inline-block px-2 py-0.5 bg-pms-surface-high text-pms-text-muted rounded-md text-[9px] font-body font-bold uppercase tracking-wider border border-pms-border">
                       {room.type}
                     </span>
                   </td>
@@ -214,15 +220,15 @@ export const RoomMatrix: React.FC<RoomMatrixProps> = ({
                         key={dateStr}
                         onClick={() => !activeBooking && onManualAllocate && onManualAllocate(room.id, dateStr)}
                         className={cn(
-                          "p-3 text-center border-l border-gray-100/40 relative min-h-[50px] transition-colors cursor-pointer",
+                          "p-3 text-center border-l border-pms-border relative min-h-[50px] transition-colors cursor-pointer",
                           activeBooking 
-                            ? "bg-primary/10 text-primary border-y border-primary/20" 
-                            : "hover:bg-accent/10"
+                            ? "bg-pms-accent/15 text-pms-text border-y border-pms-accent/30" 
+                            : "hover:bg-pms-accent/10"
                         )}
                       >
                         {isCheckInDay && (
-                          <div className="absolute inset-x-1 top-1 bottom-1 bg-primary text-white rounded-lg flex items-center gap-1.5 px-2 py-1 shadow-sm z-10 overflow-hidden truncate animate-fade-in">
-                            <User size={10} className="text-accent shrink-0" />
+                          <div className="absolute inset-x-1 top-1 bottom-1 bg-pms-accent text-pms-accent-foreground rounded-lg flex items-center gap-1.5 px-2 py-1 shadow-md z-10 overflow-hidden truncate animate-fade-in">
+                            <User size={10} className="text-pms-accent-foreground shrink-0" />
                             <span className="font-body text-[9px] font-semibold tracking-wide truncate">
                               {activeBooking.guest_name}
                             </span>
@@ -235,8 +241,8 @@ export const RoomMatrix: React.FC<RoomMatrixProps> = ({
               ))
             ) : (
               <tr>
-                <td colSpan={17} className="p-12 text-center text-gray-400 font-body text-xs font-light">
-                  <AlertTriangle className="w-8 h-8 text-accent mx-auto mb-3" strokeWidth={1.5} />
+                <td colSpan={17} className="p-12 text-center text-pms-text-muted font-body text-xs font-light">
+                  <AlertTriangle className="w-8 h-8 text-pms-accent mx-auto mb-3" strokeWidth={1.5} />
                   No existen habitaciones dadas de alta en el inventario.
                 </td>
               </tr>

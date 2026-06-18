@@ -1,6 +1,9 @@
 /**
  * @file UserProfileMenu.tsx
  * @description Sub-componente atómico para el menú desplegable del perfil de usuario autenticado.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-popover, bg-muted, border-border, text-foreground y text-destructive de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del menú de perfil de usuario.
  * - UX/UI: Avatar con iniciales de respaldo, saludo personalizado y diseño glassmorphic.
  * - ISO 27001: Rutas de control interno protegidas y cierre seguro de sesión.
  */
@@ -9,6 +12,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, LayoutDashboard } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface UserProfileMenuProps {
@@ -28,6 +32,9 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   onNavigate,
   t,
 }) => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del menú
+  usePerformanceProfiler('UserProfileMenu');
+
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -65,14 +72,14 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
       {/* Botón de Perfil con saludo e imagen de avatar */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer text-left select-none group"
+        className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-muted/10 border border-border hover:border-accent transition-all duration-300 cursor-pointer text-left select-none group"
       >
-        <span className="hidden md:inline font-body text-xs text-gray-300 group-hover:text-white transition-colors tracking-wide font-light">
-          Olá, <span className="font-medium text-white">{firstName}</span>
+        <span className="hidden md:inline font-body text-xs text-muted-foreground group-hover:text-foreground transition-colors tracking-wide font-light">
+          Olá, <span className="font-medium text-foreground">{firstName}</span>
         </span>
-        <Avatar className="w-7 h-7 border border-white/15 shadow-sm">
+        <Avatar className="w-7 h-7 border border-border/30 shadow-sm">
           <AvatarImage src={avatarUrl} alt={fullName} />
-          <AvatarFallback className="bg-gray-950 text-white font-body font-bold text-[10px]">
+          <AvatarFallback className="bg-primary text-primary-foreground font-body font-bold text-[10px]">
             {initials || 'U'}
           </AvatarFallback>
         </Avatar>
@@ -86,13 +93,13 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute right-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl p-1.5 flex flex-col gap-1 shadow-2xl z-50 min-w-[210px] origin-top-right"
+            className="absolute right-0 mt-2 bg-popover/95 backdrop-blur-xl border border-border rounded-2xl p-1.5 flex flex-col gap-1 shadow-2xl z-50 min-w-[210px] origin-top-right"
           >
             {/* Cabecera de Identidad */}
-            <div className="px-3.5 py-2.5 border-b border-white/5 select-none">
+            <div className="px-3.5 py-2.5 border-b border-border/50 select-none">
               <p className="text-[10px] text-accent uppercase tracking-widest font-bold">Sesión Activa</p>
-              <p className="text-xs font-semibold text-white truncate mt-1">{fullName}</p>
-              <p className="text-[10px] text-gray-400 truncate mt-0.5 font-light">{user.email}</p>
+              <p className="text-xs font-semibold text-foreground truncate mt-1">{fullName}</p>
+              <p className="text-[10px] text-muted-foreground truncate mt-0.5 font-light">{user.email}</p>
             </div>
 
             {/* Enlaces de Acción */}
@@ -103,7 +110,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
                   setIsOpen(false);
                   onNavigate('/admin');
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-white/5 text-gray-300 hover:text-white rounded-xl text-[11px] font-body uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground rounded-xl text-[11px] font-body uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer border-none bg-transparent text-left"
               >
                 <LayoutDashboard size={14} strokeWidth={1.5} className="text-accent" />
                 {t('dashboard') || 'Mi Panel'}
@@ -116,7 +123,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
                   await onSignOut();
                   onNavigate('/');
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-xl text-[11px] font-body uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-destructive/10 text-destructive/85 hover:text-destructive rounded-xl text-[11px] font-body uppercase tracking-[0.08em] transition-all duration-200 cursor-pointer border-none bg-transparent text-left"
               >
                 <LogOut size={14} strokeWidth={1.5} />
                 Sair / Salir

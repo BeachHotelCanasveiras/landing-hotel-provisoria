@@ -1,7 +1,9 @@
 /**
  * @file BookingDialog.tsx
  * @description Orquestador principal de reservas de 3 pasos (Calendario -> Datos -> Revisión -> Pago).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA y las normas de rendimiento de React 19:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y las normas de rendimiento de React 19:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y transiciones del motor de reservas.
  * - Cero 'any': Tipado estricto en callbacks, estados y flujos de red.
  * - Saneamiento react-hooks/set-state-in-effect: Sincronización procesada de forma atómica en el manejador de eventos.
  * - Smart SSoT Auto-Hydration: Sistema dinámico de auto-hidratación de 3 capas en tiempo real (Stripe + Guests DB).
@@ -12,7 +14,7 @@
  * - Compacto (Anti-Scroll): Header y cuerpo compactados para dispositivos móviles.
  */
 
-import React, { useState, useEffect, useMemo } from 'react'; // 🚀 Saneado:useMemo importado de forma segura
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { format } from 'date-fns';
 import { es, enUS, ptBR } from 'date-fns/locale'; 
@@ -21,12 +23,13 @@ import { DateRange } from 'react-day-picker';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/contexts/AuthContext'; // Consumo de identidad unificada
-import { StorageService } from '@/lib/storage'; // SSoT Cookie instantánea
+import { useAuth } from '@/contexts/AuthContext'; 
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
+import { StorageService } from '@/lib/storage'; 
 import { BookingTranslationSchema } from '@/locales/schemas/booking.schema';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button"; // 🚀 Saneado: Button importado de forma segura
-import { Spinner } from "@/components/ui/spinner"; // 🚀 Saneado: Spinner importado de forma segura
+import { Button } from "@/components/ui/button"; 
+import { Spinner } from "@/components/ui/spinner"; 
 
 // Importaciones atómicas de sub-componentes (Aparato C.1 y C.2)
 import { BookingDatePicker, BookingDetailsForm } from './booking';
@@ -40,6 +43,9 @@ interface BookingDialogProps {
 }
 
 export default function BookingDialog({ isOpen, onClose, roomName, roomType }: BookingDialogProps) {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del orquestador de reservas
+  usePerformanceProfiler('BookingDialog');
+
   const { t, i18n } = useTranslation(['booking', 'auth']);
   const { user } = useAuth(); // Extraemos la sesión activa de forma síncrona
   
@@ -249,7 +255,7 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
           guestName: `${firstName.trim()} ${lastName.trim()}`,
           email: email.trim(),
           guestsCount,
-          locale: i18n.language // Propagamos el locale activo del cliente para despachar vouchers bilingües
+          locale: i18n.language 
         }),
       });
 
@@ -321,43 +327,42 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* 🚀 showCloseButton={false} inyectado para erradicar el doble botón X */}
-      <DialogContent showCloseButton={false} className="sm:max-w-[400px] p-0 overflow-hidden border-none bg-white rounded-[2.5rem] shadow-2xl z-[100]">
+      <DialogContent showCloseButton={false} className="sm:max-w-[400px] p-0 overflow-hidden border-none bg-card rounded-[2.5rem] shadow-2xl z-[100] transition-colors duration-300">
         
         {/* Encabezado Compactado */}
-        <div className="relative px-5 pt-6 pb-4 border-b border-gray-50 bg-white">
+        <div className="relative px-5 pt-6 pb-4 border-b border-border bg-card">
           <div className="flex items-center justify-between">
             <div className="w-10">
               {step > 1 && (
                 <button 
                   onClick={() => setStep(prev => prev - 1)} 
                   disabled={paymentLoading}
-                  className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50 cursor-pointer"
+                  className="p-2 -ml-2 hover:bg-muted rounded-full transition-all active:scale-90 disabled:opacity-50 cursor-pointer border-none bg-transparent"
                 >
-                  <ChevronLeft size={22} className="text-gray-900" />
+                  <ChevronLeft size={22} className="text-foreground" />
                 </button>
               )}
             </div>
             
             <div className="text-center select-none">
-              <DialogTitle className="font-display text-lg text-gray-900 leading-tight">
+              <DialogTitle className="font-display text-lg text-foreground leading-tight">
                 {step === 1 ? t('step1_title') : step === 2 ? t('step2_title') : 'Revisar Reserva'}
               </DialogTitle>
-              {/* 🚀 Eliminada la redundancia de mostrar "Quarto Single" debajo de "Sua Reserva" */}
             </div>
 
             <div className="w-10 flex justify-end">
               <button 
                 onClick={onClose} 
                 disabled={paymentLoading}
-                className="p-2 -mr-2 hover:bg-gray-100 rounded-full transition-all active:scale-90 disabled:opacity-50 cursor-pointer"
+                className="p-2 -mr-2 hover:bg-muted rounded-full transition-all active:scale-90 disabled:opacity-50 cursor-pointer border-none bg-transparent"
               >
-                <X size={20} className="text-gray-400" />
+                <X size={20} className="text-muted-foreground" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Cuerpo Compactado (Anti-Scroll en móviles: p-4 sm:p-5 y max-h-85vh) */}
+        {/* Cuerpo Compactado (Anti-Scroll en móviles) */}
         <div className="p-4 sm:p-5 max-h-[85vh] overflow-y-auto">
           <AnimatePresence mode="wait" custom={step}>
             {step === 1 ? (
@@ -400,7 +405,6 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   guestsCount={guestsCount}
                   setGuestsCount={setGuestsCount}
                   paymentLoading={paymentLoading}
-                  // 🚀 El submit del formulario de datos ahora avanza al paso 3 de revisión
                   onSubmit={() => {
                     if (validateForm()) {
                       setStep(3);
@@ -408,10 +412,10 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   }}
                   onSocialLogin={handleSocialLogin}
                   t={t}
-                  isLoggedIn={!!user} // Identifica estado de sesión activo
-                  isBookForSomeoneElse={isBookForSomeoneElse} // Pasa el estado reactivo
-                  setIsBookForSomeoneElse={handleToggleBookForSomeoneElse} // Manejador de eventos libre de useEffect
-                  submitLabel="Revisar Reserva" // 🚀 Etiqueta CRO para continuar al resumen
+                  isLoggedIn={!!user} 
+                  isBookForSomeoneElse={isBookForSomeoneElse} 
+                  setIsBookForSomeoneElse={handleToggleBookForSomeoneElse} 
+                  submitLabel="Revisar Reserva" 
                 />
               </motion.div>
             ) : (
@@ -425,24 +429,23 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                 exit="exit"
                 className="space-y-4 text-left font-body"
               >
-                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-150 space-y-2.5">
-                  <div className="flex items-center gap-2 border-b border-gray-200/50 pb-2 mb-1">
+                <div className="p-4 bg-muted rounded-2xl border border-border space-y-2.5">
+                  <div className="flex items-center gap-2 border-b border-border pb-2 mb-1">
                     <ClipboardCheck size={14} className="text-accent" />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Resumen de Cotización</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Resumen de Cotización</span>
                   </div>
 
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">Alojamiento</span>
-                    <span className="font-semibold text-gray-900">{roomName}</span>
+                    <span className="text-muted-foreground">Alojamiento</span>
+                    <span className="font-semibold text-foreground">{roomName}</span>
                   </div>
                   
                   <div className="flex justify-between items-center text-xs">
-                    {/* 🚀 Saneado: El icono Calendar se inyecta al lado de la etiqueta Periodo, resolviendo la advertencia de no-unused-vars */}
-                    <span className="text-gray-500 flex items-center gap-1.5">
-                      <Calendar size={12} className="text-gray-400" />
+                    <span className="text-muted-foreground flex items-center gap-1.5">
+                      <Calendar size={12} className="text-muted-foreground" />
                       Periodo
                     </span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-foreground">
                       {range?.from && range?.to 
                         ? `${format(range.from, 'dd/MM/yyyy')} al ${format(range.to, 'dd/MM/yyyy')} (${nightsCount} ${nightsCount === 1 ? 'noche' : 'noches'})` 
                         : ''}
@@ -450,22 +453,22 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   </div>
 
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">Pasajero principal</span>
-                    <span className="font-semibold text-gray-900 truncate max-w-[170px]">
+                    <span className="text-muted-foreground">Pasajero principal</span>
+                    <span className="font-semibold text-foreground truncate max-w-[170px]">
                       {firstName} {lastName}
                     </span>
                   </div>
 
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">Huéspedes</span>
-                    <span className="font-semibold text-gray-900">
+                    <span className="text-muted-foreground">Huéspedes</span>
+                    <span className="font-semibold text-foreground">
                       {guestsCount} {guestsCount === '1' ? 'persona' : 'personas'}
                     </span>
                   </div>
 
                   {roomPrice && nightsCount > 0 && (
-                    <div className="flex justify-between items-center pt-2.5 border-t border-dashed border-gray-200">
-                      <span className="text-gray-900 font-bold text-xs">Importe Total</span>
+                    <div className="flex justify-between items-center pt-2.5 border-t border-dashed border-border">
+                      <span className="text-foreground font-bold text-xs">Importe Total</span>
                       <span className="text-base font-display font-bold text-accent">
                         R$ {(roomPrice * nightsCount).toFixed(2)}
                       </span>
@@ -473,18 +476,18 @@ export default function BookingDialog({ isOpen, onClose, roomName, roomType }: B
                   )}
                 </div>
 
-                <div className="bg-blue-50/30 p-3.5 rounded-2xl flex items-start gap-2.5 border border-blue-100/50 text-[10px] text-blue-800 leading-relaxed font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5 animate-pulse" />
+                <div className="bg-accent/10 p-3.5 rounded-2xl flex items-start gap-2.5 border border-accent/20 text-[10px] text-foreground leading-relaxed font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 mt-1.5 animate-pulse" />
                   Al proceder al pago, te redirigiremos a Stripe para completar el cobro mediante tarjeta de forma 100% encriptada.
                 </div>
 
                 <Button
                   disabled={paymentLoading}
                   onClick={handleStripePayment}
-                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-body font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                  className="w-full h-12 bg-primary hover:opacity-90 text-primary-foreground rounded-full text-xs font-body font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 border-none"
                 >
                   {paymentLoading ? (
-                    <Spinner className="w-5 h-5 text-white" />
+                    <Spinner className="w-5 h-5 text-primary-foreground" />
                   ) : (
                     "Proceder ao Pagamento"
                   )}

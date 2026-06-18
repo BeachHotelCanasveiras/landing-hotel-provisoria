@@ -12,7 +12,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
+/* ============================================================================
+   🎨 CAPA DE EXTENSIÓN DE TOKENS (Tailwind CSS v4 Standard @theme)
+   ============================================================================ */
+@theme {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -54,10 +57,20 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* 🏨 TOKENS SEMÁNTICOS EXCLUSIVOS DEL PMS (Módulo SaaS Multitema) */
+  --color-pms-bg: var(--pms-bg);
+  --color-pms-surface: var(--pms-surface);
+  --color-pms-surface-high: var(--pms-surface-high);
+  --color-pms-border: var(--pms-border);
+  --color-pms-text: var(--pms-text);
+  --color-pms-text-muted: var(--pms-text-muted);
+  --color-pms-accent: var(--pms-accent);
+  --color-pms-accent-foreground: var(--pms-accent-foreground);
 }
 
 :root {
-  /* Colores del Diseño Ejecutivo Costero */
+  /* Colores del Diseño Ejecutivo Costero (Landing Page Base) */
   --primary: #2C3539; /* Gris Antracita Elegante (Quiet Luxury) */
   --primary-foreground: #FFFFFF;
   --sidebar-primary: #2C3539;
@@ -94,6 +107,7 @@
 }
 
 .dark {
+  /* Modo Oscuro Global (Landing Page Base) */
   --primary: oklch(0.35 0.01 260); /* Gris oscuro elegante */
   --primary-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.35 0.01 260);
@@ -127,6 +141,99 @@
   --sidebar-border: oklch(0.274 0.006 286.033);
   --sidebar-ring: oklch(0.35 0.01 260);
 }
+
+/* ============================================================================
+   🔒 CAPA DE ÁMBITO (SCOPED) MULTITEMA DEL PMS DASHBOARD
+   ============================================================================ */
+
+/* 1. TEMA: Default Light (Lujo Ejecutivo Diurno) */
+[data-dashboard-theme="light"] {
+  --pms-bg: #F9FAFB;
+  --pms-surface: #FFFFFF;
+  --pms-surface-high: #F3F4F6;
+  --pms-border: #E5E7EB;
+  --pms-text: #111827;
+  --pms-text-muted: #6B7280;
+  --pms-accent: #0F3B66;
+  --pms-accent-foreground: #FFFFFF;
+}
+
+/* 2. TEMA: Sovereign Dark (Refugio Nocturno Costero) */
+[data-dashboard-theme="sovereign-dark"] {
+  --pms-bg: #0D0E10;
+  --pms-surface: #141517;
+  --pms-surface-high: #1F2124;
+  --pms-border: #2C2E33;
+  --pms-text: #F3F4F6;
+  --pms-text-muted: #9CA3AF;
+  --pms-accent: #D4A574;
+  --pms-accent-foreground: #141517;
+}
+
+/* 3. TEMA: Gemini Dark (Consola High-Tech AI Studio) */
+[data-dashboard-theme="gemini-dark"] {
+  --pms-bg: #131314;
+  --pms-surface: #1E1E1F;
+  --pms-surface-high: #2B2B2C;
+  --pms-border: #2C2E30;
+  --pms-text: #F3F3F3;
+  --pms-text-muted: #9E9E9F;
+  --pms-accent: #4285F4;
+  --pms-accent-foreground: #FFFFFF;
+}
+
+/* ============================================================================
+   ✨ COMPONENTES Y UTILIDADES GRÁFICAS DE GÉNESIS (GEMINI STYLE)
+   ============================================================================ */
+
+@property --upgrade-card-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate-upgrade-card-border {
+  to {
+    --upgrade-card-angle: 360deg;
+  }
+}
+
+/* Contenedor con borde cónico interactivo Gemini */
+.gemini-gradient-border {
+  --conic-blue-color: rgba(66, 133, 244, 0.35);
+  --conic-green-color: rgba(26, 166, 74, 0.3);
+  --conic-yellow-color: rgba(252, 189, 0, 0.3);
+  --conic-red-color: rgba(219, 55, 45, 0.3);
+  background: conic-gradient(
+    from var(--upgrade-card-angle) at 50% 50%,
+    var(--pms-border) 0deg,
+    var(--pms-border) 69deg,
+    var(--conic-blue-color) 115deg,
+    var(--conic-green-color) 193deg,
+    var(--pms-border) 270deg,
+    var(--conic-yellow-color) 291deg,
+    var(--conic-red-color) 322deg,
+    var(--pms-border) 360deg
+  );
+  animation: rotate-upgrade-card-border 30s linear infinite;
+  transition: 
+    --conic-blue-color 0.6s ease-in-out,
+    --conic-green-color 0.6s ease-in-out,
+    --conic-yellow-color 0.6s ease-in-out,
+    --conic-red-color 0.6s ease-in-out;
+}
+
+.gemini-gradient-border:hover {
+  --conic-blue-color: #4285f4;
+  --conic-green-color: #1aa64a;
+  --conic-yellow-color: #fcbd00;
+  --conic-red-color: #db372d;
+  animation-duration: 8s;
+}
+
+/* ============================================================================
+   BASE DE ELEMENTOS (HTML GLOBAL)
+   ============================================================================ */
 
 @layer base {
   * {

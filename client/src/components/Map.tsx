@@ -1,12 +1,17 @@
 /**
  * @file Map.tsx
  * @description Aparato de Geolocalización Interactiva con carga diferida.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y carga diferida del iframe de Google Maps.
+ * - Trinidad Atómica: Localización total del texto del cargador de mapa (home namespace).
  * - Performance: Utiliza IntersectionObserver para carga "just-in-time".
- * - UX: Marco decorativo con profundidad (Soft-UI) para mejorar la UX.
  * - Seguridad: Cero 'any', tipado estricto con namespace de Google Maps.
  */
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { usePerformanceProfiler } from "@/hooks/usePerformanceProfiler";
 import { cn } from "@/lib/utils";
 import { HOTEL_CONFIG } from "@/const";
 import { Spinner } from "@/components/ui/spinner";
@@ -22,6 +27,10 @@ export function MapView({
   initialZoom = 17,
   onMapReady,
 }: MapViewProps) {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de mapas
+  usePerformanceProfiler('MapView');
+
+  const { t } = useTranslation('home');
   const [iframeLoading, setIframeLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const mapRef = useRef<HTMLDivElement>(null);
@@ -51,15 +60,17 @@ export function MapView({
     : `https://maps.google.com/maps?q=${addressQuery}&t=&z=${initialZoom}&ie=UTF8&iwloc=&output=embed`;
 
   return (
-    <div ref={mapRef} className={cn("p-2 bg-white rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100", className)}>
-      <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden bg-gray-100">
+    <div ref={mapRef} className={cn("p-2 bg-card rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-border transition-colors duration-300", className)}>
+      <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden bg-muted">
         
         {isVisible ? (
           <>
             {iframeLoading && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50/90 z-10">
-                <Spinner className="text-primary w-8 h-8 mb-3" />
-                <p className="font-body text-xs text-gray-400 tracking-widest uppercase">Cargando mapa...</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted/90 z-10">
+                <Spinner className="text-accent w-8 h-8 mb-3" />
+                <p className="font-body text-xs text-muted-foreground tracking-widest uppercase">
+                  {t('loading_map', { defaultValue: 'Cargando mapa...' })}
+                </p>
               </div>
             )}
             <iframe
@@ -76,7 +87,7 @@ export function MapView({
             />
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             <Spinner className="w-6 h-6" />
           </div>
         )}

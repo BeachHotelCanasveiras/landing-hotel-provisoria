@@ -1,12 +1,14 @@
 /**
  * @file useBlockedDates.ts
  * @description Hook de alto rendimiento para calcular fechas bloqueadas en base al inventario de Supabase.
- * Lógica Heurística por Categoría: Bloquea un día si y solo si:
- *   Nº de Reservas Activas de Categoría (día D) >= Total de Habitaciones Físicas de esa categoría (N).
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Algoritmo de Rendimiento (Yield Correction): Resta un día a la fecha de salida (subDays) para liberar el check-out y evitar fugas de conversión.
+ * - Observabilidad: Monitoreo de latencia de red en la resolución de base de datos de Supabase.
+ * - Saneamiento: Tipado estricto e inmaculado para evitar advertencias en ESLint v9.
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { eachDayOfInterval, parseISO, format } from 'date-fns';
+import { eachDayOfInterval, parseISO, format, subDays } from 'date-fns'; // 🚀 Saneado: subDays importado para lógica de noches
 import { supabase } from '@/lib/supabase';
 
 interface BookingDbRow {
@@ -18,6 +20,8 @@ export function useBlockedDates(roomType: string) {
   return useQuery<Date[]>({
     queryKey: ['blocked-dates', roomType],
     queryFn: async () => {
+      const startTimer = performance.now();
+
       // 1. Obtener la capacidad total de habitaciones físicas de esta categoría (excluyendo solo fuera de servicio)
       const { count: totalRooms, error: countError } = await supabase
         .from('rooms')
@@ -41,20 +45,25 @@ export function useBlockedDates(roomType: string) {
         return [];
       }
 
-      // 3. Heurística de Ocupación: Contar reservas por cada fecha individual
+      // 3. Heurística de Ocupación: Contar reservas por cada fecha individual (Noches de estadía)
       const dateOccupancyMap: Record<string, number> = {};
 
       (bookings as unknown as BookingDbRow[]).forEach((b) => {
         const start = parseISO(b.check_in);
         const end = parseISO(b.check_out);
         
-        // Obtenemos todos los días intermedios de la estancia
-        const days = eachDayOfInterval({ start, end });
+        // 🚀 CORRECCIÓN DE RENDIMIENTO: Restamos un día a la salida. El día de check-out queda libre para ingresos.
+        const endOfNights = subDays(end, 1);
         
-        days.forEach((day) => {
-          const dateStr = format(day, 'yyyy-MM-dd');
-          dateOccupancyMap[dateStr] = (dateOccupancyMap[dateStr] || 0) + 1;
-        });
+        // Evitar inconsistencias de intervalos inversos si la reserva es de una sola noche
+        if (endOfNights >= start) {
+          const days = eachDayOfInterval({ start, end: endOfNights });
+          
+          days.forEach((day) => {
+            const dateStr = format(day, 'yyyy-MM-dd');
+            dateOccupancyMap[dateStr] = (dateOccupancyMap[dateStr] || 0) + 1;
+          });
+        }
       });
 
       // 4. Bloquear solo los días donde la ocupación llegó al límite físico de la categoría
@@ -64,6 +73,15 @@ export function useBlockedDates(roomType: string) {
           blockedDates.push(parseISO(dateStr));
         }
       });
+
+      const duration = performance.now() - startTimer;
+      
+      // 📊 Registro de telemetría pasiva para auditoría de base de datos
+      if (import.meta.env.DEV) {
+        console.warn(
+          `[Blocked Dates Query] Base de datos de Supabase consultada en: ${duration.toFixed(3)}ms para categoría: ${roomType}`
+        );
+      }
 
       return blockedDates;
     },

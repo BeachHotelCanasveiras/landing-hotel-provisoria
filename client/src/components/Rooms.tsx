@@ -1,17 +1,20 @@
 /**
  * @file Rooms.tsx
  * @description Catálogo de Habitaciones (Fase 3 del Embudo: Decisión).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border, bg-primary y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del catálogo de habitaciones.
  * - Saneamiento completo de tipos: Libre de 'any' para ESLint v9.
  * - Inyección visual de mini-iconos responsivos al lado de cada píldora de amenities.
  * - Implementa la TÁCTICA HÍBRIDA móvil (Snap-Scroll horizontal en celulares).
- * - Textos mapeados dinámicamente desde el namespace 'rooms' de i18next.
+ * - Textos mapped dinámicamente desde el namespace 'rooms' de i18next.
  * - Validación estructural estricta con Zod (RoomsTranslationSchema).
  */
 
 import { useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Button } from '@/components/ui/button';
 import { 
   AirVent, Wifi, Coffee, GlassWater, BedDouble, Bed, 
@@ -57,8 +60,6 @@ const ROOMS_CONFIG: RoomConfig[] = [
 /**
  * @function getAmenityIcon
  * @description Mapeador de precisión bilingüe para inyectar mini-iconos de alta definición.
- * @param {string} amenityText - Texto localizado del amenity.
- * @returns {React.ReactElement} Icono SVG de Lucide React de 12px de ancho.
  */
 const getAmenityIcon = (amenityText: string): React.ReactElement => {
   const text = amenityText.toLowerCase();
@@ -107,11 +108,14 @@ const itemVariants: Variants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export default function Rooms() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del catálogo de habitaciones
+  usePerformanceProfiler('Rooms');
+
   const [selectedRoom, setSelectedRoom] = useState<{ id: number; type: string; name: string } | null>(null);
   const { t, i18n } = useTranslation('rooms');
 
@@ -142,7 +146,7 @@ export default function Rooms() {
   });
 
   return (
-    <section id="rooms" className="py-24 bg-gray-50/50">
+    <section id="rooms" className="py-24 bg-muted/50 transition-colors duration-300">
       <div className="container px-4 sm:px-6">
         
         {/* Cabecera */}
@@ -153,11 +157,11 @@ export default function Rooms() {
           viewport={{ once: true }} 
           className="text-center mb-16"
         >
-          <span className="inline-block px-5 py-1.5 bg-gray-100 text-gray-800 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
+          <span className="inline-block px-5 py-1.5 bg-muted text-muted-foreground rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-border">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-5 tracking-tight">{t('title')}</h2>
-          <p className="font-body text-gray-500 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">{t('subtitle')}</p>
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 tracking-tight">{t('title')}</h2>
+          <p className="font-body text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">{t('subtitle')}</p>
         </motion.div>
 
         {/* CONTENEDOR HÍBRIDO ADAPTATIVO (Mobile: Snap-Scroll / Desktop: Grid de 4 columnas) */}
@@ -173,10 +177,10 @@ export default function Rooms() {
               key={room.id} 
               variants={itemVariants} 
               whileHover={{ y: -8 }} 
-              className="min-w-[280px] sm:min-w-[320px] lg:min-w-0 snap-center bg-white rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] transition-all duration-500 flex flex-col justify-between border border-gray-100"
+              className="min-w-[280px] sm:min-w-[320px] lg:min-w-0 snap-center bg-card rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.03)] transition-all duration-500 flex flex-col justify-between border border-border"
             >
               <div>
-                <div className="relative h-60 overflow-hidden bg-gray-100">
+                <div className="relative h-60 overflow-hidden bg-muted">
                   <motion.img 
                     src={room.image} 
                     alt={room.name} 
@@ -186,14 +190,14 @@ export default function Rooms() {
                     transition={{ duration: 0.6 }} 
                   />
                   <div className="absolute top-4 left-4">
-                    <span className="bg-white/90 backdrop-blur-md text-gray-900 px-3 py-1 rounded-full text-[10px] font-body font-medium uppercase tracking-wider shadow-sm">
+                    <span className="bg-card/90 backdrop-blur-md text-foreground px-3 py-1 rounded-full text-[10px] font-body font-medium uppercase tracking-wider shadow-sm">
                       {room.type === 'grupal' ? t('special_badge') : t('discount_badge')}
                     </span>
                   </div>
                 </div>
                 <div className="p-8 pb-0">
-                  <h3 className="font-display text-2xl text-gray-900 mb-3 tracking-tight">{room.name}</h3>
-                  <p className="font-body text-sm text-gray-500 mb-6 leading-relaxed line-clamp-3">{room.description}</p>
+                  <h3 className="font-display text-2xl text-foreground mb-3 tracking-tight">{room.name}</h3>
+                  <p className="font-body text-sm text-muted-foreground mb-6 leading-relaxed line-clamp-3">{room.description}</p>
                   
                   {/* Píldoras de Amenities Saneadas e Iconizadas */}
                   <div className="mb-6">
@@ -201,7 +205,7 @@ export default function Rooms() {
                       {room.amenities.slice(0, 3).map((amenity: string, i: number) => (
                         <span 
                           key={i} 
-                          className="inline-flex items-center gap-1.5 text-[10px] bg-gray-50 text-gray-600 px-2.5 py-1 rounded-md font-body font-medium border border-gray-100 select-none"
+                          className="inline-flex items-center gap-1.5 text-[10px] bg-muted text-muted-foreground px-2.5 py-1 rounded-md font-body font-medium border border-border select-none"
                         >
                           {getAmenityIcon(amenity)}
                           {amenity}
@@ -211,17 +215,17 @@ export default function Rooms() {
                   </div>
                 </div>
               </div>
-              <div className="p-8 pt-4 border-t border-gray-50 flex items-center justify-between mt-auto bg-gray-50/20">
+              <div className="p-8 pt-4 border-t border-border flex items-center justify-between mt-auto bg-muted/20">
                 <div className="flex flex-col">
-                  <span className="font-body text-[9px] font-bold text-gray-400 uppercase tracking-widest">{t('availability_label')}</span>
-                  <span className="font-body text-xs text-green-600 font-medium mt-1 flex items-center gap-2">
+                  <span className="font-body text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{t('availability_label')}</span>
+                  <span className="font-body text-xs text-green-500 font-medium mt-1 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
                     {t('active_status')}
                   </span>
                 </div>
                 <Button 
                   onClick={() => setSelectedRoom({ id: room.id, type: room.type, name: room.name })} 
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-6 py-4 font-body text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                  className="bg-primary hover:opacity-90 text-primary-foreground rounded-full px-6 py-4 font-body text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer border-none"
                 >
                   {t('book_button')}
                 </Button>
@@ -233,7 +237,7 @@ export default function Rooms() {
         {/* Indicador de ayuda táctil para móviles */}
         <div className="flex lg:hidden justify-center items-center gap-1.5 mt-4">
           <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          <p className="font-body text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
+          <p className="font-body text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
             Desliza para ver más habitaciones
           </p>
         </div>

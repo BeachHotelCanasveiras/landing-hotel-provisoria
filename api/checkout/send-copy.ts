@@ -1,14 +1,18 @@
 /**
  * @file send-copy.ts
  * @description Endpoint seguro para encolar de forma asíncrona un duplicado del comprobante de reserva a un email alternativo.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
  * - ISO 27001: Verificación de sesión e inserción inmutable en la cola de salida para entrega diferida (Outbox Pattern).
  * - PCI-DSS: Recuperación de datos desde Stripe sin almacenamiento de credenciales.
  * - Trinity Atómica (i18n SSoT): Consulta y compila dinámicamente la plantilla oficial desde public.email_templates en base al locale del huésped.
  * - Saneado: Satisface ESLint v9 (cero 'any') y cuenta con lazy-initialization contra colapsos de importación.
  */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 let stripeInstance: Stripe | null = null;
 let supabaseInstance: SupabaseClient | null = null;
@@ -103,11 +107,15 @@ const DEFAULT_FALLBACK_HTML = `
   </html>
 `;
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
+/**
+ * @function sendCopyHandler
+ * @description Handler interno que gestiona el encolamiento asíncrono de un comprobante alternativo con tracing
+ */
+async function sendCopyHandler(
+  req: VercelRequest,
+  res: VercelResponse,
+  context: { traceId: string }
+) {
   const { sessionId, alternativeEmail } = req.body;
 
   if (!sessionId || !alternativeEmail) {
@@ -119,78 +127,107 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ message: 'La dirección de correo electrónico provista es inválida.' });
   }
 
-  try {
-    const stripe = getStripe();
-    const supabase = getSupabase();
+  // 📊 Traza de Observabilidad: Inicio de consulta de sesión en Stripe
+  console.log(
+    JSON.stringify({
+      event: 'SEND_COPY_START',
+      traceId: context.traceId,
+      timestamp: new Date().toISOString(),
+      sessionId,
+      alternativeEmail,
+    })
+  );
 
-    // 1. Recuperar datos desde Stripe de forma segura
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['line_items']
-    });
+  const stripe = getStripe();
+  const supabase = getSupabase();
 
-    const guestName = session.metadata?.guest_name || 'Huésped';
-    const checkIn = session.metadata?.check_in || 'N/A';
-    const checkOut = session.metadata?.check_out || 'N/A';
-    const roomName = session.line_items?.data[0]?.description || 'Habitación Reservada';
-    const amountTotal = (session.amount_total || 0) / 100;
-    const currency = session.currency?.toUpperCase() || 'BRL';
-    
-    // Recuperar el locale almacenado de forma inmutable en la metadata
-    const locale = session.metadata?.locale || 'es-ES';
+  // 1. Recuperar datos desde Stripe de forma segura
+  const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    expand: ['line_items']
+  });
 
-    // Calcular noches
-    let nights = 1;
-    if (checkIn !== 'N/A' && checkOut !== 'N/A') {
-      const start = new Date(`${checkIn}T00:00:00`);
-      const end = new Date(`${checkOut}T00:00:00`);
-      nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
-    }
+  const guestName = session.metadata?.guest_name || 'Huésped';
+  const checkIn = session.metadata?.check_in || 'N/A';
+  const checkOut = session.metadata?.check_out || 'N/A';
+  const roomName = session.line_items?.data[0]?.description || 'Habitación Reservada';
+  const amountTotal = (session.amount_total || 0) / 100;
+  const currency = session.currency?.toUpperCase() || 'BRL';
+  
+  // Recuperar el locale almacenado de forma inmutable en la metadata
+  const locale = session.metadata?.locale || 'es-ES';
 
-    // 2. CONSULTA DILIGENTE DE LA PLANTILLA LOCALIZADA EN BASE DE DATOS
-    const { data: dbTemplate } = await supabase
-      .from('email_templates')
-      .select('subject, html_body')
-      .eq('id', 'alternative_receipt')
-      .eq('locale', locale)
-      .maybeSingle();
-
-    let finalSubject = dbTemplate?.subject || `Comprobante de Reserva: ${roomName} - Hotel Beach`;
-    let finalHtml = dbTemplate?.html_body || DEFAULT_FALLBACK_HTML;
-
-    // 3. REEMPLAZO Y COMPILACIÓN ATÓMICA DE VARIABLES
-    const replacements: Record<string, string> = {
-      guest_name: guestName,
-      room_name: roomName,
-      check_in: checkIn,
-      check_out: checkOut,
-      nights: nights.toString(),
-      total_price: `${currency} ${amountTotal.toFixed(2)}`
-    };
-
-    Object.entries(replacements).forEach(([key, val]) => {
-      finalSubject = finalSubject.replace(new RegExp(`{{${key}}}`, 'g'), val);
-      finalHtml = finalHtml.replace(new RegExp(`{{${key}}}`, 'g'), val);
-    });
-
-    // 4. Encolar síncronamente en public.email_queue para envío asíncrono robusto
-    const { error: queueError } = await supabase
-      .from('email_queue')
-      .insert([{
-        recipient_email: alternativeEmail.trim(),
-        subject: finalSubject,
-        html_content: finalHtml,
-        status: 'pending',
-        attempts: 0,
-        max_attempts: 3,
-        scheduled_at: new Date().toISOString()
-      }]);
-
-    if (queueError) throw queueError;
-
-    return res.status(200).json({ success: true, message: 'Copia del voucher encolada con éxito.' });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Error al procesar la solicitud.';
-    console.error('[Send Copy Error Critical]:', msg);
-    return res.status(500).json({ message: 'Error interno al procesar el envío de la copia.' });
+  // Calcular noches
+  let nights = 1;
+  if (checkIn !== 'N/A' && checkOut !== 'N/A') {
+    const start = new Date(`${checkIn}T00:00:00`);
+    const end = new Date(`${checkOut}T00:00:00`);
+    nights = Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24));
   }
+
+  // 2. CONSULTA DILIGENTE DE LA PLANTILLA LOCALIZADA EN BASE DE DATOS
+  // 📊 Traza de Observabilidad: Consulta de la plantilla en Supabase
+  console.log(
+    JSON.stringify({
+      event: 'SEND_COPY_DB_TEMPLATE_QUERY',
+      traceId: context.traceId,
+      timestamp: new Date().toISOString(),
+      locale,
+    })
+  );
+
+  const { data: dbTemplate } = await supabase
+    .from('email_templates')
+    .select('subject, html_body')
+    .eq('id', 'alternative_receipt')
+    .eq('locale', locale)
+    .maybeSingle();
+
+  let finalSubject = dbTemplate?.subject || `Comprobante de Reserva: ${roomName} - Hotel Beach`;
+  let finalHtml = dbTemplate?.html_body || DEFAULT_FALLBACK_HTML;
+
+  // 3. REEMPLAZO Y COMPILACIÓN ATÓMICA DE VARIABLES
+  const replacements: Record<string, string> = {
+    guest_name: guestName,
+    room_name: roomName,
+    check_in: checkIn,
+    check_out: checkOut,
+    nights: nights.toString(),
+    total_price: `${currency} ${amountTotal.toFixed(2)}`
+  };
+
+  Object.entries(replacements).forEach(([key, val]) => {
+    finalSubject = finalSubject.replace(new RegExp(`{{${key}}}`, 'g'), val);
+    finalHtml = finalHtml.replace(new RegExp(`{{${key}}}`, 'g'), val);
+  });
+
+  // 4. Encolar síncronamente en public.email_queue para envío asíncrono robusto
+  const { error: queueError } = await supabase
+    .from('email_queue')
+    .insert([{
+      recipient_email: alternativeEmail.trim(),
+      subject: finalSubject,
+      html_content: finalHtml,
+      status: 'pending',
+      attempts: 0,
+      max_attempts: 3,
+      scheduled_at: new Date().toISOString()
+    }]);
+
+  if (queueError) throw queueError;
+
+  // 📊 Traza de Observabilidad: Finalización e inserción en email_queue exitosa
+  console.log(
+    JSON.stringify({
+      event: 'SEND_COPY_SUCCESS',
+      traceId: context.traceId,
+      timestamp: new Date().toISOString(),
+      alternativeEmail,
+      locale,
+    })
+  );
+
+  return res.status(200).json({ success: true, message: 'Copia del voucher encolada con éxito.' });
 }
+
+// 🚀 Exportamos el despachador de copias envuelto de forma asíncrona con el decorador de telemetría y seguridad
+export default withObservability(sendCopyHandler);

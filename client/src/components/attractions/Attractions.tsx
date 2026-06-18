@@ -1,7 +1,9 @@
 /**
  * @file Attractions.tsx
  * @description Orquestador de Atracciones Locales (Fase 5 del Embudo).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del carrusel de atracciones.
  * - Cero 'any' (ESLint v9 Compliant) mediante validación de tipos `unknown`.
  * - Táctica Híbrida de UX: Snap-Scroll en Móvil para evitar fatiga de lectura, Grid en Desktop.
  */
@@ -9,6 +11,7 @@
 import React, { useMemo } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { AttractionsTranslationSchema } from '@/locales/schemas/attractions.schema';
 import { AttractionCard } from './AttractionCard';
 import { type AttractionConfig, type AttractionTranslation, type MappedAttraction } from './types';
@@ -32,6 +35,9 @@ const containerVariants: Variants = {
 };
 
 export const Attractions: React.FC = () => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del componente
+  usePerformanceProfiler('Attractions');
+
   const { t, i18n } = useTranslation('attractions');
 
   // Failsafe de integridad del esquema en DEV
@@ -64,7 +70,7 @@ export const Attractions: React.FC = () => {
   }, [t]);
 
   return (
-    <section id="attractions" className="py-20 bg-gray-50 overflow-hidden">
+    <section id="attractions" className="py-20 bg-muted/50 overflow-hidden transition-colors duration-300">
       <div className="container px-4 sm:px-6">
         
         {/* Cabecera */}
@@ -75,13 +81,13 @@ export const Attractions: React.FC = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="inline-block px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-body font-medium mb-4 uppercase tracking-wider">
+          <span className="inline-block px-4 py-2 bg-accent/10 text-accent rounded-full text-sm font-body font-medium mb-4 uppercase tracking-wider border border-accent/20">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-4 tracking-tight">
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-4 tracking-tight">
             {t('title')}
           </h2>
-          <p className="font-body text-gray-600 max-w-2xl mx-auto text-lg font-light">
+          <p className="font-body text-muted-foreground max-w-2xl mx-auto text-lg font-light">
             {t('subtitle')}
           </p>
         </motion.div>
@@ -101,8 +107,8 @@ export const Attractions: React.FC = () => {
 
         {/* Indicador táctil móvil */}
         <div className="flex md:hidden justify-center items-center gap-1.5 mt-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-          <p className="font-body text-[10px] text-gray-400 uppercase tracking-widest font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          <p className="font-body text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
             Desliza para ver más destinos
           </p>
         </div>

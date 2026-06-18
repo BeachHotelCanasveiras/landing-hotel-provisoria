@@ -2,6 +2,9 @@
  * @file AmenitiesConfig.tsx
  * @description Componente atómico para la configuración de Amenities de habitaciones.
  * Satisface la Trinidad Atómica (Zod, i18n JSON) y es 100% reutilizable en cualquier hotel (SaaS Ready).
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface, pms-surface-high y border-pms-border.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y edición de comodidades.
  * - React 19: Sincronización pura de estado durante el render, libre de renderizados en cascada (set-state-in-effect resuelto).
  */
 
@@ -13,6 +16,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { AmenitiesTranslationSchema } from '@/locales/schemas/amenities.schema';
 
 export interface AmenityDefinition {
@@ -64,6 +68,9 @@ export const AmenitiesConfig: React.FC<AmenitiesConfigProps> = ({
   initialValues = {},
   onSave,
 }) => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en la inicialización de especificaciones
+  usePerformanceProfiler('AmenitiesConfig');
+
   const { t, i18n } = useTranslation('amenities');
 
   // 1. Inicialización Perezosa del Estado (Lazy State Initialization)
@@ -117,17 +124,17 @@ export const AmenitiesConfig: React.FC<AmenitiesConfigProps> = ({
   return (
     <form 
       onSubmit={handleSubmit}
-      className="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-6"
+      className="bg-pms-surface rounded-[2rem] border border-pms-border p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] space-y-6 transition-colors duration-300"
     >
       {/* Cabecera Desacoplada de i18n */}
-      <div className="border-b border-gray-50 pb-4">
-        <span className="inline-block px-4 py-1.5 bg-gray-50 text-gray-700 rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-gray-200/50">
+      <div className="border-b border-pms-border pb-4">
+        <span className="inline-block px-4 py-1.5 bg-pms-surface-high text-pms-text-muted rounded-full text-[10px] font-body font-bold uppercase tracking-wider mb-2 border border-pms-border">
           {t('badge')}
         </span>
-        <h3 className="font-display text-2xl text-gray-900 tracking-tight">
+        <h3 className="font-display text-2xl text-pms-text tracking-tight">
           {t('title')}
         </h3>
-        <p className="font-body text-xs text-gray-400 font-light mt-1">
+        <p className="font-body text-xs text-pms-text-muted font-light mt-1">
           {t('subtitle', { roomName, roomId })}
         </p>
       </div>
@@ -141,14 +148,14 @@ export const AmenitiesConfig: React.FC<AmenitiesConfigProps> = ({
           return (
             <div 
               key={def.key}
-              className="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 border border-gray-100 hover:bg-white hover:border-accent/40 transition-all duration-300"
+              className="flex items-center justify-between p-4 rounded-2xl bg-pms-surface-high/50 border border-pms-border hover:bg-pms-surface hover:border-pms-accent/40 transition-all duration-300"
             >
               {/* Icono y Etiqueta traducida */}
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
+                <div className="w-10 h-10 rounded-xl bg-pms-surface-high flex items-center justify-center text-pms-text-muted">
                   <Icon className="w-5 h-5" strokeWidth={1.5} />
                 </div>
-                <span className="font-body text-xs font-semibold text-gray-700">
+                <span className="font-body text-xs font-semibold text-pms-text">
                   {t(`labels.${def.key}`)}
                 </span>
               </div>
@@ -160,7 +167,7 @@ export const AmenitiesConfig: React.FC<AmenitiesConfigProps> = ({
                   onClick={() => handleToggle(def.key)}
                   disabled={isSaving}
                   className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    value ? 'bg-accent' : 'bg-gray-200'
+                    value ? 'bg-pms-accent' : 'bg-pms-border'
                   }`}
                 >
                   <span
@@ -175,18 +182,18 @@ export const AmenitiesConfig: React.FC<AmenitiesConfigProps> = ({
                     type="button"
                     onClick={() => handleCounter(def.key, 'decrement', def.min, def.max)}
                     disabled={isSaving || Number(value || 0) <= (def.min ?? 0)}
-                    className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-gray-300 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer font-bold text-sm"
+                    className="w-8 h-8 rounded-full border border-pms-border bg-pms-surface-high flex items-center justify-center text-pms-text-muted hover:border-pms-accent/40 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer font-bold text-sm"
                   >
                     -
                   </button>
-                  <span className="font-body text-xs font-bold text-gray-800 w-4 text-center">
+                  <span className="font-body text-xs font-bold text-pms-text w-4 text-center">
                     {value ?? 0}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleCounter(def.key, 'increment', def.min, def.max)}
                     disabled={isSaving || Number(value || 0) >= (def.max ?? 10)}
-                    className="w-8 h-8 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-500 hover:border-gray-300 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer font-bold text-sm"
+                    className="w-8 h-8 rounded-full border border-pms-border bg-pms-surface-high flex items-center justify-center text-pms-text-muted hover:border-pms-accent/40 active:scale-95 disabled:opacity-30 disabled:pointer-events-none transition-all cursor-pointer font-bold text-sm"
                   >
                     +
                   </button>
@@ -198,14 +205,14 @@ export const AmenitiesConfig: React.FC<AmenitiesConfigProps> = ({
       </div>
 
       {/* Botón de Guardado */}
-      <div className="pt-4 border-t border-gray-50 flex justify-end">
+      <div className="pt-4 border-t border-pms-border flex justify-end">
         <Button
           type="submit"
           disabled={isSaving}
-          className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-body text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] shadow-md disabled:opacity-50"
+          className="bg-pms-accent text-pms-accent-foreground hover:opacity-90 px-6 py-3 rounded-xl flex items-center gap-2 font-body text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.98] shadow-md disabled:opacity-50 border-none cursor-pointer"
         >
           {isSaving ? (
-            <Spinner className="w-4 h-4 text-white" />
+            <Spinner className="w-4 h-4 text-pms-accent-foreground" />
           ) : (
             <Save className="w-4 h-4" strokeWidth={1.5} />
           )}

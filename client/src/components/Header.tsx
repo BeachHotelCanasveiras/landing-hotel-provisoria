@@ -1,7 +1,9 @@
 /**
  * @file Header.tsx
  * @description Orquestador principal de la cabecera estilo "Píldora Flotante" (Floating Pill).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-popover, border-border, bg-muted y text-foreground de la landing.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje e inicialización de cabecera.
  * - Smart Scroll: Ocultamiento automático al bajar, aparición de inmediato al subir.
  * - Saneamiento ESLint: Actualización de idioma delegada a un useEffect reactivo.
  * - Saneamiento TS: Eliminación de estados redundantes encapsulados en sub-componentes.
@@ -12,16 +14,20 @@ import { Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Logo } from '@/components/Logo';
 import { StorageService } from '@/lib/storage';
 import { useAuth } from '@/contexts/AuthContext';
-import BookingDialog from './BookingDialog'; // Importación recuperada de forma segura
+import BookingDialog from './BookingDialog';
 
 // Importaciones atómicas de sub-componentes (Aparato E.1 y E.2)
 import { LanguageSelector } from './header/LanguageSelector';
 import { UserProfileMenu } from './header/UserProfileMenu';
 
 export default function Header() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de cabecera
+  usePerformanceProfiler('Header');
+
   const [isOpen, setIsOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   
@@ -131,7 +137,7 @@ export default function Header() {
         animate={isVisible ? 'visible' : 'hidden'}
         className="fixed top-4 md:top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
       >
-        <nav className="relative pointer-events-auto w-full max-w-5xl bg-black/85 backdrop-blur-lg border border-white/10 shadow-[0_12px_40px_rgba(0,0,0,0.35)] rounded-full pl-5 pr-4 py-3 grid grid-cols-12 items-center transition-all duration-500">
+        <nav className="relative pointer-events-auto w-full max-w-5xl bg-card/85 backdrop-blur-lg border border-border shadow-[0_12px_40px_rgba(0,0,0,0.35)] rounded-full pl-5 pr-4 py-3 grid grid-cols-12 items-center transition-all duration-500">
           
           {/* Columna 1: Logotipo */}
           <div className="col-span-6 lg:col-span-2 flex justify-start items-center">
@@ -156,7 +162,7 @@ export default function Header() {
               <a
                 key={item.href}
                 href={item.href}
-                className="text-gray-300 hover:text-white font-body text-[11px] uppercase tracking-[0.08em] font-light transition-all duration-300 ease-in-out hover:-translate-y-[1px] transform relative group whitespace-nowrap"
+                className="text-muted-foreground hover:text-foreground font-body text-[11px] uppercase tracking-[0.08em] font-light transition-all duration-300 ease-in-out hover:-translate-y-[1px] transform relative group whitespace-nowrap"
               >
                 {item.label}
                 <span className="absolute -bottom-1.5 left-0 w-0 h-[1.5px] bg-accent group-hover:w-full transition-all duration-400 ease-out" />
@@ -182,7 +188,7 @@ export default function Header() {
               <button
                 onClick={() => setLocation('/login')}
                 disabled={loading}
-                className="px-5 py-2.5 bg-transparent text-gray-200 border border-white/10 hover:border-accent hover:bg-accent hover:text-accent-foreground font-body text-[10px] uppercase tracking-[0.1em] font-semibold rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
+                className="px-5 py-2.5 bg-transparent text-foreground border border-border hover:border-accent hover:bg-accent hover:text-accent-foreground font-body text-[10px] uppercase tracking-[0.1em] font-semibold rounded-full transition-all duration-300 shadow-md hover:scale-[1.02] active:scale-95 whitespace-nowrap disabled:opacity-50 cursor-pointer"
               >
                 {loading ? '...' : t('join_or_signin')}
               </button>
@@ -191,7 +197,7 @@ export default function Header() {
             {/* Mobile Hamburguer Trigger */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="lg:hidden p-2 text-white rounded-full hover:bg-white/10 transition-colors active:scale-95"
+              className="lg:hidden p-2 text-foreground rounded-full hover:bg-muted transition-colors active:scale-95 border-none bg-transparent"
               aria-label="Alternar menú"
             >
               {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -206,7 +212,7 @@ export default function Header() {
                 initial="closed"
                 animate="open"
                 exit="closed"
-                className="absolute top-[calc(100%+16px)] left-0 w-full bg-black/95 backdrop-blur-xl border border-white/10 shadow-2xl rounded-3xl overflow-hidden pointer-events-auto"
+                className="absolute top-[calc(100%+16px)] left-0 w-full bg-popover/95 backdrop-blur-xl border border-border shadow-2xl rounded-3xl overflow-hidden pointer-events-auto"
               >
                 <div className="py-6 px-6 flex flex-col gap-4">
                   {navItems.map((item, i) => (
@@ -216,7 +222,7 @@ export default function Header() {
                       custom={i}
                       variants={itemVariants}
                       onClick={() => setIsOpen(false)}
-                      className="text-gray-300 hover:text-white font-body text-lg font-light py-3 border-b border-white/10 transition-colors text-center"
+                      className="text-muted-foreground hover:text-foreground font-body text-lg font-light py-3 border-b border-border/50 transition-colors text-center"
                     >
                       {item.label}
                     </motion.a>
@@ -231,7 +237,7 @@ export default function Header() {
                         setLocation('/login');
                       }}
                       disabled={loading}
-                      className="mt-4 px-6 py-4 bg-transparent text-gray-200 border border-white/10 hover:border-accent hover:bg-accent hover:text-accent-foreground font-body text-[10px] uppercase tracking-[0.1em] font-semibold rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
+                      className="mt-4 px-6 py-4 bg-transparent text-foreground border border-border hover:border-accent hover:bg-accent hover:text-accent-foreground font-body text-[10px] uppercase tracking-[0.1em] font-semibold rounded-2xl shadow-sm active:scale-95 transition-all text-center w-full"
                     >
                       {loading ? '...' : t('join_or_signin')}
                     </motion.button>

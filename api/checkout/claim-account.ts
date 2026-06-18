@@ -1,14 +1,18 @@
 /**
  * @file claim-account.ts
  * @description Endpoint administrativo seguro para reclamar perfiles de huéspedes pre-creados tras un pago exitoso.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
  * - ISO 27001: Verificación de autenticidad de sesión de Stripe para evitar secuestro o spoofing de cuentas.
  * - PCI-DSS: Recuperación e integridad del email directamente desde la pasarela de pagos.
  * - Resiliencia Activa: Mitiga de raíz la carrera de datos (webhook latency) creando al usuario proactivamente si Stripe aprueba la sesión pero el webhook se retrasa.
  * - Saneado: Resuelto el error TS2339 de compilación estática mediante aserción contractual del cliente de autenticación.
  */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { withObservability } from '../utils/observability'; // 🚀 Inyección del decorador de telemetría
 
 // Contrato de interfaz estricto para mapear la API de autenticación administrativa (Bypass TS2339)
 interface SupabaseAuthAdmin {
@@ -37,11 +41,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method Not Allowed' });
-  }
-
+/**
+ * @function claimAccountHandler
+ * @description Handler interno que gestiona el reclamo de credenciales de huéspedes con tracking correlativo
+ */
+async function claimAccountHandler(
+  req: VercelRequest,
+  res: VercelResponse,
+  context: { traceId: string }
+) {
   const { sessionId, password } = req.body;
 
   if (!sessionId || !password) {
@@ -52,84 +60,113 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres.' });
   }
 
-  try {
-    // 1. Recuperar sesión de Stripe para obtener el email verificado de la transacción
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const email = session.customer_details?.email?.trim().toLowerCase();
+  // 📊 Traza de Observabilidad: Inicio de consulta de sesión en Stripe
+  console.log(
+    JSON.stringify({
+      event: 'CLAIM_ACCOUNT_START',
+      traceId: context.traceId,
+      timestamp: new Date().toISOString(),
+      sessionId,
+    })
+  );
 
-    if (!email) {
-      return res.status(400).json({ message: 'No se pudo verificar el correo electrónico de la transacción.' });
-    }
+  // 1. Recuperar sesión de Stripe para obtener el email verificado de la transacción
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const email = session.customer_details?.email?.trim().toLowerCase();
 
-    // 2. Obtener el UUID del usuario asociado en public.users
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle();
+  if (!email) {
+    console.error(`[Claim Account Error] [traceId: ${context.traceId}] Email ausente en metadatos de Stripe para sessionId: ${sessionId}`);
+    return res.status(400).json({ message: 'No se pudo verificar el correo electrónico de la transacción.' });
+  }
 
-    if (userError) {
-      throw userError;
-    }
+  // 2. Obtener el UUID del usuario asociado en public.users
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
 
-    // Castear de forma segura el cliente al contrato de administración GoTrue (Bypass TS2339)
-    const authAdmin = supabase.auth as unknown as SupabaseAuthAdmin;
-    let userId: string | null = user?.id || null;
+  if (userError) {
+    throw userError;
+  }
 
-    // 🚀 BLINDAJE CONTRA LATENCIA (Fricción 1): Si no existe aún en public.users, lo creamos de forma proactiva
-    if (!userId) {
-      console.warn(`[Claim Account Resiliency] Webhook demorado. Creando perfil proactivo para: ${email}`);
-      const guestName = session.metadata?.guest_name || 'Huésped';
+  // Castear de forma segura el cliente al contrato de administración GoTrue (Bypass TS2339)
+  const authAdmin = supabase.auth as unknown as SupabaseAuthAdmin;
+  let userId: string | null = user?.id || null;
 
-      const { data: authUser, error: createError } = await authAdmin.admin.createUser({
-        email: email,
-        email_confirm: true,
-        user_metadata: {
-          full_name: guestName,
-          temp_password_active: true
-        }
-      });
-
-      if (createError) {
-        // En caso de colisión concurrente (webhook se procesó al mismo milisegundo), re-intentamos leer el id
-        const { data: retryUser, error: retryError } = await supabase
-          .from('users')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
-
-        if (retryError || !retryUser) {
-          throw createError; // Si realmente falla, propagamos la excepción
-        }
-        userId = retryUser.id;
-      } else if (authUser?.user) {
-        userId = authUser.user.id;
-      }
-    }
-
-    if (!userId) {
-      return res.status(404).json({ message: 'No se pudo mapear un identificador de usuario para esta activación.' });
-    }
-
-    // 3. Actualizar la contraseña e inhabilitar el estado temporal en auth.users
-    const { error: updateError } = await authAdmin.admin.updateUserById(
-      userId,
-      {
-        password: password,
-        user_metadata: {
-          temp_password_active: false // Desactiva la restricción de primer inicio
-        }
-      }
+  // 🚀 BLINDAJE CONTRA LATENCIA (Fricción 1): Si no existe aún en public.users, lo creamos de forma proactiva
+  if (!userId) {
+    // 📊 Traza de Observabilidad: Detección e inicio de creación proactiva por latencia de webhook
+    console.log(
+      JSON.stringify({
+        event: 'CLAIM_ACCOUNT_PROACTIVE_CREATION_START',
+        traceId: context.traceId,
+        timestamp: new Date().toISOString(),
+        email,
+      })
     );
 
-    if (updateError) {
-      throw updateError;
-    }
+    const guestName = session.metadata?.guest_name || 'Huésped';
 
-    return res.status(200).json({ success: true, message: 'Cuenta activada correctamente.' });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : 'Error interno de red';
-    console.error('[Claim Account Error Critical]:', msg);
-    return res.status(500).json({ message: msg });
+    const { data: authUser, error: createError } = await authAdmin.admin.createUser({
+      email: email,
+      email_confirm: true,
+      user_metadata: {
+        full_name: guestName,
+        temp_password_active: true
+      }
+    });
+
+    if (createError) {
+      // En caso de colisión concurrente (webhook se procesó al mismo milisegundo), re-intentamos leer el id
+      const { data: retryUser, error: retryError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+
+      if (retryError || !retryUser) {
+        throw createError; // Si realmente falla, propagamos la excepción
+      }
+      userId = retryUser.id;
+    } else if (authUser?.user) {
+      userId = authUser.user.id;
+    }
   }
+
+  if (!userId) {
+    console.error(`[Claim Account Error] [traceId: ${context.traceId}] No se pudo resolver un identificador de usuario válido para email: ${email}`);
+    return res.status(404).json({ message: 'No se pudo mapear un identificador de usuario para esta activación.' });
+  }
+
+  // 3. Actualizar la contraseña e inhabilitar el estado temporal en auth.users
+  const { error: updateError } = await authAdmin.admin.updateUserById(
+    userId,
+    {
+      password: password,
+      user_metadata: {
+        temp_password_active: false // Desactiva la restricción de primer inicio
+      }
+    }
+  );
+
+  if (updateError) {
+    throw updateError;
+  }
+
+  // 📊 Traza de Observabilidad: Finalización exitosa del reclamo
+  console.log(
+    JSON.stringify({
+      event: 'CLAIM_ACCOUNT_SUCCESS',
+      traceId: context.traceId,
+      timestamp: new Date().toISOString(),
+      userId,
+      email,
+    })
+  );
+
+  return res.status(200).json({ success: true, message: 'Cuenta activada correctamente.' });
 }
+
+// 🚀 Exportamos el endpoint envuelto de forma asíncrona con el decorador de telemetría y seguridad
+export default withObservability(claimAccountHandler);

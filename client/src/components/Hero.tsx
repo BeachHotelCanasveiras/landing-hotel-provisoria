@@ -1,7 +1,9 @@
 /**
  * @file Hero.tsx
  * @description Componente principal de cabecera (Hero Section - Fase 1 del Embudo).
- * Refactorizado bajo el MANIFIESTO DE INGENIERÍA:
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-background, bg-muted, border-border y text-primary de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje y pintura del LCP.
  * - Textos totalmente desacoplados e internacionalizados ('hero' namespace).
  * - Validación estricta con Zod en tiempo de desarrollo.
  * - Optimizado para CRO (Call To Action claros) y accesibilidad (ARIA).
@@ -11,6 +13,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { HeroTranslationSchema } from '@/locales/schemas/hero.schema';
 
 /**
@@ -27,6 +30,9 @@ const backgroundImages = [
 ];
 
 export default function Hero() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de la cabecera cinemática
+  usePerformanceProfiler('Hero');
+
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { t, i18n } = useTranslation('hero');
 
@@ -100,7 +106,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-gray-950"
+      className="relative w-full h-screen flex items-center justify-center overflow-hidden bg-background"
       aria-label={t('title_prefix') + t('title_highlight')}
     >
       {/* Carrusel de Fondo Dinámico */}
@@ -122,7 +128,7 @@ export default function Hero() {
       </div>
 
       {/* Overlay de Gradiente extra para integrar suavemente con la siguiente sección */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-gray-950/70 via-transparent to-transparent pointer-events-none" />
+      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-background/70 via-transparent to-transparent pointer-events-none" />
 
       {/* Contenido Principal (Embudo - Fase 1: Inspiración) */}
       <motion.div
@@ -162,7 +168,7 @@ export default function Hero() {
               aria-label={t('cta_primary')}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-9 py-3.5 bg-primary text-primary-foreground rounded-full font-body text-sm font-medium shadow-2xl hover:bg-primary/90 transition-all focus:ring-4 focus:ring-accent outline-none"
+              className="w-full sm:w-auto px-9 py-3.5 bg-primary text-primary-foreground rounded-full font-body text-sm font-medium shadow-2xl hover:opacity-90 transition-all focus:ring-4 focus:ring-accent outline-none border-none cursor-pointer"
             >
               {t('cta_primary')}
             </motion.a>
@@ -171,7 +177,7 @@ export default function Hero() {
               aria-label={t('cta_secondary')}
               whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.15)" }}
               whileTap={{ scale: 0.98 }}
-              className="w-full sm:w-auto px-9 py-3.5 bg-white/10 backdrop-blur-md text-white rounded-full font-body text-sm font-medium border border-white/20 transition-all focus:ring-4 focus:ring-white/50 outline-none"
+              className="w-full sm:w-auto px-9 py-3.5 bg-muted/10 backdrop-blur-md text-white rounded-full font-body text-sm font-medium border border-border/25 transition-all focus:ring-4 focus:ring-border/50 outline-none cursor-pointer"
             >
               {t('cta_secondary')}
             </motion.a>

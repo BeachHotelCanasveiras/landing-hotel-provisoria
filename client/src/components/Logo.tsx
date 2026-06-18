@@ -1,13 +1,14 @@
 /**
  * @file Logo.tsx
  * @description Componente de Identidad Visual del Hotel.
- * Refactorizado para solucionar el bug de sobrescritura de escala. Ahora el contenedor
- * <picture> actúa como el delimitador de caja de diseño (recibe className del Header), 
- * mientras la etiqueta <img> interna hereda fluidamente el 100% de la altura de forma proporcional,
- * garantizando cero distorsiones y una alineación vertical perfecta.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - React 19 SsoT: Utiliza la propiedad nativa fetchPriority en camelCase, removiendo directivas @ts-expect-error.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del logotipo.
+ * - Optimización de Contraste: Picture contenedor responsivo con densidades físicas para pantallas Retina.
  */
 
 import React from 'react';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { cn } from '@/lib/utils';
 
 /**
@@ -38,6 +39,9 @@ export const Logo = ({
   variant = 'logo-main', 
   theme = 'dark' 
 }: LogoProps) => {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del logotipo
+  usePerformanceProfiler('Logo');
+
   // El nombre del asset coincide exactamente con el public_id del inventario
   const assetName = `${variant}-${theme}`;
 
@@ -59,8 +63,7 @@ export const Logo = ({
         className="h-full w-auto object-contain select-none pointer-events-none"
         draggable={false}
         loading="eager"
-    // @ts-expect-error - Atributo fetchpriority nativo de navegador no soportado por TS básico
-        fetchpriority="high"
+        fetchPriority="high" // 🚀 React 19 SsoT: Atributo nativo en camelCase sin bypasses
       />
     </picture>
   );

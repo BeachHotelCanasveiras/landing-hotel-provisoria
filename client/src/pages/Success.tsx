@@ -1,11 +1,12 @@
 /**
  * @file Success.tsx
  * @description Página de retorno de Stripe (Fase 6 Post-Venta).
- * Implementa la arquitectura "Venta Primero, Registro Después" bajo la lógica de RESERVA POR CATEGORÍA:
- * - Smart Identity Manifesto: Reclamo de cuenta con verificación de firma Stripe.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border, bg-primary y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del portal de éxito.
+ * - Saneamiento ESLint: Sincronización estricta de dependencias en useEffect para resolver react-hooks/exhaustive-deps.
+ * - Arquitectura Venta Primero, Registro Después: Reclamo de cuenta con verificación de firma Stripe.
  * - Desglose de Categoría: Muestra la categoría de alojamiento contratada de forma clara y desacoplada de ID físico.
- * - Saneado: Integración de desglose financiero expandido y widget de envío de voucher alternativo.
- * - ESLint & TS: 100% libre de advertencias de variables sin uso o dependencias incompletas de hooks.
  */
 
 import { useState, useEffect } from 'react';
@@ -13,12 +14,16 @@ import { motion } from 'framer-motion';
 import { CheckCircle, Lock, ArrowRight, Loader2, Mail, Send, Calendar, Check } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useTranslation } from 'react-i18next';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { StorageService } from '@/lib/storage';
 
 export default function Success() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje de la modal de éxito
+  usePerformanceProfiler('Success');
+
   const { t } = useTranslation('booking');
   const [, setLocation] = useLocation();
 
@@ -74,7 +79,17 @@ export default function Success() {
     };
 
     fetchStripeSession();
-  }, [setLocation, setGuestEmail, setGuestName]);
+    // 🚀 Saneamiento react-hooks/exhaustive-deps: Sincronización inmaculada de dependencias estables
+  }, [
+    setLocation, 
+    setGuestEmail, 
+    setGuestName, 
+    setPurchaseRoom, 
+    setPurchaseCheckIn, 
+    setPurchaseCheckOut, 
+    setPurchaseTotalPrice, 
+    setPurchaseCurrency
+  ]);
 
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,17 +186,17 @@ export default function Success() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50/50 px-4 py-12 selection:bg-accent/30">
+    <div className="min-h-screen w-full flex items-center justify-center bg-muted/50 px-4 py-12 selection:bg-accent/30 transition-colors duration-300">
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-[480px] bg-white rounded-[2.5rem] border border-gray-100 p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] text-center relative overflow-hidden"
+        className="w-full max-w-[480px] bg-card rounded-[2.5rem] border border-border p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.03)] text-center relative overflow-hidden"
       >
         {loadingSession ? (
-          <div className="flex flex-col items-center justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-12 bg-transparent">
             <Loader2 className="w-12 h-12 text-primary animate-spin mb-4 opacity-50" />
-            <p className="font-body text-sm text-gray-500 font-medium tracking-wide">
+            <p className="font-body text-sm text-muted-foreground font-medium tracking-wide">
               {t('success_loading')}
             </p>
           </div>
@@ -194,39 +209,39 @@ export default function Success() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.1 }}
-                className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-xs"
+                className="w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-card shadow-xs"
               >
                 <CheckCircle className="w-8 h-8 text-green-500" strokeWidth={2.5} />
               </motion.div>
 
-              <h1 className="font-display text-3xl text-gray-900 tracking-tight">
+              <h1 className="font-display text-3xl text-foreground tracking-tight">
                 {guestName ? `Obrigado, ${guestName.trim().split(' ')[0]}!` : t('success_title')}
               </h1>
-              <p className="font-body text-xs text-gray-500 font-light mt-1">
+              <p className="font-body text-xs text-muted-foreground font-light mt-1 text-center">
                 {t('success_subtitle')}
               </p>
             </div>
 
             {/* 📋 TARJETA DESGLOSE DE COMPRA (Categoría de Alojamiento) */}
             {purchaseTotalPrice !== null && (
-              <div className="p-5 bg-gray-50 rounded-2xl border border-gray-100 text-left space-y-3">
-                <div className="flex items-center gap-2 border-b border-gray-200/50 pb-2 mb-2">
+              <div className="p-5 bg-muted rounded-2xl border border-border text-left space-y-3">
+                <div className="flex items-center gap-2 border-b border-border pb-2 mb-2">
                   <Calendar size={13} className="text-accent" />
-                  <span className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest">Resumen de Estadía</span>
+                  <span className="text-[10px] font-body font-bold text-muted-foreground uppercase tracking-widest">Resumen de Estadía</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-body text-gray-500">Alojamiento</span>
-                  <span className="font-body font-semibold text-gray-900">{purchaseRoom}</span>
+                  <span className="font-body text-muted-foreground">Alojamiento</span>
+                  <span className="font-body font-semibold text-foreground">{purchaseRoom}</span>
                 </div>
                 
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-body text-gray-500">Periodo</span>
-                  <span className="font-body font-semibold text-gray-900">{purchaseCheckIn} al {purchaseCheckOut}</span>
+                  <span className="font-body text-muted-foreground">Periodo</span>
+                  <span className="font-body font-semibold text-foreground">{purchaseCheckIn} al {purchaseCheckOut}</span>
                 </div>
 
-                <div className="flex justify-between items-center text-xs pt-2 border-t border-dashed border-gray-200">
-                  <span className="font-body text-gray-500 font-bold">Total Pagado</span>
+                <div className="flex justify-between items-center text-xs pt-2 border-t border-dashed border-border">
+                  <span className="font-body text-foreground font-bold">Total Pagado</span>
                   <span className="font-display text-base font-bold text-accent">
                     {purchaseCurrency} {purchaseTotalPrice.toFixed(2)}
                   </span>
@@ -235,30 +250,30 @@ export default function Success() {
             )}
 
             {/* 📧 WIDGET DE ENVÍO ALTERNATIVO (Comprobante secundario) */}
-            <div className="p-5 bg-blue-50/30 rounded-2xl border border-blue-100/50 text-left space-y-3">
+            <div className="p-5 bg-accent/10 rounded-2xl border border-accent/20 text-left space-y-3">
               <div>
-                <p className="text-[10px] font-body font-bold text-blue-900 uppercase tracking-widest">¿Enviar copia a otro correo?</p>
-                <p className="text-[10px] text-gray-400 font-light mt-0.5">Útil para justificantes de empresa o acompañantes.</p>
+                <p className="text-[10px] font-body font-bold text-foreground uppercase tracking-widest">¿Enviar copia a otro correo?</p>
+                <p className="text-[10px] text-muted-foreground font-light mt-0.5">Útil para justificantes de empresa o acompañantes.</p>
               </div>
 
               <form onSubmit={handleSendAlternativeCopy} className="flex gap-2">
-                <div className="flex-1 p-2.5 rounded-xl border border-gray-150 bg-white focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/10 transition-all flex items-center gap-2">
-                  <Mail size={13} className="text-gray-400" />
+                <div className="flex-1 p-2.5 rounded-xl border border-border bg-card focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/10 transition-all flex items-center gap-2">
+                  <Mail size={13} className="text-muted-foreground" />
                   <input
                     type="email"
                     value={alternativeEmail}
                     onChange={(e) => setAlternativeEmail(e.target.value)}
                     placeholder="contador@empresa.com"
                     disabled={isSendingCopy || copySent}
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-gray-900 placeholder:text-gray-300 outline-none"
+                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-xs text-foreground placeholder:text-muted-foreground outline-none"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={isSendingCopy || !alternativeEmail}
-                  className="px-3 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-body font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
+                  className="px-3 bg-primary hover:opacity-90 text-primary-foreground rounded-xl text-xs font-body font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-30 disabled:pointer-events-none border-none"
                 >
-                  {isSendingCopy ? <Loader2 size={12} className="animate-spin" /> : copySent ? <Check size={12} className="text-green-400" /> : <Send size={11} />}
+                  {isSendingCopy ? <Loader2 size={12} className="animate-spin" /> : copySent ? <Check size={12} className="text-green-500" /> : <Send size={11} />}
                   {copySent ? 'Enviado' : 'Enviar'}
                 </button>
               </form>
@@ -266,17 +281,17 @@ export default function Success() {
 
             {/* Formulario Activación de Cuenta */}
             <form onSubmit={handleCreateAccount} className="space-y-4 text-left">
-              <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-100/50 flex items-center justify-between">
-                <span className="font-body text-xs text-gray-400 font-semibold uppercase tracking-wider">Email Principal</span>
-                <span className="font-body text-sm text-gray-700 font-medium truncate ml-2">
+              <div className="p-3.5 rounded-2xl bg-muted border border-border/50 flex items-center justify-between">
+                <span className="font-body text-xs text-muted-foreground font-semibold uppercase tracking-wider">Email Principal</span>
+                <span className="font-body text-sm text-foreground font-medium truncate ml-2">
                   {guestEmail}
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50 focus-within:border-accent focus-within:bg-white focus-within:ring-4 focus-within:ring-accent/10 transition-all flex items-center gap-3">
-                <Lock size={18} className="text-gray-400" />
+              <div className="p-4 rounded-2xl border border-border bg-muted focus-within:border-accent focus-within:bg-card focus-within:ring-4 focus-within:ring-accent/10 transition-all flex items-center gap-3">
+                <Lock size={18} className="text-muted-foreground" />
                 <div className="flex-1">
-                  <label className="block text-[9px] font-body font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                  <label className="block text-[9px] font-body font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
                     {t('success_password_label')}
                   </label>
                   <input
@@ -286,7 +301,7 @@ export default function Success() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t('success_password_placeholder')}
                     disabled={isRegistering}
-                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-sm text-gray-900 placeholder:text-gray-300 outline-none disabled:opacity-50"
+                    className="w-full bg-transparent border-none p-0 focus:ring-0 font-body text-sm text-foreground placeholder:text-muted-foreground outline-none disabled:opacity-50"
                   />
                 </div>
               </div>
@@ -294,10 +309,10 @@ export default function Success() {
               <Button
                 type="submit"
                 disabled={isRegistering || !password}
-                className="w-full h-14 mt-4 bg-primary hover:bg-primary/90 text-primary-foreground rounded-2xl text-sm font-body font-semibold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50"
+                className="w-full h-14 mt-4 bg-primary hover:opacity-90 text-primary-foreground rounded-2xl text-sm font-body font-semibold flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 border-none"
               >
                 {isRegistering ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin text-primary-foreground" />
                 ) : (
                   <>
                     {t('success_button')}

@@ -1,6 +1,9 @@
 /**
  * @file ContactSection.tsx
  * @description Sección de Formulario de Contacto (Cierre del Embudo).
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Gobernación Semántica Whitelabel: 100% adaptado a la paleta bg-card, bg-muted, border-border y text-foreground de la landing page.
+ * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje del formulario de contacto.
  * - Refactorizado: Cumple con la regla react-hooks/immutability de React 19.
  */
 
@@ -10,11 +13,15 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Mail, User, MessageSquare } from 'lucide-react';
+import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Button } from '@/components/ui/button';
 import { ContactTranslationSchema } from '@/locales/schemas/contact.schema';
 import { cn } from '@/lib/utils';
 
 export default function ContactSection() {
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje del formulario
+  usePerformanceProfiler('ContactSection');
+
   const { t, i18n } = useTranslation('contact');
 
   // ============================================================================
@@ -63,29 +70,29 @@ export default function ContactSection() {
   };
 
   return (
-    <section id="contact-form" className="py-24 bg-gray-50/50 border-t border-gray-100">
+    <section id="contact-form" className="py-24 bg-muted/50 border-t border-border transition-colors duration-300">
       <div className="container px-4 sm:px-6 max-w-2xl mx-auto">
         
         {/* Cabecera */}
         <div className="text-center mb-16">
-          <span className="inline-block px-5 py-1.5 bg-gray-100 text-gray-800 rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-gray-200/50">
+          <span className="inline-block px-5 py-1.5 bg-muted text-foreground rounded-full text-[10px] font-body font-semibold uppercase tracking-[0.2em] mb-4 border border-border">
             {t('badge')}
           </span>
-          <h2 className="font-display text-4xl md:text-5xl text-gray-900 mb-5 tracking-tight">
+          <h2 className="font-display text-4xl md:text-5xl text-foreground mb-5 tracking-tight">
             {t('title')}
           </h2>
-          <p className="font-body text-gray-500 max-w-xl mx-auto text-base leading-relaxed font-light">
+          <p className="font-body text-muted-foreground max-w-xl mx-auto text-base leading-relaxed font-light">
             {t('subtitle')}
           </p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-white p-8 sm:p-10 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.02)] border border-gray-100">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 bg-card p-8 sm:p-10 rounded-[2.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.02)] border border-border">
           
           {/* Campo: Nombre */}
           <div className="space-y-2">
-            <label className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <User size={12} className="text-gray-400" />
+            <label className="text-[10px] font-body font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              <User size={12} className="text-muted-foreground" />
               {t('name_label')}
             </label>
             <input
@@ -93,7 +100,7 @@ export default function ContactSection() {
               {...register('name')}
               placeholder={t('name_placeholder')}
               className={cn(
-                "w-full h-12 px-4 rounded-2xl bg-gray-50 border border-gray-100 font-body text-sm text-gray-900 placeholder:text-gray-300 outline-none focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all",
+                "w-full h-12 px-4 rounded-2xl bg-muted border border-border font-body text-sm text-foreground placeholder:text-muted-foreground outline-none focus:bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all",
                 errors.name && "border-red-300 focus:border-red-500 focus:ring-red-100"
               )}
             />
@@ -104,8 +111,8 @@ export default function ContactSection() {
 
           {/* Campo: Email */}
           <div className="space-y-2">
-            <label className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <Mail size={12} className="text-gray-400" />
+            <label className="text-[10px] font-body font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              <Mail size={12} className="text-muted-foreground" />
               {t('email_label')}
             </label>
             <input
@@ -113,7 +120,7 @@ export default function ContactSection() {
               {...register('email')}
               placeholder={t('email_placeholder')}
               className={cn(
-                "w-full h-12 px-4 rounded-2xl bg-gray-50 border border-gray-100 font-body text-sm text-gray-900 placeholder:text-gray-300 outline-none focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all",
+                "w-full h-12 px-4 rounded-2xl bg-muted border border-border font-body text-sm text-foreground placeholder:text-muted-foreground outline-none focus:bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all",
                 errors.email && "border-red-300 focus:border-red-500 focus:ring-red-100"
               )}
             />
@@ -124,8 +131,8 @@ export default function ContactSection() {
 
           {/* Campo: Mensaje */}
           <div className="space-y-2">
-            <label className="text-[10px] font-body font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <MessageSquare size={12} className="text-gray-400" />
+            <label className="text-[10px] font-body font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+              <MessageSquare size={12} className="text-muted-foreground" />
               {t('message_label')}
             </label>
             <textarea
@@ -133,7 +140,7 @@ export default function ContactSection() {
               {...register('message')}
               placeholder={t('message_placeholder')}
               className={cn(
-                "w-full p-4 rounded-2xl bg-gray-50 border border-gray-100 font-body text-sm text-gray-900 placeholder:text-gray-300 outline-none resize-none focus:bg-white focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all",
+                "w-full p-4 rounded-2xl bg-muted border border-border font-body text-sm text-foreground placeholder:text-muted-foreground outline-none resize-none focus:bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all",
                 errors.message && "border-red-300 focus:border-red-500 focus:ring-red-100"
               )}
             />
