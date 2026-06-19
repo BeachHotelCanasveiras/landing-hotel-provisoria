@@ -3,6 +3,7 @@
  * @description Endpoint administrativo de alta fidelidad para la gobernanza integral de Recursos Humanos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y Estándares de Producción:
  * - Ciclo de Vida CRUD Completo: Soporta creación, actualización de perfil, reset de clave, magic link y eliminación atómica.
+ * - Inyección SSoT (Fix Constraint): Integración de `role` directamente en los metadatos de auth para sincronía con triggers de BD.
  * - Sincronización Heurística de Roles (Bypass de Trigger): Select/Update defensivo para evitar conflictos con triggers de Postgres.
  * - Modificación de E-mail en Caliente: Permite re-escribir y actualizar el correo del empleado en Supabase Auth de forma segura.
  * - Destrucción Segura (ISO 27001): Ejecuta la baja en cascada (staff_profiles -> public.users -> auth.users) para cumplir la LGPD.
@@ -28,14 +29,14 @@ interface ExtendedAuthClient {
     updateUserById(
       id: string,
       attributes: {
-        email?: string; // Permitir cambio de e-mail de acceso primario
+        email?: string; 
         password?: string;
         user_metadata?: Record<string, unknown>;
       }
     ): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
     deleteUser(
       id: string
-    ): Promise<{ data: Record<string, unknown>; error: Error | null }>; // Permitir baja administrativa
+    ): Promise<{ data: Record<string, unknown>; error: Error | null }>; 
     generateLink(params: {
       type: 'invite' | 'signup' | 'magiclink' | 'recovery';
       email: string;
@@ -137,7 +138,7 @@ const UpdateActionSchema = z.object({
   middle_name: z.string().max(50).optional().nullable(),
   paternal_last_name: z.string().min(1).max(50),
   maternal_last_name: z.string().max(50).optional().nullable(),
-  email: z.string().email(), // Email nuevo o personalizado
+  email: z.string().email(),
   role: z.enum(['housekeeper', 'receptionist', 'admin']),
   country: z.string().default('Brasil'),
   state_code: z.string().min(2).max(2).default('SC'),
@@ -238,13 +239,14 @@ async function createStaffHandler(
       })
     );
 
-    // ELUSIÓN DE TRIGGER: Enviamos un user_metadata minimalista para evitar colapso de Postgres
+    // 🚀 SANEAMIENTO (ANTI-REGRESIÓN): Enviamos 'role' explícitamente en user_metadata para el Trigger
     const { data: authData, error: createError } = await authAdmin.admin.createUser({
       email,
       password: tempPassword,
       email_confirm: true,
       user_metadata: {
         full_name: fullNameCompiled,
+        role: payload.role, // <-- INYECCIÓN VITAL RECUPERADA
         temp_password_active: true
       }
     });
@@ -256,7 +258,7 @@ async function createStaffHandler(
 
     const userId = authData.user.id;
 
-    // SINCRONIZACIÓN HEURÍSTICA RBAC (Bypass de trigger de carreras):
+    // SINCRONIZACIÓN HEURÍSTICA RBAC
     const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
@@ -332,11 +334,12 @@ async function createStaffHandler(
       })
     );
 
-    // 1. Actualizar credencial de acceso e-mail y metadata en Supabase Auth
+    // 🚀 SANEAMIENTO (ANTI-REGRESIÓN): Actualizar role en user_metadata también en el Update
     const { error: authUpdateError } = await authAdmin.admin.updateUserById(payload.userId, {
       email,
       user_metadata: {
-        full_name: fullNameCompiled
+        full_name: fullNameCompiled,
+        role: payload.role // <-- INYECCIÓN VITAL RECUPERADA
       }
     });
 
@@ -345,7 +348,7 @@ async function createStaffHandler(
       return res.status(400).json({ message: authUpdateError.message });
     }
 
-    // 2. Sincronizar de forma atómica en public.users (RBAC)
+    // Sincronizar de forma atómica en public.users (RBAC)
     const { error: usersUpdateError } = await supabaseAdmin
       .from('users')
       .update({ email, role: payload.role })
@@ -356,7 +359,7 @@ async function createStaffHandler(
       return res.status(400).json({ message: usersUpdateError.message });
     }
 
-    // 3. Actualizar ficha en public.staff_profiles
+    // Actualizar ficha en public.staff_profiles
     const { error: staffUpdateError } = await supabaseAdmin
       .from('staff_profiles')
       .update({
@@ -398,7 +401,6 @@ async function createStaffHandler(
       })
     );
 
-    // 1. Eliminar Ficha de staff_profiles primero para respetar FKs
     const { error: staffDeleteError } = await supabaseAdmin
       .from('staff_profiles')
       .delete()
@@ -409,7 +411,6 @@ async function createStaffHandler(
       return res.status(400).json({ message: tLocal.error_delete });
     }
 
-    // 2. Eliminar Rol en public.users
     const { error: usersDeleteError } = await supabaseAdmin
       .from('users')
       .delete()
@@ -420,7 +421,6 @@ async function createStaffHandler(
       return res.status(400).json({ message: tLocal.error_delete });
     }
 
-    // 3. Eliminar de Supabase Auth permanentemente
     const { error: authDeleteError } = await authAdmin.admin.deleteUser(payload.userId);
 
     if (authDeleteError) {
