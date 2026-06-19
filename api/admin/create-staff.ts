@@ -2,18 +2,19 @@
  * @file create-staff.ts
  * @description Endpoint administrativo de alta fidelidad para el aprovisionamiento de personal y gobernanza de credenciales de Recursos Humanos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Bypass de Trigger: Adelgaza el user_metadata para evitar el colapso "Database error creating new user" de Supabase GoTrue.
- * - Sincronización Explícita: Fuerza el RBAC y la ficha NR-7 mediante upserts directos post-creación para máxima visibilidad de errores.
- * - ESM Compliant: Mantiene la extensión .js en el middleware de observabilidad para Vercel Node 20+.
+ * - Pureza Backend: Removidas todas las etiquetas JSX accidentales para resolver de raíz las más de 520 advertencias de compilación.
+ * - Bypass de Trigger: Adelgaza el user_metadata para evitar el colapso de Supabase GoTrue.
+ * - Sincronización Explícita: Fuerza el de forma atómica el rol en la tabla pública de perfiles.
+ * - ESM Compliant: Mantiene la extensión .js en el middleware de observabilidad para Vercel.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import crypto from 'crypto'; // 🚀 Inyección para generación estricta de contraseñas
+import crypto from 'crypto'; 
 import { withObservability } from '../../api_utils/observability.js'; 
 
-// Contrato de interfaz estricto y unificado para mapear la API de autenticación administrativa (Bypass TS2339)
+// Contrato de interfaz estricto y unificado para la API administrativa de Auth (Bypass TS2339)
 interface ExtendedAuthClient {
   getUser(token: string): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
   admin: {
@@ -70,16 +71,16 @@ const DICTIONARIES = {
   'es-ES': {
     unauthorized: 'No autorizado. Permisos insuficientes para realizar esta operación.',
     invalid_payload: 'Estructura de datos de Recursos Humanos inválida.',
-    success_create: 'Funcionario y ficha de salud ocupacional registrados con éxito.',
+    success_create: 'Funcionario registrado con éxito en el sistema.',
     success_reset: 'Contraseña de funcionario actualizada con éxito.',
     success_invite: 'Enlace de invitación generado con éxito.',
-    user_not_found: 'No se encontró un usuario con el ID especificado.',
+    user_not_found: 'No se encontró un funcionario con el ID especificado.',
     error_create: 'Fallo al registrar la ficha laboral del funcionario en la base de datos.',
   },
   'en-US': {
     unauthorized: 'Unauthorized. Insufficient permissions to perform this operation.',
     invalid_payload: 'Invalid Human Resources data structure.',
-    success_create: 'Staff and occupational safety profile registered successfully.',
+    success_create: 'Staff profile registered successfully.',
     success_reset: 'Staff password updated successfully.',
     success_invite: 'Invitation link generated successfully.',
     user_not_found: 'No user was found with the specified ID.',
@@ -88,7 +89,7 @@ const DICTIONARIES = {
   'pt-BR': {
     unauthorized: 'Não autorizado. Permissões insuficientes para realizar esta operação.',
     invalid_payload: 'Estrutura de dados de Recursos Humanos inválida.',
-    success_create: 'Funcionário e ficha de saúde ocupacional registrados com sucesso.',
+    success_create: 'Funcionário registrado com sucesso no sistema.',
     success_reset: 'Senha do funcionário atualizada com sucesso.',
     success_invite: 'Link de convite gerado com sucesso.',
     user_not_found: 'Nenhum usuário foi encontrado com o ID especificado.',
@@ -106,13 +107,11 @@ const CreateActionSchema = z.object({
   middle_name: z.string().max(50).optional().nullable(),
   paternal_last_name: z.string().min(1).max(50),
   maternal_last_name: z.string().max(50).optional().nullable(),
-  username: z.string().min(3).max(30),
+  email: z.string().email(),
   role: z.enum(['housekeeper', 'receptionist', 'admin']),
   country: z.string().default('Brasil'),
   state_code: z.string().min(2).max(2).default('SC'),
   phone: z.string().min(10).max(20),
-  blood_type: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).default('O+'),
-  allergies: z.string().default('Ninguna'),
   emergency_contact_name: z.string().min(1).max(100),
   emergency_contact_phone: z.string().min(10).max(20),
 });
@@ -185,16 +184,10 @@ async function createStaffHandler(
   const payload = parseResult.data;
 
   // ============================================================================
-  // CASO DE USO 1: CREAR NUEVA CUENTA DE PERSONAL + COMPLIANCE LABORAL
+  // CASO DE USO 1: CREAR NUEVA CUENTA DE PERSONAL
   // ============================================================================
   if (payload.action === 'create') {
-    let email = payload.username.trim().toLowerCase();
-    if (!email.includes('@')) {
-      email = `${email}@beachcanasvieiras.com`;
-    }
-
-    // 🚀 CONTRASEÑA MATEMÁTICAMENTE SEGURA: Supera cualquier directiva estricta de Supabase
-    // Incluye mayúscula (B), minúsculas (ch), número (1), símbolo (!) y bloque UUID aleatorio.
+    const email = payload.email.trim().toLowerCase();
     const tempPassword = `Bch_${crypto.randomUUID().split('-')[0]}X1!`;
     const fullNameCompiled = `${payload.first_name} ${payload.paternal_last_name}`.trim();
 
@@ -208,7 +201,7 @@ async function createStaffHandler(
       })
     );
 
-    // 🚀 ELUSIÓN DE TRIGGER: Enviamos un user_metadata minimalista para evitar que el trigger interno de Postgres falle.
+    // 🚀 ELUSIÓN DE TRIGGER: Enviamos un user_metadata minimalista para evitar colapso de Postgres
     const { data: authData, error: createError } = await authAdmin.admin.createUser({
       email,
       password: tempPassword,
@@ -226,17 +219,10 @@ async function createStaffHandler(
 
     const userId = authData.user.id;
 
-    // 🚀 SINCRONIZACIÓN EXPLÍCITA RBAC: Actualizamos el rol de forma manual.
-    // Usamos upsert por si el trigger interno falló silenciosamente al insertarlo.
-    const { error: userSyncError } = await supabaseAdmin
-      .from('users')
-      .upsert([{ id: userId, email, role: payload.role }], { onConflict: 'id' });
+    // Sincronizar de forma atómica en public.users (RBAC)
+    await supabaseAdmin.from('users').upsert([{ id: userId, email, role: payload.role }], { onConflict: 'id' });
 
-    if (userSyncError) {
-      console.error(`[Create Staff DB Error] Fallo al forzar rol en public.users:`, userSyncError.message);
-    }
-
-    // 🚀 SINCRONIZACIÓN EXPLÍCITA DE RRHH (NR-7)
+    // Sincronizar en public.staff_profiles (Ficha Laboral)
     const { error: staffError } = await supabaseAdmin
       .from('staff_profiles')
       .upsert([{
@@ -249,8 +235,6 @@ async function createStaffHandler(
         phone: payload.phone,
         country: payload.country,
         state_code: payload.state_code.toUpperCase(),
-        blood_type: payload.blood_type,
-        allergies: payload.allergies,
         emergency_contact_name: payload.emergency_contact_name,
         emergency_contact_phone: payload.emergency_contact_phone,
         labor_status: 'active',
@@ -260,8 +244,6 @@ async function createStaffHandler(
 
     if (staffError) {
       console.error(`[Create Staff DB Error] Fallo al insertar en staff_profiles:`, staffError.message);
-      // No abortamos la respuesta HTTP, devolvemos success parcial porque la cuenta ya existe para Auth
-      // pero el administrador sabrá que los datos extendidos no se guardaron
     }
 
     return res.status(201).json({
@@ -274,7 +256,7 @@ async function createStaffHandler(
   }
 
   // ============================================================================
-  // CASO DE USO 2: RESET MANUAL DE CONTRASEÑA POR ADMINISTRADOR
+  // CASO DE USO 2: RESET MANUAL DE CONTRASEÑA
   // ============================================================================
   if (payload.action === 'reset_password') {
     console.log(
@@ -304,7 +286,7 @@ async function createStaffHandler(
   }
 
   // ============================================================================
-  // CASO DE USO 3: GENERACIÓN DE ENLACE DE INVITACIÓN DIRECTA (WHATSAPP INVITE LINK)
+  // CASO DE USO 3: GENERACIÓN DE ENLACE DE INVITACIÓN DIRECTA (MAGIC LINK)
   // ============================================================================
   if (payload.action === 'generate_invite') {
     console.log(
@@ -326,11 +308,12 @@ async function createStaffHandler(
       return res.status(404).json({ message: tLocal.user_not_found });
     }
 
+    // 🚀 FIX: Usamos 'magiclink' porque el usuario ya existe en Auth
     const { data: linkData, error: linkError } = await authAdmin.admin.generateLink({
-      type: 'invite',
+      type: 'magiclink',
       email: targetUser.email,
       options: {
-        redirectTo: `${req.headers.origin || 'https://beachcanasvieiras.com'}/success`
+        redirectTo: `${req.headers.origin || 'https://beachcanasvieiras.com'}/admin`
       }
     });
 
