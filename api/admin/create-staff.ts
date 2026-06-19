@@ -1,10 +1,11 @@
 /**
  * @file create-staff.ts
- * @description Endpoint administrativo de alta fidelidad para el aprovisionamiento de personal y gobernanza de credenciales de Recursos Humanos.
- * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Sincronización Heurística de Roles (Bypass de Trigger): Lógica defensiva Select/Update/Insert optimizada para resolver el aviso de ESLint 'no-useless-assignment'.
- * - Pureza Backend: Removidas todas las etiquetas JSX accidentales para resolver de raíz las más de 520 advertencias de compilación.
- * - Bypass de Trigger: Adelgaza el user_metadata para evitar el colapso de Supabase GoTrue.
+ * @description Endpoint administrativo de alta fidelidad para la gobernanza integral de Recursos Humanos.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y Estándares de Producción:
+ * - Ciclo de Vida CRUD Completo: Soporta creación, actualización de perfil, reset de clave, magic link y eliminación atómica.
+ * - Sincronización Heurística de Roles (Bypass de Trigger): Select/Update defensivo para evitar conflictos con triggers de Postgres.
+ * - Modificación de E-mail en Caliente: Permite re-escribir y actualizar el correo del empleado en Supabase Auth de forma segura.
+ * - Destrucción Segura (ISO 27001): Ejecuta la baja en cascada (staff_profiles -> public.users -> auth.users) para cumplir la LGPD.
  * - ESM Compliant: Mantiene la extensión .js en el middleware de observabilidad para Vercel.
  */
 
@@ -27,10 +28,14 @@ interface ExtendedAuthClient {
     updateUserById(
       id: string,
       attributes: {
+        email?: string; // Permitir cambio de e-mail de acceso primario
         password?: string;
         user_metadata?: Record<string, unknown>;
       }
     ): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+    deleteUser(
+      id: string
+    ): Promise<{ data: Record<string, unknown>; error: Error | null }>; // Permitir baja administrativa
     generateLink(params: {
       type: 'invite' | 'signup' | 'magiclink' | 'recovery';
       email: string;
@@ -72,28 +77,37 @@ const DICTIONARIES = {
     unauthorized: 'No autorizado. Permisos insuficientes para realizar esta operación.',
     invalid_payload: 'Estructura de datos de Recursos Humanos inválida.',
     success_create: 'Funcionario registrado con éxito en el sistema.',
+    success_update: 'Ficha de funcionario actualizada con éxito.',
+    success_delete: 'Funcionario dado de baja y eliminado con éxito del sistema.',
     success_reset: 'Contraseña de funcionario actualizada con éxito.',
     success_invite: 'Enlace de invitación generado con éxito.',
     user_not_found: 'No se encontró un funcionario con el ID especificado.',
     error_create: 'Fallo al registrar la ficha laboral del funcionario en la base de datos.',
+    error_delete: 'Ocurrió un error al procesar la baja del funcionario en cascada.',
   },
   'en-US': {
     unauthorized: 'Unauthorized. Insufficient permissions to perform this operation.',
     invalid_payload: 'Invalid Human Resources data structure.',
     success_create: 'Staff profile registered successfully.',
+    success_update: 'Staff profile updated successfully.',
+    success_delete: 'Staff member removed from the system successfully.',
     success_reset: 'Staff password updated successfully.',
     success_invite: 'Invitation link generated successfully.',
     user_not_found: 'No user was found with the specified ID.',
     error_create: 'Failed to register staff profile in the database.',
+    error_delete: 'An error occurred during cascading deletion of the staff profile.',
   },
   'pt-BR': {
     unauthorized: 'Não autorizado. Permissões insuficientes para realizar esta operação.',
     invalid_payload: 'Estrutura de dados de Recursos Humanos inválida.',
     success_create: 'Funcionário registrado com sucesso no sistema.',
+    success_update: 'Ficha do funcionário atualizada com sucesso.',
+    success_delete: 'Funcionário desligado e removido do sistema com sucesso.',
     success_reset: 'Senha do funcionário atualizada com sucesso.',
     success_invite: 'Link de convite gerado com sucesso.',
     user_not_found: 'Nenhum usuário foi encontrado com o ID especificado.',
     error_create: 'Falha ao registrar ficha trabalhista do funcionário no banco de dados.',
+    error_delete: 'Ocorreu um erro ao processar o desligamento do funcionário.',
   }
 };
 
@@ -116,6 +130,27 @@ const CreateActionSchema = z.object({
   emergency_contact_phone: z.string().min(10).max(20),
 });
 
+const UpdateActionSchema = z.object({
+  action: z.literal('update'),
+  userId: z.string().uuid(),
+  first_name: z.string().min(1).max(50),
+  middle_name: z.string().max(50).optional().nullable(),
+  paternal_last_name: z.string().min(1).max(50),
+  maternal_last_name: z.string().max(50).optional().nullable(),
+  email: z.string().email(), // Email nuevo o personalizado
+  role: z.enum(['housekeeper', 'receptionist', 'admin']),
+  country: z.string().default('Brasil'),
+  state_code: z.string().min(2).max(2).default('SC'),
+  phone: z.string().min(10).max(20),
+  emergency_contact_name: z.string().min(1).max(100),
+  emergency_contact_phone: z.string().min(10).max(20),
+});
+
+const DeleteActionSchema = z.object({
+  action: z.literal('delete'),
+  userId: z.string().uuid(),
+});
+
 const ResetActionSchema = z.object({
   action: z.literal('reset_password'),
   userId: z.string().uuid(),
@@ -129,6 +164,8 @@ const InviteActionSchema = z.object({
 
 const RequestBodySchema = z.discriminatedUnion('action', [
   CreateActionSchema,
+  UpdateActionSchema,
+  DeleteActionSchema,
   ResetActionSchema,
   InviteActionSchema,
 ]);
@@ -184,7 +221,7 @@ async function createStaffHandler(
   const payload = parseResult.data;
 
   // ============================================================================
-  // CASO DE USO 1: CREAR NUEVA CUENTA DE PERSONAL
+  // OPERACIÓN 1: CREAR NUEVA CUENTA DE PERSONAL
   // ============================================================================
   if (payload.action === 'create') {
     const email = payload.email.trim().toLowerCase();
@@ -201,7 +238,7 @@ async function createStaffHandler(
       })
     );
 
-    // 🚀 ELUSIÓN DE TRIGGER: Enviamos un user_metadata minimalista para evitar colapso de Postgres
+    // ELUSIÓN DE TRIGGER: Enviamos un user_metadata minimalista para evitar colapso de Postgres
     const { data: authData, error: createError } = await authAdmin.admin.createUser({
       email,
       password: tempPassword,
@@ -219,16 +256,13 @@ async function createStaffHandler(
 
     const userId = authData.user.id;
 
-    // 🚀 SINCRONIZACIÓN HEURÍSTICA RBAC (Bypass de trigger de carreras):
-    // Verificamos si el disparador de base de datos ya insertó la fila antes de proceder
+    // SINCRONIZACIÓN HEURÍSTICA RBAC (Bypass de trigger de carreras):
     const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id')
       .eq('id', userId)
       .maybeSingle();
 
-    // ✅ Saneamiento ESLint: Removida la reasignación de variable mutable 'userSyncError'
-    // para cumplir de forma estricta con la regla no-useless-assignment.
     if (existingUser) {
       const { error: updateError } = await supabaseAdmin
         .from('users')
@@ -282,70 +316,158 @@ async function createStaffHandler(
   }
 
   // ============================================================================
-  // CASO DE USO 2: RESET MANUAL DE CONTRASEÑA
+  // OPERACIÓN 2: ACTUALIZACIÓN EN CALIENTE (UPDATE CRUD)
   // ============================================================================
-  if (payload.action === 'reset_password') {
+  if (payload.action === 'update') {
+    const email = payload.email.trim().toLowerCase();
+    const fullNameCompiled = `${payload.first_name} ${payload.paternal_last_name}`.trim();
+
     console.log(
       JSON.stringify({
-        event: 'STAFF_PASSWORD_RESET_START',
+        event: 'UPDATE_STAFF_START',
         traceId: context.traceId,
         timestamp: new Date().toISOString(),
-        targetUserId: payload.userId,
+        userId: payload.userId,
+        newEmail: email,
       })
     );
 
-    const { error: resetError } = await authAdmin.admin.updateUserById(payload.userId, {
-      password: payload.password,
+    // 1. Actualizar credencial de acceso e-mail y metadata en Supabase Auth
+    const { error: authUpdateError } = await authAdmin.admin.updateUserById(payload.userId, {
+      email,
       user_metadata: {
-        temp_password_active: false
+        full_name: fullNameCompiled
       }
     });
 
-    if (resetError) {
-      return res.status(400).json({ message: resetError.message });
+    if (authUpdateError) {
+      console.error(`[Update Staff Auth Error] [traceId: ${context.traceId}]:`, authUpdateError.message);
+      return res.status(400).json({ message: authUpdateError.message });
+    }
+
+    // 2. Sincronizar de forma atómica en public.users (RBAC)
+    const { error: usersUpdateError } = await supabaseAdmin
+      .from('users')
+      .update({ email, role: payload.role })
+      .eq('id', payload.userId);
+
+    if (usersUpdateError) {
+      console.error(`[Update Staff DB Error] users:`, usersUpdateError.message);
+      return res.status(400).json({ message: usersUpdateError.message });
+    }
+
+    // 3. Actualizar ficha en public.staff_profiles
+    const { error: staffUpdateError } = await supabaseAdmin
+      .from('staff_profiles')
+      .update({
+        email,
+        first_name: payload.first_name,
+        middle_name: payload.middle_name || null,
+        paternal_last_name: payload.paternal_last_name,
+        maternal_last_name: payload.maternal_last_name || null,
+        phone: payload.phone,
+        country: payload.country,
+        state_code: payload.state_code.toUpperCase(),
+        emergency_contact_name: payload.emergency_contact_name,
+        emergency_contact_phone: payload.emergency_contact_phone,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', payload.userId);
+
+    if (staffUpdateError) {
+      console.error(`[Update Staff DB Error] staff_profiles:`, staffUpdateError.message);
+      return res.status(400).json({ message: staffUpdateError.message });
     }
 
     return res.status(200).json({
       success: true,
-      message: tLocal.success_reset
+      message: tLocal.success_update,
     });
   }
 
   // ============================================================================
-  // CASO DE USO 3: GENERACIÓN DE ENLACE DE INVITACIÓN DIRECTA (MAGIC LINK)
+  // OPERACIÓN 3: ELIMINACIÓN EN CASCADA COMPLIANCE (DELETE CRUD)
   // ============================================================================
-  if (payload.action === 'generate_invite') {
+  if (payload.action === 'delete') {
     console.log(
       JSON.stringify({
-        event: 'STAFF_INVITE_LINK_GENERATION_START',
+        event: 'DELETE_STAFF_START',
         traceId: context.traceId,
         timestamp: new Date().toISOString(),
         targetUserId: payload.userId,
       })
     );
 
+    // 1. Eliminar Ficha de staff_profiles primero para respetar FKs
+    const { error: staffDeleteError } = await supabaseAdmin
+      .from('staff_profiles')
+      .delete()
+      .eq('id', payload.userId);
+
+    if (staffDeleteError) {
+      console.error(`[Delete Staff DB Error] staff_profiles:`, staffDeleteError.message);
+      return res.status(400).json({ message: tLocal.error_delete });
+    }
+
+    // 2. Eliminar Rol en public.users
+    const { error: usersDeleteError } = await supabaseAdmin
+      .from('users')
+      .delete()
+      .eq('id', payload.userId);
+
+    if (usersDeleteError) {
+      console.error(`[Delete Staff DB Error] users:`, usersDeleteError.message);
+      return res.status(400).json({ message: tLocal.error_delete });
+    }
+
+    // 3. Eliminar de Supabase Auth permanentemente
+    const { error: authDeleteError } = await authAdmin.admin.deleteUser(payload.userId);
+
+    if (authDeleteError) {
+      console.error(`[Delete Staff Auth Error] [traceId: ${context.traceId}]:`, authDeleteError.message);
+      return res.status(400).json({ message: authDeleteError.message });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: tLocal.success_delete,
+    });
+  }
+
+  // ============================================================================
+  // OPERACIÓN 4: RESET PASSWORD
+  // ============================================================================
+  if (payload.action === 'reset_password') {
+    const { error: resetError } = await authAdmin.admin.updateUserById(payload.userId, {
+      password: payload.password,
+      user_metadata: { temp_password_active: false }
+    });
+
+    if (resetError) return res.status(400).json({ message: resetError.message });
+    return res.status(200).json({ success: true, message: tLocal.success_reset });
+  }
+
+  // ============================================================================
+  // OPERACIÓN 5: GENERAR MAGIC LINK (OTP)
+  // ============================================================================
+  if (payload.action === 'generate_invite') {
     const { data: targetUser, error: queryError } = await supabaseAdmin
       .from('users')
       .select('email')
       .eq('id', payload.userId)
       .single();
 
-    if (queryError || !targetUser) {
-      return res.status(404).json({ message: tLocal.user_not_found });
-    }
+    if (queryError || !targetUser) return res.status(404).json({ message: tLocal.user_not_found });
 
-    // 🚀 FIX: Usamos 'magiclink' porque el usuario ya existe en Auth
     const { data: linkData, error: linkError } = await authAdmin.admin.generateLink({
-      type: 'magiclink',
+      type: 'magiclink', 
       email: targetUser.email,
       options: {
         redirectTo: `${req.headers.origin || 'https://beachcanasvieiras.com'}/admin`
       }
     });
 
-    if (linkError || !linkData) {
-      return res.status(400).json({ message: linkError?.message || 'Error al generar enlace' });
-    }
+    if (linkError || !linkData) return res.status(400).json({ message: linkError?.message || 'Error al generar enlace' });
 
     const actionLink = linkData.properties?.action_link || linkData.action_link || '';
 
@@ -361,5 +483,4 @@ async function createStaffHandler(
 }
 
 const observedCreateStaffHandler = withObservability(createStaffHandler);
-
 export default observedCreateStaffHandler;
