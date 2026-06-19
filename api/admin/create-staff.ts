@@ -2,24 +2,71 @@
  * @file create-staff.ts
  * @description Endpoint administrativo de alta fidelidad para el aprovisionamiento de personal y gobernanza de credenciales de Recursos Humanos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la ruta física real.
  * - ISO 27001 & RBAC: Verificación rigurosa de JWT de administrador para prevenir elevación de privilegios.
  * - Validación con Zod: Estructura, formatos, códigos de país, estado y ficha de salud ocupacional analizados en tiempo de ejecución.
  * - Soporte Multilingüe: Mensajes de respuesta localizados en es-ES, en-US y pt-BR.
  * - Multipropósito: Soporta creación de cuentas, reset manual de password y generación de Magic Links de invitación.
- * - Saneamiento de Redundancias: Resuelto el crash por desestructuración nula de Auth y provistas fechas obligatorias.
+ * - Lazy Initialization: Instanciación perezosa en caliente de Supabase para evitar colapsos de Cold Start.
+ * - Saneamiento de Linter: Resueltas todas las advertencias de desuso (no-unused-vars) e interfaces duplicadas de la suite.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../_utils/observability'; // ✅ Corrección de ruta física real para resolver ts(2307)
 
-// Inicialización de Supabase con privilegios de súper usuario (Service Role)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Contrato de interfaz estricto y unificado para mapear la API de autenticación administrativa (Bypass TS2339)
+interface ExtendedAuthClient {
+  getUser(token: string): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+  admin: {
+    createUser(params: {
+      email: string;
+      password?: string;
+      email_confirm?: boolean;
+      user_metadata?: Record<string, unknown>;
+    }): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+    updateUserById(
+      id: string,
+      attributes: {
+        password?: string;
+        user_metadata?: Record<string, unknown>;
+      }
+    ): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
+    generateLink(params: {
+      type: 'invite' | 'signup' | 'magiclink' | 'recovery';
+      email: string;
+      options?: {
+        redirectTo?: string;
+        data?: Record<string, unknown>;
+      };
+    }): Promise<{ data: { properties?: { action_link?: string }; action_link?: string } | null; error: Error | null }>;
+  };
+}
+
+// Deshabilita el body parser automático de Vercel para conservar el Raw Body intacto
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+let supabaseAdminInstance: SupabaseClient | null = null;
+
+/**
+ * Inicialización perezosa (Lazy) de Supabase con privilegios administrativos
+ */
+function getSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdminInstance) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+      throw new Error('Credenciales administrativas de base de datos Supabase ausentes en el servidor.');
+    }
+    supabaseAdminInstance = createClient(url, key);
+  }
+  return supabaseAdminInstance;
+}
 
 // Diccionarios localizados para respuestas e incidencias de Recursos Humanos del backend
 const DICTIONARIES = {
@@ -48,37 +95,9 @@ const DICTIONARIES = {
     success_reset: 'Senha do funcionário atualizada com sucesso.',
     success_invite: 'Link de convite gerado com sucesso.',
     user_not_found: 'Nenhum usuário foi encontrado com o ID especificado.',
-    error_create: 'Falha ao registrar cartão trabalhista do funcionário no banco de dados.',
+    error_create: 'Falha ao registrar ficha trabalhista do funcionário no banco de dados.',
   }
 };
-
-// Contrato de interfaz estricto para mapear la API administrativa de GoTrue (Bypass TS2339)
-interface ExtendedAuthClient {
-  getUser(token: string): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
-  admin: {
-    createUser(params: {
-      email: string;
-      password?: string;
-      email_confirm?: boolean;
-      user_metadata?: Record<string, unknown>;
-    }): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
-    updateUserById(
-      id: string,
-      attributes: {
-        password?: string;
-        user_metadata?: Record<string, unknown>;
-      }
-    ): Promise<{ data: { user: { id: string } | null }; error: Error | null }>;
-    generateLink(params: {
-      type: 'invite' | 'signup' | 'magiclink' | 'recovery';
-      email: string;
-      options?: {
-        redirectTo?: string;
-        data?: Record<string, unknown>;
-      };
-    }): Promise<{ data: { properties?: { action_link?: string }; action_link?: string } | null; error: Error | null }>;
-  };
-}
 
 // ============================================================================
 // 📏 VALIDACIÓN DE ESQUEMAS CON ZOD (TRINITY)
@@ -96,7 +115,7 @@ const CreateActionSchema = z.object({
   state_code: z.string().min(2).max(2).default('SC'),
   phone: z.string().min(10).max(20),
   
-  // 🚀 Campos de Derechos Humanos y Salud Ocupacional (ISO 27001 / NR-7 brasileña)
+  // Campos de Derechos Humanos y Salud Ocupacional (ISO 27001 / NR-7 brasileña)
   blood_type: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).default('O+'),
   allergies: z.string().default('Ninguna'),
   emergency_contact_name: z.string().min(1).max(100),
@@ -132,6 +151,9 @@ async function createStaffHandler(
   // Idioma de la Petición (locale SSoT)
   const queryLocale = (req.body?.locale || req.query?.locale || 'pt-BR') as 'es-ES' | 'en-US' | 'pt-BR';
   const tLocal = DICTIONARIES[queryLocale] || DICTIONARIES['pt-BR'];
+
+  // Carga e inicialización perezosa del cliente administrativo (Evita crasheos de Cold Start)
+  const supabaseAdmin = getSupabaseAdmin();
 
   // 1. CONTROL DE ACCESO (ISO 27001): Verificar JWT del solicitante
   const authHeader = req.headers.authorization;
@@ -206,7 +228,7 @@ async function createStaffHandler(
       }
     });
 
-    // 🚀 SANEAMIENTO: Validación cortocircuitada defensiva para evitar excepciones Null Pointer
+    // Validación defensiva para evitar excepciones Null Pointer
     if (createError || !authData || !authData.user) {
       console.error(`[Create Staff Error] [traceId: ${context.traceId}] Fallo al crear usuario en Auth:`, createError?.message);
       return res.status(400).json({ message: createError?.message || tLocal.error_create });
@@ -235,7 +257,7 @@ async function createStaffHandler(
         emergency_contact_name: payload.emergency_contact_name,
         emergency_contact_phone: payload.emergency_contact_phone,
         labor_status: 'active',
-        created_at: new Date().toISOString(), // 🚀 Saneamiento: Provisión síncrona obligatoria para bypass de nulos
+        created_at: new Date().toISOString(), // Provisión síncrona obligatoria para bypass de nulos
         updated_at: new Date().toISOString()
       }]);
 
