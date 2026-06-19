@@ -3,6 +3,7 @@
  * @description Orquestador Maestro de Paneles de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
  * - Gobernación Semántica: 100% desacoplado de colores rígidos mediante bg-pms-bg, bg-pms-surface y border-pms-border.
+ * - Selector Multitema del Header: Inyección de un widget segmentado de 1-clic (Sun, Moon, Sparkles) al lado del perfil de usuario.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
  * - Trinidad Atómica: Localización total del texto institucional de cabeceras.
  * - Saneamiento: Cero aserciones implícitas de tipo 'any' para ESLint v9.
@@ -14,11 +15,11 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LogOut } from 'lucide-react';
+import { LogOut, Sun, Moon, Sparkles } from 'lucide-react';
 
 import { supabase } from '@/lib/supabase';
 import { useAuth, type UserRole } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme, type DashboardTheme } from '@/contexts/ThemeContext'; 
 import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
@@ -38,6 +39,7 @@ import { OnboardingForm } from '@/components/dashboard/reception/OnboardingForm'
 import { TemplateManager } from '@/components/dashboard/reception/TemplateManager';
 
 import { type RoomHousekeepingData } from '@/components/dashboard/reception/HousekeepingReport';
+import { cn } from '@/lib/utils'; // ✅ Saneamiento TS: Importación inyectada para resolver ts(2304)
 
 // --- CONTRATOS DE DATOS ESTRICTOS (SSoT) ---
 interface SupabaseRoom {
@@ -97,7 +99,7 @@ export default function AdminDashboard() {
   const { t } = useTranslation(['dashboard', 'housekeeping']);
   const [, setLocation] = useLocation();
   const { user, role, signOut, refreshUser, loading: authLoading } = useAuth();
-  const { dashboardTheme } = useTheme(); // Sincronizador de tema reactivo
+  const { dashboardTheme, setDashboardTheme } = useTheme(); // ✅ Sincronizador de tema reactivo de la raíz
   const queryClient = useQueryClient();
 
   const [currentView, setCurrentView] = useState<string>('overview');
@@ -429,10 +431,40 @@ export default function AdminDashboard() {
                 Beach Core PMS • <span className="text-pms-accent">{userRole}</span>
               </p>
             </div>
-            <Avatar className="w-10 h-10 border-2 border-pms-border shadow-sm cursor-pointer hover:border-pms-accent transition-colors">
-              <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-              <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
-            </Avatar>
+            
+            <div className="flex items-center gap-4">
+              {/* 🚀 APARATO SELECTOR DE TEMAS COMPACTO Y ESTÉTICO (1-CLIC) */}
+              <div className="flex bg-pms-surface-high p-1 rounded-xl border border-pms-border shadow-inner">
+                {[
+                  { key: 'light', icon: Sun, label: 'Light' },
+                  { key: 'sovereign-dark', icon: Moon, label: 'Sovereign' },
+                  { key: 'gemini-dark', icon: Sparkles, label: 'Gemini' }
+                ].map((themeOpt) => {
+                  const IsActiveTheme = dashboardTheme === themeOpt.key;
+                  const ThemeIcon = themeOpt.icon;
+                  return (
+                    <button
+                      key={themeOpt.key}
+                      onClick={() => setDashboardTheme(themeOpt.key as DashboardTheme)}
+                      title={`Alternar para ${themeOpt.label}`}
+                      className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer border-none bg-transparent outline-none",
+                        IsActiveTheme 
+                          ? "bg-pms-accent text-pms-accent-foreground shadow-md" 
+                          : "text-pms-text-muted hover:text-pms-text hover:bg-pms-surface/50"
+                      )}
+                    >
+                      <ThemeIcon size={14} />
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Avatar className="w-10 h-10 border-2 border-pms-border shadow-sm cursor-pointer hover:border-pms-accent transition-colors">
+                <AvatarImage src={user.user_metadata?.avatar_url || ''} />
+                <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
+              </Avatar>
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-pms-bg transition-colors duration-300">
             <AnimatePresence mode="wait">
@@ -469,11 +501,38 @@ export default function AdminDashboard() {
           <span className="text-xs font-bold uppercase tracking-[0.2em] text-pms-text-muted">{userRole}</span>
         </div>
         <div className="flex items-center gap-4">
+          {/* 🚀 APARATO SELECTOR DE TEMAS COMPACTO Y ESTÉTICO (B2C/B2B view) */}
+          <div className="flex bg-pms-surface-high p-1 rounded-xl border border-pms-border shadow-inner">
+            {[
+              { key: 'light', icon: Sun, label: 'Light' },
+              { key: 'sovereign-dark', icon: Moon, label: 'Sovereign' },
+              { key: 'gemini-dark', icon: Sparkles, label: 'Gemini' }
+            ].map((themeOpt) => {
+              const IsActiveTheme = dashboardTheme === themeOpt.key;
+              const ThemeIcon = themeOpt.icon;
+              return (
+                <button
+                  key={themeOpt.key}
+                  onClick={() => setDashboardTheme(themeOpt.key as DashboardTheme)}
+                  title={`Alternar para ${themeOpt.label}`}
+                  className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer border-none bg-transparent outline-none",
+                    IsActiveTheme 
+                      ? "bg-pms-accent text-pms-accent-foreground shadow-md" 
+                      : "text-pms-text-muted hover:text-pms-text hover:bg-pms-surface/50"
+                  )}
+                >
+                  <ThemeIcon size={14} />
+                </button>
+              );
+            })}
+          </div>
+
           <Avatar className="w-9 h-9 border border-pms-border shadow-xs">
             <AvatarImage src={user.user_metadata?.avatar_url || ''} />
             <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
           </Avatar>
-          <button onClick={() => signOut()} className="p-2 text-pms-text-muted hover:text-red-500 transition-colors border-none bg-transparent" title="Sair"><LogOut size={20} /></button>
+          <button onClick={() => signOut()} className="p-2 text-pms-text-muted hover:text-red-500 transition-colors border-none bg-transparent cursor-pointer" title="Sair"><LogOut size={20}/></button>
         </div>
       </header>
       <main className="flex-1 container px-6 py-12 max-w-5xl mx-auto transition-colors duration-300">

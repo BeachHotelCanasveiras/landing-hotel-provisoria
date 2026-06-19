@@ -2,9 +2,9 @@
  * @file create-staff.ts
  * @description Endpoint administrativo de alta fidelidad para el aprovisionamiento de personal y gobernanza de credenciales de Recursos Humanos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Sincronización Heurística de Roles (Bypass de Trigger): Lógica defensiva Select/Update/Insert optimizada para resolver el aviso de ESLint 'no-useless-assignment'.
  * - Pureza Backend: Removidas todas las etiquetas JSX accidentales para resolver de raíz las más de 520 advertencias de compilación.
  * - Bypass de Trigger: Adelgaza el user_metadata para evitar el colapso de Supabase GoTrue.
- * - Sincronización Explícita: Fuerza el de forma atómica el rol en la tabla pública de perfiles.
  * - ESM Compliant: Mantiene la extensión .js en el middleware de observabilidad para Vercel.
  */
 
@@ -219,8 +219,34 @@ async function createStaffHandler(
 
     const userId = authData.user.id;
 
-    // Sincronizar de forma atómica en public.users (RBAC)
-    await supabaseAdmin.from('users').upsert([{ id: userId, email, role: payload.role }], { onConflict: 'id' });
+    // 🚀 SINCRONIZACIÓN HEURÍSTICA RBAC (Bypass de trigger de carreras):
+    // Verificamos si el disparador de base de datos ya insertó la fila antes de proceder
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle();
+
+    // ✅ Saneamiento ESLint: Removida la reasignación de variable mutable 'userSyncError'
+    // para cumplir de forma estricta con la regla no-useless-assignment.
+    if (existingUser) {
+      const { error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({ role: payload.role })
+        .eq('id', userId);
+      
+      if (updateError) {
+        console.error(`[Create Staff DB Error] Fallo al actualizar rol en public.users:`, updateError.message);
+      }
+    } else {
+      const { error: insertError } = await supabaseAdmin
+        .from('users')
+        .insert([{ id: userId, email, role: payload.role }]);
+      
+      if (insertError) {
+        console.error(`[Create Staff DB Error] Fallo al insertar en public.users:`, insertError.message);
+      }
+    }
 
     // Sincronizar en public.staff_profiles (Ficha Laboral)
     const { error: staffError } = await supabaseAdmin

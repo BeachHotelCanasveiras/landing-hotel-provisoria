@@ -1,8 +1,9 @@
 /**
  * @file ThemeContext.tsx
- * @description Proveedor de estado global de temas duales para el ecosistema.
+ * @description Proveedor de estado global de temas para el ecosistema Beach Hotel.
  * - Desacoplado: Gobernación independiente para Landing Page y Dashboard Operativo PMS.
  * - SSoT: Persistencia robusta de preferencias mediante StorageService.
+ * - Tema por Defecto: Inicialización nativa en 'gemini-dark' para el PMS.
  * - Rendimiento: Inyección directa por atributos HTML para aceleración por GPU sin renders en cascada.
  * - Telemetría: Registro de auditoría estructurado (ISO 27001) para transiciones estéticas de interfaz.
  * - Saneamiento: Resuelve la advertencia react-refresh/only-export-components de ESLint.
@@ -38,7 +39,7 @@ interface ThemeProviderProps {
 export function ThemeProvider({
   children,
   defaultTheme = "light",
-  defaultDashboardTheme = "light",
+  defaultDashboardTheme = "gemini-dark", // 🚀 Saneamiento: 'gemini-dark' establecido como tema predeterminado
   switchable = true, // Activado para dar soporte dinámico de temas
 }: ThemeProviderProps) {
   
