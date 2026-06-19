@@ -2,19 +2,20 @@
  * @file create-staff.ts
  * @description Endpoint administrativo de alta fidelidad para el aprovisionamiento de personal y gobernanza de credenciales de Recursos Humanos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la raíz del proyecto.
+ * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la ruta física real.
  * - ISO 27001 & RBAC: Verificación rigurosa de JWT de administrador para prevenir elevación de privilegios.
  * - Validación con Zod: Estructura, formatos, códigos de país, estado y ficha de salud ocupacional analizados en tiempo de ejecución.
  * - Soporte Multilingüe: Mensajes de respuesta localizados en es-ES, en-US y pt-BR.
  * - Multipropósito: Soporta creación de cuentas, reset manual de password y generación de Magic Links de invitación.
- * - Lazy Initialization: Instanciación perezosa en caliente de Supabase para evitar colapsos de Cold Start.
- * - Saneamiento de Linter: Resueltas todas las advertencias de desuso (no-unused-vars) e interfaces duplicadas de la suite.
+ * - ESM Compliant: Resuelto ERR_MODULE_NOT_FOUND añadiendo la extensión .js exigida por el motor de Vercel.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { withObservability } from '../../api_utils/observability'; // ✅ Ruta corregida a la raíz (api_utils) para resolver ts(2307)
+
+// 🚀 SANEAMIENTO ESM: Node.js (type: module) requiere estrictamente la extensión .js en runtime
+import { withObservability } from '../../api_utils/observability.js'; 
 
 // Contrato de interfaz estricto y unificado para mapear la API de autenticación administrativa (Bypass TS2339)
 interface ExtendedAuthClient {
@@ -89,7 +90,7 @@ const DICTIONARIES = {
     error_create: 'Failed to register staff profile in the database.',
   },
   'pt-BR': {
-    unauthorized: 'Não autorisado. Permissões insuficientes para realizar esta operação.',
+    unauthorized: 'Não autorizado. Permissões insuficientes para realizar esta operação.',
     invalid_payload: 'Estrutura de dados de Recursos Humanos inválida.',
     success_create: 'Funcionário e ficha de saúde ocupacional registrados com sucesso.',
     success_reset: 'Senha do funcionário atualizada com sucesso.',
@@ -228,7 +229,7 @@ async function createStaffHandler(
       }
     });
 
-    // Validación cortocircuitada defensiva para evitar excepciones Null Pointer
+    // Validación defensiva para evitar excepciones Null Pointer
     if (createError || !authData || !authData.user) {
       console.error(`[Create Staff Error] [traceId: ${context.traceId}] Fallo al crear usuario en Auth:`, createError?.message);
       return res.status(400).json({ message: createError?.message || tLocal.error_create });
