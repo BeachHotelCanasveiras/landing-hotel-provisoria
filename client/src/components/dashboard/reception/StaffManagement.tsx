@@ -9,7 +9,7 @@
  * - Recursos Humanos: Incorpora la ficha de Salud Ocupacional (Tipo de Sangre, Alergias, Contacto de Emergencia) conectada a public.staff_profiles.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import { 
@@ -75,6 +75,9 @@ export const StaffManagement: React.FC = () => {
   const [loadingList, setLoadingList] = useState(false);
   const [copied, setCopied] = useState(false); // 🚀 Saneamiento: Estado agregado para resolver ts(2304)
 
+  // Referencias para limpiar timeouts de animación y portapapeles de forma segura
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Estados para despliegue de credenciales y links generados
   const [credentials, setCredentials] = useState<{ email: string; tempPass: string } | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; link: string } | null>(null);
@@ -82,6 +85,13 @@ export const StaffManagement: React.FC = () => {
   // Estados para Reset Manual de Contraseña
   const [selectedResetUser, setSelectedResetUser] = useState<StaffMember | null>(null);
   const [newManualPassword, setNewManualPassword] = useState('');
+
+  // Limpieza preventiva de timeouts al desmontar el componente (ISO 27001)
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
 
   // ============================================================================
   // 1. CARGA DE LISTADO DE PERSONAL DE FORMA SEGURA (RBAC / PostgREST)
@@ -107,6 +117,7 @@ export const StaffManagement: React.FC = () => {
       setStaffList(compiled);
     } catch (err: unknown) {
       console.error('[StaffManagement] Error al cargar lista desde staff_profiles:', err);
+      toast.error('Erro ao carregar o cadastro de funcionários.');
     } finally {
       setLoadingList(false);
     }
@@ -207,7 +218,8 @@ export const StaffManagement: React.FC = () => {
       setEmergencyContactPhone('');
 
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Error inesperado');
+      const msg = err instanceof Error ? err.message : 'Erro inesperado';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -249,7 +261,8 @@ export const StaffManagement: React.FC = () => {
       setSelectedResetUser(null);
       setNewManualPassword('');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Fallo al redefinir clave.');
+      const msg = err instanceof Error ? err.message : 'Fallo al redefinir clave.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -285,7 +298,8 @@ export const StaffManagement: React.FC = () => {
 
       toast.success(data.message || 'Link de convite gerado!');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Error al generar link.');
+      const msg = err instanceof Error ? err.message : 'Error al generar link.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -300,7 +314,9 @@ export const StaffManagement: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success('Credenciales copiadas para enviar por WhatsApp');
-    setTimeout(() => setCopied(false), 2000);
+    
+    if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
   const copyInviteLinkToClipboard = () => {
@@ -309,10 +325,12 @@ export const StaffManagement: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success('Link de invitación copiado');
-    setTimeout(() => setCopied(false), 2000);
+    
+    if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    copiedTimeoutRef.current = setTimeout(() => setCopied(false), 2000);
   };
 
-  // CORRECCIÓN: Lista de roles tipada e internacionalizada sin warnings
+  // Lista de roles tipada e internacionalizada sin warnings
   const rolesList: { role: 'housekeeper' | 'receptionist' | 'admin'; label: string }[] = [
     { role: 'housekeeper', label: 'Limpieza' },
     { role: 'receptionist', label: 'Recepción' },

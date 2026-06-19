@@ -2,7 +2,7 @@
  * @file ical-import.ts
  * @description Sincronizador en segundo plano que importa agendas de Booking.com y OTAs.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la raíz del proyecto.
  * - Sincronización por Categorías: Extrae e inyecta room_type (type) en las reservas importadas para evitar sobre-reservas.
  * - Saneamiento: Resuelve error de compilación TS2339 convirtiendo a tipos nativos JS Date.
  * - Resiliencia: Aislamiento de fallos individuales mediante try-catch interno por habitación (Garantía de Disponibilidad ISO 27001).
@@ -13,7 +13,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import ICAL from 'ical.js';
 import crypto from 'crypto'; // 🚀 Inyección del módulo criptográfico nativo de Node.js
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -85,7 +85,7 @@ async function icalImportHandler(
     return res.status(200).json({ message: 'No hay canales de importación configurados.' });
   }
 
-  console.log(`[iCal Import] [traceId: ${context.traceId}] Iniciando sincronización de ${roomsToSync.length} habitaciones...`);
+  console.log(`[iCal Import] [traceId: ${context.traceId}] Sincronizando ${roomsToSync.length} habitaciones...`);
 
   let successfullySynced = 0;
 

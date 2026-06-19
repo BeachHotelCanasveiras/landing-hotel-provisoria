@@ -2,7 +2,7 @@
  * @file retrieve.ts
  * @description Recupera de forma enriquecida y segura los datos de una sesión de Stripe para pre-llenar y mostrar el resumen de compra.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - Lógica de RESERVA POR CATEGORÍA: Extrae la categoría de habitación (room_type) en lugar del identificador físico.
  * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - Smart Identity Manifesto: Expande line_items de Stripe para entregar el desglose financiero al cliente.
@@ -15,7 +15,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import crypto from 'crypto';
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 // Configuración criptográfica de grado bancario (Sincrónica con session.ts)
 const ALGORITHM = 'aes-256-gcm';

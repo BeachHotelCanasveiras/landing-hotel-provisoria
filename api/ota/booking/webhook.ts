@@ -11,8 +11,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
-import { withObservability } from '../../_utils/observability';
-import { getBookingConfig, getBookingBasicAuthHeader } from '../../_utils/booking-config';
+import { withObservability } from '../../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
+import { getBookingConfig, getBookingBasicAuthHeader } from '../../../api_utils/booking-config'; // ✅ Ruta de importación actualizada a la raíz
 
 // Contrato de interfaz estricto para la API administrativa de Supabase Auth
 interface SupabaseAuthAdmin {

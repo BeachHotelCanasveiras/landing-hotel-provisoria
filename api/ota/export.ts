@@ -2,14 +2,14 @@
  * @file export.ts
  * @description Exportador unificado e inteligente de disponibilidad en formato iCal (RFC 5545).
  * - SaaS-Ready (Fase de Consolidación): Resuelve el límite de Vercel unificando exportadores individuales y multicanal.
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - Seguridad (ISO 27001): Validación síncrona mediante tokens e IDs relacionales.
  * - Tipo Saneado: Saneado el error TS7006 inyectando la interfaz BookingRow de forma estricta.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

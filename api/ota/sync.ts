@@ -2,7 +2,7 @@
  * @file sync.ts
  * @description Sincronizador e importador universal de canales OTA (Booking, Decolar, Expedia, Airbnb).
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - Sincronización por Categorías: Extrae e inyecta room_type (rooms.type) en las reservas importadas para evitar sobre-reservas.
  * - Resiliencia: Sincroniza secuencialmente todas las conexiones registradas.
  * - Idempotencia Total: Generación de UUID determinístico (SHA-256) a partir del UID de la OTA para evitar duplicados en base de datos.
@@ -12,7 +12,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import ICAL from 'ical.js';
 import crypto from 'crypto'; // 🚀 Inyección del módulo criptográfico nativo de Node.js
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

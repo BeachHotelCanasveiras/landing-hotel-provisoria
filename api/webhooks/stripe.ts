@@ -3,7 +3,7 @@
  * @description Webhook de seguridad e idempotencia para conciliar pagos exitosos en Supabase.
  * Refactorizado para Vercel Serverless (VercelRequest/VercelResponse) y libre de 'any' para ESLint v9.
  * Paradigma de RESERVA POR CATEGORÍA:
- * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la raíz del proyecto.
  * - Desacoplamiento de ID físico: Las reservas se crean con `room_id = null` y asociadas a un `room_type`.
  * - ISO 27001: Deduplicación a nivel de base de datos basada en huésped y tipo, verificación segura de firmas e integridad relacional.
  * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
@@ -15,7 +15,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 // Contrato de interfaz estricto para mapear la API de autenticación administrativa (Bypass TS2339)
 interface SupabaseAuthAdmin {
@@ -149,7 +149,7 @@ async function webhookHandler(
     } else {
       // El usuario no existe. Creamos preventivamente la cuenta en auth.users.
       // Esto ejecuta síncronamente el trigger postgres 'handle_new_user_sync' poblando public.users y public.guests.
-      console.log(`[Identity Sync] [traceId: ${context.traceId}] Creando cuenta preventiva para ${guestEmail}...`);
+      console.log(`[Identity Sync] [traceId: ${context.traceId}] Creamos cuenta preventiva para ${guestEmail}...`);
       
       // Castear de forma segura el cliente al contrato de administración GoTrue (Bypass TS2339)
       const authAdmin = supabase.auth as unknown as SupabaseAuthAdmin;

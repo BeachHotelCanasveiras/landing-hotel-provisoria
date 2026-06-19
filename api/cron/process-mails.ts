@@ -2,7 +2,7 @@
  * @file process-mails.ts
  * @description Worker de backend asíncrono que procesa secuencialmente la cola de correos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - Saneamiento: Se corrige el fallo síncrono importando nativamente el módulo "crypto" de Node.js.
  * - Desacoplado: Consume los registros de la tabla 'email_queue' en Supabase.
  * - Anti-Spam: Aplica Staggering síncrono de 2 segundos para proteger el dominio.
@@ -13,7 +13,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import crypto from 'crypto'; // 🚀 Saneamiento de Bug: Importación nativa agregada de forma segura
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 // Inicialización segura del cliente de base de datos con rol de servicio (Bypass RLS)
 const supabase = createClient(

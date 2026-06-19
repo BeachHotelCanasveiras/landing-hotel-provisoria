@@ -2,7 +2,7 @@
  * @file send-copy.ts
  * @description Endpoint seguro para encolar de forma asíncrona un duplicado del comprobante de reserva a un email alternativo.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - ISO 27001: Verificación de sesión e inserción inmutable en la cola de salida para entrega diferida (Outbox Pattern).
  * - PCI-DSS: Recuperación de datos desde Stripe sin almacenamiento de credenciales.
  * - Trinity Atómica (i18n SSoT): Consulta y compila dinámicamente la plantilla oficial desde public.email_templates en base al locale del huésped.
@@ -12,7 +12,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 let stripeInstance: Stripe | null = null;
 let supabaseInstance: SupabaseClient | null = null;

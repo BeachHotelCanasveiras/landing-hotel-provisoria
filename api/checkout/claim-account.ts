@@ -2,7 +2,7 @@
  * @file claim-account.ts
  * @description Endpoint administrativo seguro para reclamar perfiles de huéspedes pre-creados tras un pago exitoso.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - ISO 27001: Verificación de autenticidad de sesión de Stripe para evitar secuestro o spoofing de cuentas.
  * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - PCI-DSS: Recuperación e integridad del email directamente desde la pasarela de pagos.
@@ -13,7 +13,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 // Contrato de interfaz estricto para mapear la API de autenticación administrativa (Bypass TS2339)
 interface SupabaseAuthAdmin {
@@ -40,7 +40,7 @@ interface StripeConstructor {
   new (key: string, options?: { apiVersion: string }): Stripe;
 }
 
-// 🚀 Saneamiento & Alineación de API: Forzamos la versión validada sin disparar advertencias de 'any' ni errores ts(2694)
+// 🚀 Saneamiento & Alignment de API: Forzamos la versión validada sin disparar advertencias de 'any' ni errores ts(2694)
 const StripeClass = Stripe as unknown as StripeConstructor;
 const stripe = new StripeClass(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2026-05-27.dahlia'

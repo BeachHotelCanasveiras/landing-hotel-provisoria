@@ -2,7 +2,7 @@
  * @file create-staff.ts
  * @description Endpoint administrativo de alta fidelidad para el aprovisionamiento de personal y gobernanza de credenciales de Recursos Humanos.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la ruta física real.
+ * - Observabilidad Serverless: Encapsulado asincrónicamente con el middleware withObservability desde la raíz del proyecto.
  * - ISO 27001 & RBAC: Verificación rigurosa de JWT de administrador para prevenir elevación de privilegios.
  * - Validación con Zod: Estructura, formatos, códigos de país, estado y ficha de salud ocupacional analizados en tiempo de ejecución.
  * - Soporte Multilingüe: Mensajes de respuesta localizados en es-ES, en-US y pt-BR.
@@ -14,7 +14,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { withObservability } from '../_utils/observability'; // ✅ Corrección de ruta física real para resolver ts(2307)
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta corregida a la raíz (api_utils) para resolver ts(2307)
 
 // Contrato de interfaz estricto y unificado para mapear la API de autenticación administrativa (Bypass TS2339)
 interface ExtendedAuthClient {
@@ -89,7 +89,7 @@ const DICTIONARIES = {
     error_create: 'Failed to register staff profile in the database.',
   },
   'pt-BR': {
-    unauthorized: 'Não autorizado. Permissões insuficientes para realizar esta operação.',
+    unauthorized: 'Não autorisado. Permissões insuficientes para realizar esta operação.',
     invalid_payload: 'Estrutura de dados de Recursos Humanos inválida.',
     success_create: 'Funcionário e ficha de saúde ocupacional registrados com sucesso.',
     success_reset: 'Senha do funcionário atualizada com sucesso.',
@@ -228,7 +228,7 @@ async function createStaffHandler(
       }
     });
 
-    // Validación defensiva para evitar excepciones Null Pointer
+    // Validación cortocircuitada defensiva para evitar excepciones Null Pointer
     if (createError || !authData || !authData.user) {
       console.error(`[Create Staff Error] [traceId: ${context.traceId}] Fallo al crear usuario en Auth:`, createError?.message);
       return res.status(400).json({ message: createError?.message || tLocal.error_create });
@@ -257,7 +257,7 @@ async function createStaffHandler(
         emergency_contact_name: payload.emergency_contact_name,
         emergency_contact_phone: payload.emergency_contact_phone,
         labor_status: 'active',
-        created_at: new Date().toISOString(), // Provisión síncrona obligatoria para bypass de nulos
+        created_at: new Date().toISOString(), 
         updated_at: new Date().toISOString()
       }]);
 

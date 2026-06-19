@@ -2,7 +2,7 @@
  * @file session.ts
  * @description Endpoint seguro para inicializar sesiones de pago en Stripe.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y el paradigma de RESERVA POR CATEGORÍA:
- * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability.
+ * - Observabilidad Serverless: Encapsulado de forma asíncrona con el middleware withObservability desde la raíz del proyecto.
  * - Desacoplamiento de ID físico: No se pre-asigna una habitación física en la reserva.
  * - Sincronización de API: Forzada de forma segura la versión de Stripe alineada con los scripts de auditoría.
  * - Validación por Tipo: Se obtiene el precio base del tipo de habitación seleccionado.
@@ -18,7 +18,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import crypto from 'crypto'; 
-import { withObservability } from '../_utils/observability'; // 🚀 Inyección del decorador de telemetría
+import { withObservability } from '../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
 
 // Configuración criptográfica de grado bancario
 const ALGORITHM = 'aes-256-gcm';

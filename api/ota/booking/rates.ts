@@ -9,8 +9,8 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { withObservability } from '../../_utils/observability';
-import { getBookingConfig } from '../../_utils/booking-config';
+import { withObservability } from '../../../api_utils/observability'; // ✅ Ruta de importación actualizada a la raíz
+import { getBookingConfig } from '../../../api_utils/booking-config'; // ✅ Ruta de importación actualizada a la raíz
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
