@@ -2,9 +2,9 @@
  * @file AdminDashboard.tsx
  * @description Orquestador Maestro de Paneles de Control (PMS & Portales).
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Corrección Vercel: Importación de 'StaffManagement' ajustada al nuevo barril '/staff'.
+ * - Visor Supa Base: Mapeo y renderizado dinámico de tablas físicas con el componente 'DatabaseTableViewer'.
  * - React 19 Purity (static-components): Se inyecta 'themeSelectorUI' como nodo JSX en lugar de componente anidado.
- * - Saneamiento TS (no-explicit-any): Tipado estricto de 'DashboardHeaderProps'.
+ * - Saneamiento TS (no-explicit-any): Tipado estricto de 'DashboardHeaderProps' y firmas del localizador.
  * - Responsabilidad Única (SRP): Lógica de red extraída a 'useDashboardData' y 'useDashboardMutations'.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
  */
@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LogOut, Sun, Moon, Sparkles } from 'lucide-react';
+import { LogOut, Sun, Moon, Sparkles, Database } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
@@ -134,6 +134,22 @@ function useDashboardData(user: User | null, isStaff: boolean, currentView: stri
     enabled: isStaff && currentView === 'housekeeping' && !!user,
   });
 
+  // 🚀 LECTURA DINÁMICA DE TABLAS (Visor de Base de Datos Supa Base)
+  const isDbView = currentView.startsWith('db_');
+  const dbTableName = isDbView ? currentView.slice(3) : '';
+
+  const { data: dbTableData = [], isLoading: loadingDbTable } = useQuery<Record<string, unknown>[]>({
+    queryKey: ['db_table', dbTableName],
+    queryFn: async () => {
+      const { data, error } = await supabase.from(dbTableName).select('*');
+      if (error) throw error;
+      return data as Record<string, unknown>[];
+    },
+    enabled: !!user && isDbView,
+    staleTime: 1000 * 5, // Cache sutil de 5 segundos para mantener consistencia
+  });
+
+  // Mappers
   const mappedBookings: BookingRecord[] = useMemo(() => rawBookings.map((b) => ({
     id: b.id,
     referenceCode: b.id.split('-')[0].toUpperCase(),
@@ -188,7 +204,8 @@ function useDashboardData(user: User | null, isStaff: boolean, currentView: stri
   return {
     rooms, rawBookings, tasks,
     mappedBookings, matrixRooms, matrixBookings, roomCategories, housekeepingRooms,
-    isGlobalLoading: loadingRooms || loadingBookings || (currentView === 'housekeeping' && loadingTasks)
+    dbTableData, dbTableName, isDbView,
+    isGlobalLoading: loadingRooms || loadingBookings || (currentView === 'housekeeping' && loadingTasks) || (isDbView && loadingDbTable)
   };
 }
 
@@ -298,7 +315,7 @@ function useDashboardMutations() {
 }
 
 // ============================================================================
-// 🎨 COMPONENTES DE UI (Layout & Header)
+// 🎨 COMPONENTES DE UI (Layout, Header & Visor Supa Base)
 // ============================================================================
 
 interface DashboardHeaderProps {
@@ -317,7 +334,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const userInitial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U';
 
-  // 🚀 Saneamiento (react-hooks/static-components): Se inyecta como un nodo JSX puro, no como componente anidado
   const themeSelectorUI = (
     <div className="flex bg-pms-surface-high p-1 rounded-xl border border-pms-border shadow-inner">
       {[
@@ -349,7 +365,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <header className="bg-pms-surface border-b border-pms-border px-8 py-4 flex items-center justify-between shrink-0 shadow-sm z-10 transition-colors duration-300">
         <div>
           <h1 className="font-display text-2xl font-bold text-pms-text tracking-tight">
-            {currentView === 'overview' ? `Olá, ${user.user_metadata?.full_name?.split(' ')[0] || 'User'}` : t('brand_dashboard_title', { defaultValue: 'Gestão do Hotel' })}
+            {currentView.startsWith('db_') ? 'Supa Base' : currentView === 'overview' ? `Olá, ${user.user_metadata?.full_name?.split(' ')[0] || 'User'}` : t('brand_dashboard_title', { defaultValue: 'Gestão do Hotel' })}
           </h1>
           <p className="font-body text-[10px] text-pms-text-muted font-bold uppercase tracking-widest mt-0.5">
             Beach Core PMS • <span className="text-pms-accent">{userRole}</span>
@@ -366,7 +382,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     );
   }
 
-  // Layout B2C / B2B (Huéspedes y Agencias)
   return (
     <header className="border-b border-pms-border bg-pms-surface sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm transition-colors duration-300">
       <div className="flex items-center gap-4">
@@ -382,6 +397,97 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <button onClick={() => signOut()} className="p-2 text-pms-text-muted hover:text-red-500 transition-colors border-none bg-transparent cursor-pointer" title="Sair"><LogOut size={20}/></button>
       </div>
     </header>
+  );
+};
+
+/**
+ * 🛰️ VISOR INTERACTIVO DE BASE DE DATOS (Gemini High-Density Layout)
+ */
+const DatabaseTableViewer: React.FC<{ 
+  tableName: string; 
+  data: Record<string, unknown>[]; 
+  t: (key: string, options?: Record<string, unknown>) => string;
+}> = ({ tableName, data}) => {
+  
+  const headers = useMemo(() => {
+    if (data.length === 0) return [];
+    return Object.keys(data[0]);
+  }, [data]);
+
+  const formatCellValue = (key: string, val: unknown) => {
+    if (val === null || val === undefined) {
+      return <span className="text-pms-text-muted/40 font-mono italic">null</span>;
+    }
+    if (typeof val === 'boolean') {
+      return val ? (
+        <span className="px-2 py-0.5 bg-green-500/10 text-green-500 rounded-md font-bold text-[9px]">TRUE</span>
+      ) : (
+        <span className="px-2 py-0.5 bg-red-500/10 text-red-500 rounded-md font-bold text-[9px]">FALSE</span>
+      );
+    }
+    if (typeof val === 'object') {
+      return <code className="text-[10px] bg-pms-surface-high px-1.5 py-0.5 rounded font-mono text-pms-text truncate block max-w-[200px]" title={JSON.stringify(val)}>{JSON.stringify(val)}</code>;
+    }
+    if (key === 'id' || key.endsWith('_id')) {
+      const strVal = String(val);
+      return <span className="font-mono text-[10px] tracking-tight bg-pms-surface-high px-1.5 py-0.5 rounded text-pms-text-muted" title={strVal}>{strVal.slice(0, 8)}...</span>;
+    }
+    if (key.endsWith('_at') || key === 'created_at') {
+      return <span className="text-[10px] font-mono text-pms-text-muted">{new Date(String(val)).toLocaleString()}</span>;
+    }
+    return <span className="text-pms-text font-medium">{String(val)}</span>;
+  };
+
+  return (
+    <div className="bg-pms-surface rounded-3xl border border-pms-border p-6 shadow-xs space-y-4 animate-in fade-in duration-300">
+      <div className="border-b border-pms-border pb-3 flex justify-between items-center">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-pms-surface-high border border-pms-border flex items-center justify-center text-pms-accent">
+            <Database size={18} strokeWidth={1.5} />
+          </div>
+          <div>
+            <h4 className="font-display text-lg font-bold text-pms-text">Tabela: public.{tableName}</h4>
+            <p className="text-[9px] font-bold text-pms-text-muted uppercase tracking-widest mt-0.5">Visor Supa Base Ativo</p>
+          </div>
+        </div>
+        <span className="bg-pms-surface-high border border-pms-border px-3 py-1.5 rounded-xl font-mono text-[11px] text-pms-text-muted select-none">
+          {data.length} registros
+        </span>
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-pms-border scrollbar-thin">
+        <table className="w-full border-collapse divide-y divide-pms-border text-[11px] font-body">
+          <thead className="bg-pms-surface-high/50">
+            <tr className="divide-x divide-pms-border">
+              {headers.map(h => (
+                <th key={h} className="p-3 text-left font-bold text-pms-text-muted uppercase tracking-wider select-none whitespace-nowrap">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-pms-border bg-pms-surface">
+            {data.length > 0 ? (
+              data.map((row, idx) => (
+                <tr key={idx} className="divide-x divide-pms-border hover:bg-pms-surface-high/20 transition-colors">
+                  {headers.map(h => (
+                    <td key={h} className="p-3 whitespace-nowrap overflow-hidden max-w-[220px] truncate">
+                      {formatCellValue(h, row[h])}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={headers.length || 1} className="p-12 text-center text-pms-text-muted italic">
+                  Tabela sem registros.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 };
 
@@ -406,7 +512,7 @@ export default function AdminDashboard() {
   // Data & Mutations
   const { 
     rooms, tasks, mappedBookings, matrixRooms, matrixBookings, 
-    roomCategories, housekeepingRooms, isGlobalLoading 
+    roomCategories, housekeepingRooms, dbTableData, dbTableName, isDbView, isGlobalLoading 
   } = useDashboardData(user, isStaff, currentView);
   
   const mutations = useDashboardMutations();
@@ -427,6 +533,11 @@ export default function AdminDashboard() {
 
   // Mapa de Vistas (Factory Pattern)
   const renderView = () => {
+    // 🚀 INTERCEPTOR DEL VISOR DE BASE DE DATOS (Supa Base)
+    if (isDbView) {
+      return <DatabaseTableViewer tableName={dbTableName} data={dbTableData} t={t} />;
+    }
+
     switch (currentView) {
       case 'overview':
         return userRole === 'developer' ? <DeveloperConsole t={t as (key: string) => string} /> :

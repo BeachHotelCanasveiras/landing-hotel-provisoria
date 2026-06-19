@@ -2,10 +2,11 @@
  * @file PMSSidebar.tsx
  * @description Panel colapsable de navegación principal del PMS.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
+ * - Estética Gemini: Tipografía normal-case, limpia y de alta densidad para una consola ejecutiva B2B de lujo.
+ * - Integración Supa Base: Incorporación de la pestaña "Base de Datos" y sus sub-menús de tablas físicas.
  * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface y pms-border.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
- * - Trinidad Atómica: Localización total del texto institucional del hotel.
- * - Control Multitema: Selector de píldora segmentada integrado en el pie del sidebar.
+ * - Trinidad Atómica: Localización total del texto institucional del hotel con fallbacks robustos.
  */
 
 import React, { useState } from 'react';
@@ -13,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, Calendar, BarChart3, Briefcase, 
   Sparkles, ExternalLink, Settings, LogOut, ChevronDown, ChevronUp, 
-  Menu, Hotel, Sun, Moon 
+  Menu, Hotel, Sun, Moon, Database 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme, type DashboardTheme } from '@/contexts/ThemeContext';
@@ -58,6 +59,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
     reports: false,
     accounting: false,
     settings: false,
+    database: false, // 🚀 Inicializa colapsada para no saturar el primer renderizado
   });
 
   // Validación de esquema en modo DEV (Failsafe)
@@ -116,6 +118,20 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       icon: Sparkles,
       view: 'housekeeping'
     },
+    // 🚀 NUEVA SECCIÓN DE BASE DE DATOS (Supa Base Viewer)
+    {
+      key: 'database',
+      label: t('database.title', { defaultValue: 'Base de Datos' }),
+      icon: Database,
+      subItems: [
+        { key: 'db_users', label: t('database.users', { defaultValue: 'Tabela Users' }), view: 'db_users' },
+        { key: 'db_guests', label: t('database.guests', { defaultValue: 'Tabela Guests' }), view: 'db_guests' },
+        { key: 'db_rooms', label: t('database.rooms', { defaultValue: 'Tabela Rooms' }), view: 'db_rooms' },
+        { key: 'db_bookings', label: t('database.bookings', { defaultValue: 'Tabela Bookings' }), view: 'db_bookings' },
+        { key: 'db_email_queue', label: t('database.email_queue', { defaultValue: 'Tabela Email Queue' }), view: 'db_email_queue' },
+        { key: 'db_staff_profiles', label: t('database.staff_profiles', { defaultValue: 'Tabela Staff Profiles' }), view: 'db_staff_profiles' },
+      ]
+    },
     {
       key: 'accounting',
       label: t('accounting.title'),
@@ -153,7 +169,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       )}
     >
       <div>
-        {/* HEADER (Con marcas de posición traducidas de forma robusta) */}
+        {/* HEADER */}
         <div className="p-6 mb-2 flex items-center justify-between">
           {!isCollapsed && (
             <div className="flex items-center gap-3 animate-in fade-in duration-700">
@@ -172,7 +188,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
           )}
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-pms-surface-high rounded-xl transition-all text-pms-text-muted hover:text-pms-text cursor-pointer"
+            className="p-2 hover:bg-pms-surface-high rounded-xl transition-all text-pms-text-muted hover:text-pms-text cursor-pointer border-none bg-transparent"
             aria-label="Minimizar barra lateral"
           >
             <Menu size={18} />
@@ -198,7 +214,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
                 <button
                   onClick={() => isGroup ? toggleSubMenu(item.key) : item.view && onNavigate(item.view)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 group cursor-pointer border-none",
+                    "w-full flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 group cursor-pointer border-none",
                     isActive && !isGroup 
                       ? "bg-pms-accent text-pms-accent-foreground shadow-lg" 
                       : "hover:bg-pms-surface-high text-pms-text-muted hover:text-pms-text"
@@ -211,7 +227,10 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
                       className={cn(isActive ? "text-pms-accent-foreground" : "text-pms-text-muted group-hover:text-pms-text")} 
                     />
                     {!isCollapsed && (
-                      <span className={cn("text-xs font-semibold uppercase tracking-wider", isActive ? "opacity-100" : "opacity-80")}>
+                      <span className={cn(
+                        "text-xs tracking-normal normal-case transition-all", 
+                        isActive ? "opacity-100 font-semibold text-pms-text" : "opacity-80 font-medium"
+                      )}>
                         {item.label}
                       </span>
                     )}
@@ -228,9 +247,9 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
                         key={sub.key}
                         onClick={() => onNavigate(sub.view)}
                         className={cn(
-                          "w-full text-left px-4 py-2.5 rounded-xl text-[11px] font-medium transition-all cursor-pointer relative border-none bg-transparent",
+                          "w-full text-left px-4 py-2 rounded-xl text-[11px] font-normal tracking-normal normal-case transition-all cursor-pointer relative border-none bg-transparent",
                           currentView === sub.view 
-                            ? "text-pms-accent font-bold bg-pms-accent/5" 
+                            ? "text-pms-accent font-semibold bg-pms-accent/5" 
                             : "text-pms-text-muted hover:text-pms-text hover:bg-pms-surface-high"
                         )}
                       >
