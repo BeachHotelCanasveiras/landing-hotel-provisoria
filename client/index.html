@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <meta name="theme-color" content="#0F3B66" />
     
+    <!-- New Relic Browser Agent (Capa 1 Telemetría - Carga vía CDN Oficial) -->
+    <script type="text/javascript">
+      window.NREUM || (NREUM = {});
+      NREUM.init = {
+        browser_consent_mode: { enabled: false },
+        privacy: { cookies_enabled: true },
+        distributed_tracing: { enabled: true },
+        performance: { capture_measures: true },
+        ajax: { deny_list: ["bam.nr-data.net"], capture_payloads: 'none' }
+      };
+      NREUM.loader_config = {
+        accountID: "8196377",
+        trustKey: "8196377",
+        agentID: "1120543321",
+        licenseKey: "NRJS-6a9d52c61e36e24ddbf",
+        applicationID: "1120543321"
+      };
+      NREUM.info = {
+        beacon: "bam.nr-data.net",
+        errorBeacon: "bam.nr-data.net",
+        licenseKey: "NRJS-6a9d52c61e36e24ddbf",
+        applicationID: "1120543321",
+        sa: 1
+      };
+    </script>
+    <script src="https://js-agent.newrelic.com/nr-loader-spa-1.316.0.min.js"></script>
+    
     <!-- Favicon Oficial -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     
@@ -15,7 +42,7 @@
     <link rel="canonical" href="https://beachcanasvieiras.com" />
     <meta name="author" content="Raz Podestá - MetaShark Tech" />
 
-    <!-- Open Graph / Facebook (Sincronizado con assets optimizados de Cloudinary) -->
+    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Hotel Beach Canasvieiras" />
     <meta property="og:locale" content="es_ES" />
@@ -24,7 +51,7 @@
     <meta property="og:description" content="Descubre un rincón acogedor donde el tiempo se detiene. Ubicación privilegiada sobre la Avenida das Nações, confort absoluto y la calidez de sentirte bienvenido a pasos de la playa." />
     <meta property="og:image" content="https://res.cloudinary.com/dap9ukdyq/image/upload/f_auto,q_auto,w_1200/v1/beach-hotel/hotel/hero-1.webp" />
 
-    <!-- Twitter Cards (Sincronizado con assets optimizados de Cloudinary) -->
+    <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Hotel Beach Canasvieiras | Tu Refugio Costero" />
     <meta name="twitter:description" content="El punto de encuentro perfecto para tus días de descanso en Canasvieiras. Comodidad, hospitalidad genuina y desayuno buffet artesanal a solo dos cuadras del mar." />

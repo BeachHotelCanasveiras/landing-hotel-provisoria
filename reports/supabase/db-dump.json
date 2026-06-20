@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-20T05:43:21.646Z",
+  "timestamp": "2026-06-20T16:34:14.130Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -642,7 +642,7 @@
         "price_per_night": 200,
         "status": "available",
         "created_at": "2026-06-16T03:26:36.912044+00:00",
-        "housekeeping_status": "dirty",
+        "housekeeping_status": "clean",
         "current_occupant": null,
         "ical_import_url": null,
         "ical_export_token": "b1045ed6-2f4c-4156-852e-803b960047fa"
