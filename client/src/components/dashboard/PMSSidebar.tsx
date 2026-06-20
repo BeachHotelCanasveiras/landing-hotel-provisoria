@@ -3,6 +3,7 @@
  * @description Panel lateral de navegación plana de alta fidelidad estilo Vercel.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y principios SOLID:
  * - Estética Vercel: Diseñado con accesos planos e interactivos, libre de acordeones colapsables.
+ * - Saneamiento Temático: Ajustado al modelo de dos estados (Claro y Oscuro) para resolver inconsistencias de superposición (TS2322 / TS2367).
  * - RBAC Seguro: Filtrado reactivo de menús por rol. El rol 'developer' tiene bypass absoluto a todas las vistas.
  * - Soporte B2B y Supervisión: Canales independientes para Agencias de Viajes (Minoristas), Mayoristas y Supervisores de Limpieza.
  * - Saneado: Satisface ESLint v9, libre de variables huérfanas y advertencias de renderizado.
@@ -68,7 +69,8 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   }
 
   const cycleDashboardTheme = () => {
-    const themes: DashboardTheme[] = ['light', 'sovereign-dark', 'gemini-dark'];
+    // 🚀 SANEADO (TS2322): Rotación reducida para conmutar únicamente entre Claro y Oscuro
+    const themes: DashboardTheme[] = ['light', 'dark'];
     const currentIndex = themes.indexOf(dashboardTheme);
     const nextIndex = (currentIndex + 1) % themes.length;
     setDashboardTheme(themes[nextIndex]);
@@ -279,7 +281,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       {/* FOOTER & CONTROL MULTITEMA INTEGRADO */}
       <div className="p-4 border-t border-pms-border flex flex-col gap-4 bg-pms-surface-high/10">
         
-        {/* Selector Multitema Píldora Segmentada */}
+        {/* Selector de Tema */}
         <div className="flex justify-center">
           {isCollapsed ? (
             <button
@@ -288,15 +290,13 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
               title="Alternar Tema PMS"
             >
               {dashboardTheme === 'light' && <Sun size={14} />}
-              {dashboardTheme === 'sovereign-dark' && <Moon size={14} />}
-              {dashboardTheme === 'gemini-dark' && <Sparkles size={14} />}
+              {dashboardTheme === 'dark' && <Moon size={14} />}
             </button>
           ) : (
             <div className="flex items-center gap-1.5 p-1 bg-pms-surface-high border border-pms-border rounded-full shadow-inner w-full">
               {[
                 { key: 'light', icon: Sun, label: 'Light' },
-                { key: 'sovereign-dark', icon: Moon, label: 'Sovereign' },
-                { key: 'gemini-dark', icon: Sparkles, label: 'Gemini' }
+                { key: 'dark', icon: Moon, label: 'Dark' } // 🚀 SANEADO (TS2367): Mapeo acotado exclusivamente a Claro y Oscuro
               ].map((themeOpt) => {
                 const IsActiveTheme = dashboardTheme === themeOpt.key;
                 const ThemeIcon = themeOpt.icon;

@@ -3,7 +3,7 @@
  * @description Proveedor de estado global de temas para el ecosistema Beach Hotel.
  * - Desacoplado: Gobernación independiente para Landing Page y Dashboard Operativo PMS.
  * - SSoT: Persistencia robusta de preferencias mediante StorageService.
- * - Tema por Defecto: Inicialización nativa en 'gemini-dark' para el PMS.
+ * - Tema por Defecto: Inicialización nativa en 'dark' (Tema Oscuro estilo Vercel) para el PMS.
  * - Rendimiento: Inyección directa por atributos HTML para aceleración por GPU sin renders en cascada.
  * - Telemetría: Registro de auditoría estructurado (ISO 27001) para transiciones estéticas de interfaz.
  * - Saneamiento: Resuelve la advertencia react-refresh/only-export-components de ESLint.
@@ -13,7 +13,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { StorageService } from "@/lib/storage";
 
 export type Theme = "light" | "dark";
-export type DashboardTheme = "light" | "sovereign-dark" | "gemini-dark";
+export type DashboardTheme = "light" | "dark"; // 🚀 Saneamiento: Simplificado a solo Claro y Oscuro
 
 interface ThemeContextType {
   // Configuración del Portal Web Público / Landing Page
@@ -39,8 +39,8 @@ interface ThemeProviderProps {
 export function ThemeProvider({
   children,
   defaultTheme = "light",
-  defaultDashboardTheme = "gemini-dark", // 🚀 Saneamiento: 'gemini-dark' establecido como tema predeterminado
-  switchable = true, // Activado para dar soporte dinámico de temas
+  defaultDashboardTheme = "dark", // 🚀 Saneamiento: 'dark' (Oscuro) establecido como predeterminado
+  switchable = true,
 }: ThemeProviderProps) {
   
   // 1. Inicialización del Tema del Portal Público
