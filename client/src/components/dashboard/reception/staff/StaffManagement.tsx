@@ -2,8 +2,9 @@
  * @file StaffManagement.tsx
  * @description Orquestador inteligente de estado (Smart Component) para la gobernanza de Recursos Humanos.
  * Coordinación y sincronización de las llamadas CRUD al servidor Vercel y Supabase.
- * - Despido en Cascada: Implementa baja automatizada para cumplimiento riguroso de LGPD (staff_profiles -> users -> auth).
- * - Sincronización de Ediciones: Controla la mutación de e-mails alternativos mapeando cambios en caliente.
+ * - Despido en Cascada Seguro: Implementa baja automatizada de todas las dependencias.
+ * - Doble Factor de Confirmación (Fix Regresión): Añadido modal que exige escribir el Nombre y Apellido Paterno del empleado.
+ * - Sincronización de Ediciones: Controls la mutación de e-mails alternativos mapeando cambios en caliente.
  * - Telemetría: Registro pasivo del ciclo de vida de operaciones de personal.
  * - Saneamiento de Dependencias Circulares: Exportado nativo de 'StaffMember' rompiendo bucles de importación.
  * - Saneamiento de Linter: Resueltos todos los errores ts(2304), ts(2303), ts(2607), ts(2786) y no-unused-vars.
@@ -13,15 +14,16 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Sparkles, X, Mail, Phone, 
-  Globe, HeartPulse, Briefcase, MessageSquare, Lock 
-} from 'lucide-react'; // ✅ Saneamiento: Todos los iconos requeridos declarados correctamente
+  Globe, HeartPulse, Briefcase, MessageSquare, Lock, Trash2 
+} from 'lucide-react'; // ✅ Saneamiento: Añadidos 'Trash2' y 'CheckCircle2' para el flujo de baja segura
 import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { supabase } from '@/lib/supabase';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Button } from "@/components/ui/button"; // ✅ Saneamiento: Importado para resolver ts(2304)
-import { Spinner } from "@/components/ui/spinner"; // ✅ Saneamiento: Importado para resolver ts(2304)
+import { Button } from "@/components/ui/button"; 
+import { Spinner } from "@/components/ui/spinner"; 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"; // ✅ Saneamiento: Importados para el modal de doble factor
 
 // Importaciones atómicas del módulo
 import { StaffTable } from './StaffTable';
@@ -31,7 +33,6 @@ import { StaffForm } from './StaffForm';
 // 📏 INTERFACES Y CONTRATOS DE DATOS (SSoT)
 // ============================================================================
 
-// ✅ Saneamiento: 'export' inyectado para que index.ts lo re-exporte de forma no circular
 export interface StaffMember {
   id: string;
   email: string;
@@ -146,7 +147,6 @@ const InviteDistributionModal: React.FC<{
         </div>
 
         <div className="space-y-3">
-          {/* ✅ Saneamiento ESLint: Invocadas directamente las variables estructuradas sendWhatsApp y sendEmail */}
           <Button onClick={sendWhatsApp} className="w-full h-12 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 border-none">
             <MessageSquare size={16} /> Enviar via WhatsApp
           </Button>
@@ -226,9 +226,13 @@ export const StaffManagement: React.FC = () => {
   const [inviteModalData, setInviteModalData] = useState<{ email: string; link: string; phone: string; name: string } | null>(null);
   const [selectedFichaUser, setSelectedFichaUser] = useState<StaffMember | null>(null);
 
+  // 🚀 ESTADOS PARA EL MODAL DE CONFIRMACIÓN SEGURA DE ELIMINACIÓN (DOUBLE-VERIFICATION)
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<StaffMember | null>(null);
+  const [deleteTypedName, setDeleteTypedName] = useState('');
+
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ✅ Saneamiento ESM: Captura del objeto de referencia estable para el linter de dependencias
+  // Saneamiento ESM: Captura del objeto de referencia estable
   useEffect(() => {
     const currentRef = copiedTimeoutRef;
     return () => {
@@ -259,7 +263,7 @@ export const StaffManagement: React.FC = () => {
 
       const compiled: StaffMember[] = (profiles || []).map((item) => ({
         ...item,
-        role: roleMap.get(item.id) || 'housekeeper', // ✅ Saneamiento de Rol (Evita el dash '—')
+        role: roleMap.get(item.id) || 'housekeeper', 
         fullName: `${item.first_name} ${item.paternal_last_name}`.trim(),
         address: `${item.state_code.toUpperCase()}, ${item.country}`
       }));
@@ -283,7 +287,6 @@ export const StaffManagement: React.FC = () => {
   // ============================================================================
   // 💾 PROCESAMIENTO CRUD: CREACIÓN Y ACTUALIZACIÓN
   // ============================================================================
-  // ✅ Saneamiento: any reemplazado por Record<string, unknown> para ESLint v9
   const handleFormSubmit = async (formData: Record<string, unknown>) => {
     setLoading(true);
     try {
@@ -310,7 +313,7 @@ export const StaffManagement: React.FC = () => {
 
       toast.success(data.message || 'Funcionário salvo com sucesso!');
       setSelectedEditUser(null);
-      setActiveTab('manage'); // Regresa al listado automáticamente
+      setActiveTab('manage'); 
       await fetchStaffList();
 
     } catch (err: unknown) {
@@ -322,11 +325,17 @@ export const StaffManagement: React.FC = () => {
   };
 
   // ============================================================================
-  // 🗑️ PROCESAMIENTO CRUD: BAJA EN CASCADA (DELETE)
+  // 🗑️ PROCESAMIENTO CRUD: GESTOR DE DISPARO DEL DIÁLOGO DE ELIMINACIÓN
   // ============================================================================
-  const handleDeleteStaff = async (member: StaffMember) => {
-    if (!window.confirm(`Tem certeza que deseja excluir permanentemente o funcionário ${member.fullName}? Esta ação é irreversível.`)) return;
+  const handleDeleteStaff = (member: StaffMember) => {
+    setDeleteConfirmUser(member);
+    setDeleteTypedName(''); 
+  };
 
+  /**
+   * Ejecuta el borrado final en cascada en el backend una vez verificado el nombre
+   */
+  const executeDeleteStaff = async (member: StaffMember) => {
     setLoadingList(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -424,7 +433,7 @@ export const StaffManagement: React.FC = () => {
       });
       toast.success('Link de acesso seguro gerado.');
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Erro ao gerar link.');
+      toast.error(err instanceof Error ? err.message : 'Erro ao generar link.');
     } finally {
       setLoadingList(false);
     }
@@ -528,6 +537,63 @@ export const StaffManagement: React.FC = () => {
             user={selectedFichaUser}
             onClose={() => setSelectedFichaUser(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* 🚀 MODAL 4: CONFIRMACIÓN SEGURA DE ELIMINACIÓN DE PERSONAL (DOUBLE-VERIFICATION) */}
+      <AnimatePresence>
+        {deleteConfirmUser && (
+          <Dialog open={!!deleteConfirmUser} onOpenChange={(open) => !open && setDeleteConfirmUser(null)}>
+            <DialogContent className="sm:max-w-[380px] rounded-[2rem] border-pms-border bg-pms-surface text-pms-text shadow-2xl">
+              <DialogHeader>
+                <DialogTitle className="font-display text-lg text-pms-text flex items-center gap-2">
+                  <Trash2 size={16} className="text-red-500 animate-pulse" />
+                  Confirmar Desligamento
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2 text-xs font-body text-pms-text-muted">
+                <p className="leading-relaxed text-left">
+                  Para confirmar a exclusão e o desligamento permanente em cascata de <strong className="text-pms-text">{deleteConfirmUser.first_name} {deleteConfirmUser.paternal_last_name}</strong>, digite seu nome e sobrenome paterno exatamente como mostrado abajo:
+                </p>
+                
+                <div className="p-3 bg-pms-surface-high border border-pms-border rounded-xl text-center select-all">
+                  <code className="font-mono text-xs font-bold text-pms-text select-all">
+                    {deleteConfirmUser.first_name} {deleteConfirmUser.paternal_last_name}
+                  </code>
+                </div>
+
+                <div className="p-3 rounded-xl border border-pms-border bg-pms-surface-high focus-within:border-pms-accent">
+                  <input
+                    type="text"
+                    value={deleteTypedName}
+                    onChange={(e) => setDeleteTypedName(e.target.value)}
+                    placeholder="Digite o nome completo para confirmar..."
+                    className="w-full bg-transparent border-none p-0 text-xs text-pms-text outline-none text-center font-medium placeholder:text-pms-text-muted"
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button type="button" onClick={() => setDeleteConfirmUser(null)} className="flex-1 h-11 bg-pms-surface-high border border-pms-border text-pms-text rounded-xl font-bold">
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    disabled={deleteTypedName !== `${deleteConfirmUser.first_name} ${deleteConfirmUser.paternal_last_name}`}
+                    onClick={() => {
+                      if (deleteConfirmUser) {
+                        executeDeleteStaff(deleteConfirmUser);
+                      }
+                      setDeleteConfirmUser(null);
+                      setDeleteTypedName('');
+                    }}
+                    className="flex-1 h-11 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold border-none disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95 shadow-md flex items-center justify-center cursor-pointer"
+                  >
+                    Excluir Funcionário
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
       </AnimatePresence>
 
