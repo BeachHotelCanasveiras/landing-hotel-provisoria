@@ -1,31 +1,82 @@
 {
   "menu_principal": "Menu Principal",
-  "overview": "Visão Geral Diária",
+  "overview": "Visão Geral",
+  "check_in": "Check-In / Entrada",
   "bookings": {
-    "title": "Reservas",
+    "title": "Reservas e Quartos",
     "room_map": "Mapa de Quartos",
-    "search": "CRM - Buscador"
+    "search": "Buscador Reservas",
+    "daily": "Diário",
+    "weekly": "Semanal",
+    "monthly": "Mensal",
+    "available": "Disponibilidade",
+    "occupied": "Ocupados",
+    "reserved": "Reservados",
+    "blocked": "Bloqueios",
+    "maintenance": "Manutenção"
   },
-  "property": {
-    "title": "Propriedade",
-    "inventory": "Inventário de Quartos",
-    "rates": "Tarifas e Disponibilidade"
+  "rates": {
+    "title": "Tarifas",
+    "wholesale": "Base Operadoras",
+    "public": "Venda Público",
+    "flexible": "Flexíveis",
+    "last_minute": "Último Minuto"
   },
-  "housekeeping": "Governança",
+  "guests": {
+    "title": "Hóspedes",
+    "search": "Banco de Dados"
+  },
+  "housekeeping": {
+    "title": "Governança",
+    "checklist": "Tarefas Diárias",
+    "schedule": "Escala de Turnos",
+    "messages": "Mensagens Hóspede",
+    "inventory": "Controle Compras",
+    "missing": "Faltas"
+  },
   "accounting": {
     "title": "Contabilidade",
-    "cash_flow": "Fluxo de Caixa",
-    "expenses": "Despesas e Fornecedores"
+    "invoice_input": "Notas Fiscais",
+    "cost_centers": "Centros de Custo"
   },
-  "reports": {
-    "title": "Relatórios",
-    "revenue": "Receita e Previsões",
-    "police": "Relatório Policial (FNRH)"
+  "inventory": {
+    "title": "Inventário & Estoque",
+    "stock": "Controle de Estoque"
+  },
+  "laundry": {
+    "title": "Lavanderia",
+    "dirty_sheets": "Roupa Suja"
+  },
+  "breakfast": {
+    "title": "Café / Desjejum",
+    "menu_today": "Menu do Dia",
+    "special_requests": "Pedidos Especiais"
+  },
+  "hr": {
+    "title": "Recursos Humanos",
+    "employees": "Fichas do Pessoal",
+    "schedules": "Dias de Trabalho",
+    "calculations": "Cálculo de Ponto"
+  },
+  "promotions": {
+    "title": "Promos & Guias",
+    "packages": "Pacotes",
+    "receipts": "Comprovantes",
+    "coupons": "Cupons"
+  },
+  "database": {
+    "title": "Supa Base"
+  },
+  "agency_retail": {
+    "title": "Agências de Viagens"
+  },
+  "agency_wholesale": {
+    "title": "Agências Majoristas"
   },
   "settings": {
     "title": "Configurações",
-    "staff": "Equipe / Pessoal",
-    "all_settings": "Ajustes Gerais"
+    "dashboard": "Ajustes de Painel",
+    "templates": "Modelos"
   },
   "booking_engine": "Motor de Reservas",
   "logout": "Sair"

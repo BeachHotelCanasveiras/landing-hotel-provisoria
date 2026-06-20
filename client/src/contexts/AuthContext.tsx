@@ -8,6 +8,7 @@
  * - Smart Identity Manifesto: Sincroniza e hidrata en caliente el perfil del huésped en cookies seguras.
  * - Self-Healing Integrity Engine: Detecta y auto-repara de forma síncrona registros de huéspedes legacy huérfanos en public.guests.
  * - Workaround Deadlock: Desacopladas las llamadas asíncronas de base de datos dentro del ciclo de vida de autenticación.
+ * - Soporte RBAC Extendido: Incorporación de roles 'receptionist', 'agency_retail', 'agency_wholesale' y 'housekeeping_supervisor'.
  */
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
@@ -15,7 +16,17 @@ import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { StorageService } from '@/lib/storage'; // 🚀 Importación del servicio de persistencia segura
 
-export type UserRole = 'guest' | 'agency' | 'admin' | 'developer' | 'housekeeper';
+// Definición extendida de roles para soportar la granularidad del PMS y los portales B2B
+export type UserRole = 
+  | 'guest' 
+  | 'agency' 
+  | 'agency_retail' 
+  | 'agency_wholesale' 
+  | 'admin' 
+  | 'developer' 
+  | 'housekeeper' 
+  | 'receptionist' 
+  | 'housekeeping_supervisor';
 
 interface AuthContextType {
   user: User | null;

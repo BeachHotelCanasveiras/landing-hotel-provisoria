@@ -1,32 +1,83 @@
 {
   "menu_principal": "Main Menu",
   "overview": "Daily Overview",
+  "check_in": "Check-In / Entrance",
   "bookings": {
-    "title": "Bookings",
+    "title": "Bookings & Rooms",
     "room_map": "Room Matrix",
-    "search": "CRM - Search"
+    "search": "Search Bookings",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "available": "Availability",
+    "occupied": "Occupied",
+    "reserved": "Reserved",
+    "blocked": "Blocked Days",
+    "maintenance": "Maintenance"
   },
-  "property": {
-    "title": "Property",
-    "inventory": "Room Inventory",
-    "rates": "Rates & Availability"
+  "rates": {
+    "title": "Rates",
+    "wholesale": "Wholesaler Rates",
+    "public": "Public Sales",
+    "flexible": "Flexible Packages",
+    "last_minute": "Last Minute"
   },
-  "housekeeping": "Housekeeping Log",
+  "guests": {
+    "title": "Guests",
+    "search": "Database"
+  },
+  "housekeeping": {
+    "title": "Housekeeping",
+    "checklist": "Daily Checklist",
+    "schedule": "Staff Shift",
+    "messages": "Guest Messages",
+    "inventory": "Purchase Control",
+    "missing": "Missing Items"
+  },
   "accounting": {
     "title": "Accounting",
-    "cash_flow": "Cash Flow",
-    "expenses": "Expenses & Suppliers"
+    "invoice_input": "Invoices",
+    "cost_centers": "Cost Centers"
   },
-  "reports": {
-    "title": "Reports",
-    "revenue": "Revenue & Forecasts",
-    "police": "Police Report (FNRH)"
+  "inventory": {
+    "title": "Inventory & Stock",
+    "stock": "Stock Control"
+  },
+  "laundry": {
+    "title": "Laundry",
+    "dirty_sheets": "Dirty Sheets"
+  },
+  "breakfast": {
+    "title": "Breakfast / Cafe",
+    "menu_today": "Menu of the Day",
+    "special_requests": "Special Requests"
+  },
+  "hr": {
+    "title": "Human Resources",
+    "employees": "Staff Files",
+    "schedules": "Work Schedules",
+    "calculations": "Work Clock"
+  },
+  "promotions": {
+    "title": "Promos & Vouchers",
+    "packages": "Packages",
+    "receipts": "Receipts",
+    "coupons": "Coupons"
+  },
+  "database": {
+    "title": "Supa Base"
+  },
+  "agency_retail": {
+    "title": "Travel Agencies"
+  },
+  "agency_wholesale": {
+    "title": "Wholesaler Agencies"
   },
   "settings": {
     "title": "Settings",
-    "staff": "Team / Staff",
-    "all_settings": "All Settings"
+    "dashboard": "Dashboard Settings",
+    "templates": "Templates"
   },
   "booking_engine": "Booking Engine",
-  "logout": "Sign Out"
+  "logout": "Logout"
 }

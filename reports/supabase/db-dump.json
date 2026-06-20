@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-06-18T20:14:00.513Z",
+  "timestamp": "2026-06-20T03:33:32.203Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
   "data": {
     "users": [
@@ -86,6 +86,30 @@
         "email": "antonellarusso060183@gmail.com",
         "role": "guest",
         "created_at": "2026-06-18T01:59:43.280255+00:00"
+      },
+      {
+        "id": "ba7a8a43-ecdb-4851-806e-d91fe528bac3",
+        "email": "aaaa.bbbb@beachcanasvieiras.com",
+        "role": "guest",
+        "created_at": "2026-06-19T06:47:50.085523+00:00"
+      },
+      {
+        "id": "e59bf9e8-d149-4903-a81c-e0286a95bea9",
+        "email": "aaaab.cccc@beachcanasvieiras.com",
+        "role": "admin",
+        "created_at": "2026-06-19T18:40:10.222869+00:00"
+      },
+      {
+        "id": "d395ac8e-4942-4758-a38a-99c4678a4d82",
+        "email": "aaaa.cccc@beachcanasvieiras.com",
+        "role": "admin",
+        "created_at": "2026-06-19T17:37:01.872844+00:00"
+      },
+      {
+        "id": "7a5c89c5-efc6-4a59-b572-919e7b13d8a1",
+        "email": "hotelbeachcanasvieiras@gmail.com",
+        "role": "admin",
+        "created_at": "2026-06-20T01:30:34.370274+00:00"
       }
     ],
     "guests": [
@@ -168,6 +192,38 @@
         "last_name": "Podestá",
         "phone": null,
         "created_at": "2026-06-18T02:14:59.428589+00:00"
+      },
+      {
+        "id": "ba7a8a43-ecdb-4851-806e-d91fe528bac3",
+        "user_email": "aaaa.bbbb@beachcanasvieiras.com",
+        "first_name": "aaaa",
+        "last_name": "cccc",
+        "phone": null,
+        "created_at": "2026-06-19T06:47:50.085523+00:00"
+      },
+      {
+        "id": "d395ac8e-4942-4758-a38a-99c4678a4d82",
+        "user_email": "aaaa.cccc@beachcanasvieiras.com",
+        "first_name": "aaaa",
+        "last_name": "cccc",
+        "phone": null,
+        "created_at": "2026-06-19T17:37:01.872844+00:00"
+      },
+      {
+        "id": "e59bf9e8-d149-4903-a81c-e0286a95bea9",
+        "user_email": "aaaab.cccc@beachcanasvieiras.com",
+        "first_name": "aaaab",
+        "last_name": "cccc",
+        "phone": null,
+        "created_at": "2026-06-19T18:40:10.222869+00:00"
+      },
+      {
+        "id": "7a5c89c5-efc6-4a59-b572-919e7b13d8a1",
+        "user_email": "hotelbeachcanasvieiras@gmail.com",
+        "first_name": "lllll",
+        "last_name": "hhh",
+        "phone": null,
+        "created_at": "2026-06-20T01:30:34.370274+00:00"
       }
     ],
     "rooms": [

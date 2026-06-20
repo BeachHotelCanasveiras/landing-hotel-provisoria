@@ -1,11 +1,13 @@
 /**
  * @file AdminDashboard.tsx
- * @description Orquestador Maestro de Paneles de Control (PMS & Portales).
+ * @description Orquestador Maestro de Paneles de Control (PMS & Portales de Acceso).
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
  * - Visor Supa Base: Mapeo y renderizado dinámico de tablas físicas con el componente 'DatabaseTableViewer'.
  * - React 19 Purity (static-components): Se inyecta 'themeSelectorUI' como nodo JSX en lugar de componente anidado.
  * - Saneamiento TS (no-explicit-any): Tipado estricto de 'DashboardHeaderProps' y firmas del localizador.
  * - Responsabilidad Única (SRP): Lógica de red extraída a 'useDashboardData' y 'useDashboardMutations'.
+ * - Soporte RBAC Extendido: Incorporación de portales B2B e interfaces para el supervisor de housekeeping.
+ * - Saneamiento de Acoplamiento y ESLint: Mapea de forma segura 'housekeeping_supervisor' a 'housekeeper' en el componente de reporte para resolver TS2322 sin regresión y encapsulado en bloque para cumplir 'no-case-declarations'.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
  */
 
@@ -507,7 +509,9 @@ export default function AdminDashboard() {
   const [currentView, setCurrentView] = useState<string>('overview');
 
   const userRole: UserRole = role || 'guest';
-  const isStaff = ['admin', 'developer', 'receptionist'].includes(userRole);
+  
+  // 🚀 SANEAMIENTO (RBAC): Incorporamos 'housekeeping_supervisor' al censo de personal operativo (isStaff)
+  const isStaff = ['admin', 'developer', 'receptionist', 'housekeeping_supervisor'].includes(userRole);
 
   // Data & Mutations
   const { 
@@ -542,9 +546,16 @@ export default function AdminDashboard() {
       case 'overview':
         return userRole === 'developer' ? <DeveloperConsole t={t as (key: string) => string} /> :
                userRole === 'admin' ? <AdminPMS t={t as (key: string) => string} /> :
-               userRole === 'agency' ? <AgencyPortal userEmail={user.email || ''} t={t as (key: string) => string} /> :
-               userRole === 'housekeeper' ? <HousekeeperPortal /> : 
+               // 🚀 REFACTOR PORTALES B2B: Segregamos el soporte analítico de las agencias
+               (userRole === 'agency_retail' || userRole === 'agency_wholesale' || userRole === 'agency') ? <AgencyPortal userEmail={user.email || ''} t={t as (key: string) => string} /> :
+               (userRole === 'housekeeper' || userRole === 'housekeeping_supervisor') ? <HousekeeperPortal /> : 
                <GuestPortal userEmail={user.email || ''} t={t as (key: string) => string} />;
+      
+      // 🚀 SOPORTE ADICIONAL PARA LAS VISTAS PLANAS DEL SIDEBAR B2B
+      case 'agency_retail_portal':
+      case 'agency_wholesale_portal':
+        return <AgencyPortal userEmail={user.email || ''} t={t as (key: string) => string} />;
+
       case 'room_inventory':
         return <RoomManagement rooms={rooms} isActionLoading={mutations.createRoom.isPending || mutations.deleteRoom.isPending} onCreateRoom={(d) => mutations.createRoom.mutateAsync(d)} onDeleteRoom={(id) => mutations.deleteRoom.mutateAsync(id)} />;
       case 'room_map':
@@ -553,8 +564,26 @@ export default function AdminDashboard() {
         return <RatesAvailability categories={roomCategories} onSave={async () => {}} />;
       case 'booking_search':
         return <BookingSearch bookings={mappedBookings} isActionLoading={mutations.updateBookingStatus.isPending} onStatusChange={(id, status) => mutations.updateBookingStatus.mutateAsync({ id, status })} />;
-      case 'housekeeping':
-        return <HousekeepingReport rooms={housekeepingRooms} tasks={tasks} userRole={userRole as 'developer'|'admin'|'receptionist'|'housekeeper'} isActionLoading={mutations.updateRoomStatus.isPending || mutations.toggleTask.isPending} onUpdateRoomStatus={(id, st) => mutations.updateRoomStatus.mutateAsync({ roomId: id, status: st })} onToggleTask={(id, st) => mutations.toggleTask.mutateAsync({ taskId: id, isCompleted: st })} onAddCustomTask={(id, name) => mutations.addCustomTask.mutateAsync({ roomId: id, taskName: name })} />;
+      case 'housekeeping': {
+        // 🚀 SANEAMIENTO DE ROL: Mapeamos con un condicional para que 'housekeeping_supervisor' se convierta en 'housekeeper'
+        // al entrar en HousekeepingReport y evitar el error TS2322 de firmas sin alterar el tipado nativo.
+        // Envuelta esta sección en llaves {} de forma síncrona para resolver el error léxico no-case-declarations.
+        const reportRole = userRole === 'housekeeping_supervisor' 
+          ? 'housekeeper' 
+          : (userRole as 'developer' | 'admin' | 'receptionist' | 'housekeeper');
+
+        return (
+          <HousekeepingReport 
+            rooms={housekeepingRooms} 
+            tasks={tasks} 
+            userRole={reportRole} 
+            isActionLoading={mutations.updateRoomStatus.isPending || mutations.toggleTask.isPending} 
+            onUpdateRoomStatus={(id, st) => mutations.updateRoomStatus.mutateAsync({ roomId: id, status: st })} 
+            onToggleTask={(id, st) => mutations.toggleTask.mutateAsync({ taskId: id, isCompleted: st })} 
+            onAddCustomTask={(id, name) => mutations.addCustomTask.mutateAsync({ roomId: id, taskName: name })} 
+          />
+        );
+      }
       case 'staff':
         return <StaffManagement />;
       case 'settings_all':

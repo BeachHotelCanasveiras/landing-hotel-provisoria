@@ -1,31 +1,82 @@
 {
   "menu_principal": "Menú Principal",
-  "overview": "Panorámica de Hoy",
+  "overview": "Visión General",
+  "check_in": "Check-In / Entrada",
   "bookings": {
-    "title": "Reservas",
-    "room_map": "Mapa de Habitaciones",
-    "search": "CRM - Buscador"
+    "title": "Reservas y Cuartos",
+    "room_map": "Mapa de Cuartos",
+    "search": "Buscador Reservas",
+    "daily": "Diario",
+    "weekly": "Semanal",
+    "monthly": "Mensual",
+    "available": "Disponibilidad",
+    "occupied": "Ocupados",
+    "reserved": "Reservados",
+    "blocked": "Bloqueos",
+    "maintenance": "Mantenimiento"
   },
-  "property": {
-    "title": "Propiedad",
-    "inventory": "Inventario de Cuartos",
-    "rates": "Tarifas y Disponibilidad"
+  "rates": {
+    "title": "Tarifas",
+    "wholesale": "Base Mayoristas",
+    "public": "Venta Público",
+    "flexible": "Flexibles",
+    "last_minute": "Último Minuto"
   },
-  "housekeeping": "Ama de Llaves",
+  "guests": {
+    "title": "Huéspedes",
+    "search": "Base de Datos"
+  },
+  "housekeeping": {
+    "title": "Gobernación / Aseo",
+    "checklist": "Tareas Diarias",
+    "schedule": "Rol de Turnos",
+    "messages": "Mensajes Huésped",
+    "inventory": "Control Compras",
+    "missing": "Faltantes"
+  },
   "accounting": {
     "title": "Contabilidad",
-    "cash_flow": "Flujo de Caja",
-    "expenses": "Gastos y Proveedores"
+    "invoice_input": "Notas Fiscales",
+    "cost_centers": "Centros de Costo"
   },
-  "reports": {
-    "title": "Informes",
-    "revenue": "Ingresos y Pronósticos",
-    "police": "Informe Policial (FNRH)"
+  "inventory": {
+    "title": "Inventario & Stock",
+    "stock": "Control de Stock"
+  },
+  "laundry": {
+    "title": "Lavandería",
+    "dirty_sheets": "Ropa Sucia"
+  },
+  "breakfast": {
+    "title": "Café / Desayuno",
+    "menu_today": "Menú del Día",
+    "special_requests": "Pedidos Especiales"
+  },
+  "hr": {
+    "title": "Recursos Humanos",
+    "employees": "Fichas de Personal",
+    "schedules": "Días de Trabajo",
+    "calculations": "Cálculo de Ponto"
+  },
+  "promotions": {
+    "title": "Promos & Vouchers",
+    "packages": "Paquetes",
+    "receipts": "Comprobantes",
+    "coupons": "Cupones"
+  },
+  "database": {
+    "title": "Supa Base"
+  },
+  "agency_retail": {
+    "title": "Agencias de Viajes"
+  },
+  "agency_wholesale": {
+    "title": "Agencias Mayoristas"
   },
   "settings": {
     "title": "Configuraciones",
-    "staff": "Equipo / Personal",
-    "all_settings": "Ver Ajustes"
+    "dashboard": "Ajustes de Panel",
+    "templates": "Plantillas"
   },
   "booking_engine": "Motor de Reservas",
   "logout": "Cerrar Sesión"

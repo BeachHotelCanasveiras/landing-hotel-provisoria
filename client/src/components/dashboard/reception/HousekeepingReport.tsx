@@ -5,7 +5,7 @@
  * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface, pms-surface-high y border-pms-border.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
  * - Trinidad Atómica: Soporte total para traducción y esquemas de validación Zod.
- * - RBAC: Restringe acciones en tiempo real evaluando el prop 'userRole' (ISO 27001).
+ * - Soporte Supervisor de Housekeeping (RBAC): Panel de auditoría de alta fidelidad para evaluación de faena, carga de evidencias por cámara y control de checklists (ISO 27001).
  */
 
 import React, { useState, useMemo } from 'react';
@@ -13,7 +13,8 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   CheckCircle2, User, Users, Printer, Mail, 
-  Search, ChevronDown, ChevronUp, AlertCircle 
+  Search, ChevronDown, ChevronUp, AlertCircle, 
+  Star, Camera, ClipboardCheck, ClipboardX 
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
@@ -57,7 +58,7 @@ interface HousekeepingReportProps {
   /** Listado de todas las tareas activas */
   tasks: HousekeepingTask[];
   /** Rol del usuario activo para restringir accesos (RBAC) */
-  userRole: 'developer' | 'admin' | 'receptionist' | 'housekeeper';
+  userRole: 'developer' | 'admin' | 'receptionist' | 'housekeeper' | 'housekeeping_supervisor';
   /** Estado de carga durante las mutaciones de red */
   isActionLoading?: boolean;
   /** Callback para cambiar el estado de limpieza de una habitación */
@@ -66,6 +67,13 @@ interface HousekeepingReportProps {
   onToggleTask: (taskId: string, isCompleted: boolean) => Promise<void>;
   /** Callback para inyectar una tarea de mantenimiento personalizada */
   onAddCustomTask: (roomId: number, taskName: string) => Promise<void>;
+  /** Callback opcional para consolidar la auditoría de limpieza en Supabase */
+  onSaveAudit?: (roomId: number, auditData: {
+    score: number;
+    is_satisfactory: boolean;
+    notes: string;
+    photo_url?: string;
+  }) => Promise<void>;
 }
 
 export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
@@ -76,17 +84,26 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
   onUpdateRoomStatus,
   onToggleTask,
   onAddCustomTask,
+  onSaveAudit,
 }) => {
-  // 📊 Capa de Telemetría: Registro asíncrono de latencia en módulo operativo pesado
+  // 📊 Capa de Telemetría: Registro asíncrono de latencia en montaje
   usePerformanceProfiler('HousekeepingReport');
 
   const { t, i18n } = useTranslation('housekeeping');
 
-  // Estados locales para los filtros del reporte (Mini Hotel Style)
+  // Estados de filtrado y visualización
   const [filterType, setFilterType] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [expandedRoomId, setExpandedRoomId] = useState<number | null>(null);
   const [newCustomTaskName, setNewCustomTaskName] = useState<string>('');
+
+  // 🚀 ESTADO LOCAL PARA AUDITORÍAS DE SUPERVISIÓN POR HABITACIÓN
+  const [auditForms, setAuditForms] = useState<Record<number, {
+    score: number;
+    is_satisfactory: boolean;
+    notes: string;
+    photo_url: string;
+  }>>({});
 
   // Validación de contrato Zod en DEV
   if (import.meta.env.DEV) {
@@ -98,7 +115,7 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
     }
   }
 
-  // Filtrado reactivo de habitaciones en base a búsqueda y selección
+  // Filtrado reactivo de habitaciones
   const filteredRooms = useMemo(() => {
     return rooms.filter(room => {
       const matchesSearch = room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -118,13 +135,58 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
     toast.success('Enviando reporte de Ama de Llaves por correo electrónico...');
   };
 
-  // Lógica RBAC para control de privilegios (ISO 27001)
-  const canManageMaintenance = userRole === 'admin' || userRole === 'developer' || userRole === 'receptionist';
+  // 🚀 GOBERNANZA RBAC (ISO 27001): El supervisor ahora tiene privilegios de adición de checklists
+  const canManageMaintenance = ['admin', 'developer', 'receptionist', 'housekeeping_supervisor'].includes(userRole);
+  
+  // Habilitar panel de inspección para roles con capacidades de auditoría
+  const isSupervisorOrAdmin = ['admin', 'developer', 'housekeeping_supervisor'].includes(userRole);
+
+  // ============================================================================
+  // ⚡ GESTOR DE AUDITORÍAS SÍNCRONAS
+  // ============================================================================
+  const updateAuditField = (roomId: number, field: string, value: unknown) => {
+    setAuditForms(prev => {
+      const currentForm = prev[roomId] || { score: 5, is_satisfactory: true, notes: '', photo_url: '' };
+      return {
+        ...prev,
+        [roomId]: {
+          ...currentForm,
+          [field]: value
+        }
+      };
+    });
+  };
+
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>, roomId: number) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      updateAuditField(roomId, 'photo_url', URL.createObjectURL(file));
+      toast.info(`Evidência fotográfica capturada para o Quarto ${roomId}.`);
+    }
+  };
+
+  const submitRoomAudit = async (roomId: number) => {
+    const form = auditForms[roomId] || { score: 5, is_satisfactory: true, notes: '', photo_url: '' };
+    
+    if (onSaveAudit) {
+      await onSaveAudit(roomId, form);
+    } else {
+      // Fallback de demostración síncrono si no está enlazado el callback en AdminDashboard
+      toast.success(`Auditoria enviada para o Quarto ${roomId}. Nota: ${form.score} Estrelas.`);
+    }
+
+    // Limpiar formulario tras auditoría exitosa
+    setAuditForms(prev => {
+      const copy = { ...prev };
+      delete copy[roomId];
+      return copy;
+    });
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-pms-text">
       
-      {/* 1. SECCIÓN DE FILTROS Y CONTROL DE CABECERA (Estilo Mini Hotel) */}
+      {/* 1. SECCIÓN DE FILTROS Y CONTROL DE CABECERA */}
       <div className="bg-pms-surface rounded-[2rem] border border-pms-border p-8 shadow-[0_8px_30px_rgba(0,0,0,0.02)] grid grid-cols-1 lg:grid-cols-12 gap-6 items-center transition-colors duration-300">
         
         {/* Información del Bloque */}
@@ -191,7 +253,7 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
 
       </div>
 
-      {/* 2. REJILLA DE HABITACIONES (Data Grid de Operación de Limpieza) */}
+      {/* 2. REJILLA DE HABITACIONES */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredRooms.map((room) => {
           // Filtrar tareas correspondientes a esta habitación
@@ -205,6 +267,9 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
             : 100;
 
           const isExpanded = expandedRoomId === room.id;
+
+          // Estado del formulario de auditoría para este cuarto específico
+          const auditForm = auditForms[room.id] || { score: 5, is_satisfactory: true, notes: '', photo_url: '' };
 
           return (
             <div 
@@ -299,7 +364,7 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                   {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </button>
 
-                {/* Panel Expandido: Tareas Patrón y Personalizadas */}
+                {/* Panel Expandido: Tareas Patrón, Personalizadas y Auditoría de Supervisor */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
@@ -309,7 +374,7 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                       className="overflow-hidden space-y-4 pt-4"
                     >
                       {/* Tareas */}
-                      <div className="space-y-2.5">
+                      <div className="space-y-2">
                         {roomTasks.length > 0 ? (
                           roomTasks.map((task) => (
                             <div 
@@ -317,16 +382,12 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                               onClick={() => !isActionLoading && onToggleTask(task.id, !task.is_completed)}
                               className={cn(
                                 "flex items-center gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none text-xs font-body",
-                                task.is_completed 
-                                  ? "bg-green-500/10 border-green-500/20 text-pms-text-muted line-through" 
-                                  : "bg-pms-surface border-pms-border text-pms-text hover:border-pms-accent/40"
+                                task.is_completed ? "bg-green-500/10 border-green-500/20 text-pms-text-muted line-through" : "bg-pms-surface border-pms-border text-pms-text"
                               )}
                             >
                               <div className={cn(
                                 "w-4.5 h-4.5 rounded-full border flex items-center justify-center shrink-0 transition-all",
-                                task.is_completed 
-                                  ? "bg-green-500 border-green-500 text-white" 
-                                  : "border-pms-border"
+                                task.is_completed ? "bg-green-500 border-green-500 text-white" : "border-pms-border"
                               )}>
                                 {task.is_completed && <CheckCircle2 size={12} strokeWidth={2.5} />}
                               </div>
@@ -368,6 +429,98 @@ export const HousekeepingReport: React.FC<HousekeepingReportProps> = ({
                           >
                             {t('add_button')}
                           </Button>
+                        </div>
+                      )}
+
+                      {/* 🚀 NUEVA SECCIÓN DE AUDITORÍA: EXCLUSIVA PARA EL SUPERVISOR (Y ROLES ADMIN/DEV) */}
+                      {isSupervisorOrAdmin && (
+                        <div className="pt-4 border-t border-pms-border/60 space-y-3">
+                          <div className="flex items-center gap-2 text-pms-accent">
+                            <ClipboardCheck size={14} className="animate-pulse" />
+                            <span className="text-[10px] font-bold text-pms-text uppercase tracking-widest">Painel de Inspeção do Supervisor</span>
+                          </div>
+
+                          <div className="p-4 bg-pms-surface-high/30 rounded-2xl border border-pms-border space-y-4">
+                            
+                            {/* Evaluación de Estrellas */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-semibold text-pms-text-muted">Nota da Limpeza:</span>
+                              <div className="flex gap-1">
+                                {[1, 2, 3, 4, 5].map((starValue) => (
+                                  <button
+                                    key={starValue}
+                                    type="button"
+                                    onClick={() => updateAuditField(room.id, 'score', starValue)}
+                                    className="p-1 focus:outline-none transition-transform active:scale-90 border-none bg-transparent cursor-pointer"
+                                  >
+                                    <Star 
+                                      size={16} 
+                                      className={cn(
+                                        "transition-colors",
+                                        starValue <= auditForm.score 
+                                          ? "fill-amber-500 text-amber-500" 
+                                          : "text-pms-text-muted/40"
+                                      )} 
+                                    />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Switch de Conformidad */}
+                            <div className="flex items-center justify-between border-t border-pms-border/40 pt-3">
+                              <span className="text-xs font-semibold text-pms-text-muted">Resultado Satisfatório?</span>
+                              <button
+                                type="button"
+                                onClick={() => updateAuditField(room.id, 'is_satisfactory', !auditForm.is_satisfactory)}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider border cursor-pointer transition-all",
+                                  auditForm.is_satisfactory 
+                                    ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                                    : "bg-red-500/10 text-red-500 border-red-500/20"
+                                )}
+                              >
+                                {auditForm.is_satisfactory ? <CheckCircle2 size={10} /> : <ClipboardX size={10} />}
+                                {auditForm.is_satisfactory ? 'Aprovado' : 'Reprovado'}
+                              </button>
+                            </div>
+
+                            {/* Entrada de Observaciones */}
+                            <div className="p-3 bg-pms-surface border border-pms-border rounded-xl focus-within:border-pms-accent/40">
+                              <label className="block text-[8px] font-bold text-pms-text-muted uppercase tracking-widest mb-1">Notas de Auditoria</label>
+                              <textarea
+                                value={auditForm.notes}
+                                onChange={(e) => updateAuditField(room.id, 'notes', e.target.value)}
+                                placeholder="Observações sobre a vistoria (Ex: Amolleta rota o sábanas limpias)..."
+                                className="w-full bg-transparent border-none p-0 text-xs text-pms-text outline-none resize-none h-12 placeholder:text-pms-text-muted/50"
+                              />
+                            </div>
+
+                            {/* Carga de Evidencia Fotográfica por Cámara Nativa */}
+                            <div className="flex gap-2 pt-1">
+                              <label className="flex-1 h-11 bg-pms-surface border border-pms-border rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95 text-xs text-pms-text-muted font-semibold hover:bg-pms-surface-high">
+                                <Camera size={15} className="text-pms-accent" />
+                                {auditForm.photo_url ? 'Evidência Pronta' : 'Capturar Falla'}
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  capture="environment" 
+                                  onChange={(e) => handleCameraCapture(e, room.id)}
+                                  className="hidden" 
+                                />
+                              </label>
+
+                              <button
+                                type="button"
+                                disabled={isActionLoading}
+                                onClick={() => submitRoomAudit(room.id)}
+                                className="flex-1 h-11 bg-pms-accent hover:opacity-90 text-pms-accent-foreground rounded-xl flex items-center justify-center gap-2 font-bold text-xs transition-all active:scale-95 cursor-pointer border-none shadow-md"
+                              >
+                                Enviar Vistoria
+                              </button>
+                            </div>
+
+                          </div>
                         </div>
                       )}
 

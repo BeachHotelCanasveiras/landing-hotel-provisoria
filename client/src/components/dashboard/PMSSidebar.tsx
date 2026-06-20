@@ -1,22 +1,22 @@
 /**
  * @file PMSSidebar.tsx
- * @description Panel colapsable de navegación principal del PMS.
- * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
- * - Estética Gemini: Tipografía normal-case, limpia y de alta densidad para una consola ejecutiva B2B de lujo.
- * - Integración Supa Base: Incorporación de la pestaña "Base de Datos" y sus sub-menús de tablas físicas.
- * - Gobernación Semántica: 100% adaptado a la paleta pms-bg, pms-surface y pms-border.
- * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
- * - Trinidad Atómica: Localización total del texto institucional del hotel con fallbacks robustos.
+ * @description Panel lateral de navegación plana de alta fidelidad estilo Vercel.
+ * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y principios SOLID:
+ * - Estética Vercel: Diseñado con accesos planos e interactivos, libre de acordeones colapsables.
+ * - RBAC Seguro: Filtrado reactivo de menús por rol. El rol 'developer' tiene bypass absoluto a todas las vistas.
+ * - Soporte B2B y Supervisión: Canales independientes para Agencias de Viajes (Minoristas), Mayoristas y Supervisores de Limpieza.
+ * - Saneado: Satisface ESLint v9, libre de variables huérfanas y advertencias de renderizado.
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, Calendar, BarChart3, Briefcase, 
-  Sparkles, ExternalLink, Settings, LogOut, ChevronDown, ChevronUp, 
-  Menu, Hotel, Sun, Moon, Database 
+  Sparkles, ExternalLink, Settings, LogOut, Menu, 
+  Hotel, Sun, Moon, Database, Users2 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth, type UserRole } from '@/contexts/AuthContext';
 import { useTheme, type DashboardTheme } from '@/contexts/ThemeContext';
 import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { PMSSidebarTranslationSchema } from '@/locales/schemas/pms_sidebar.schema';
@@ -32,6 +32,7 @@ interface MenuItem {
   label: string;
   icon: React.ElementType;
   view?: string;
+  roles?: UserRole[]; // Restricción opcional de acceso (RBAC)
   subItems?: SubMenuItem[];
 }
 
@@ -50,17 +51,11 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   usePerformanceProfiler('PMSSidebar');
 
   const { t, i18n } = useTranslation('pms_sidebar');
+  const { role } = useAuth(); // Saneado: Removido 'user' no utilizado para satisfacer ESLint
   const { dashboardTheme, setDashboardTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({
-    bookings: false,
-    property: true,
-    reports: false,
-    accounting: false,
-    settings: false,
-    database: false, // 🚀 Inicializa colapsada para no saturar el primer renderizado
-  });
+
+  const activeRole: UserRole = role || 'guest';
 
   // Validación de esquema en modo DEV (Failsafe)
   if (import.meta.env.DEV) {
@@ -68,17 +63,10 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       const currentBundle = i18n.getResourceBundle(i18n.language, 'pms_sidebar') || {};
       PMSSidebarTranslationSchema.parse(currentBundle);
     } catch (error) {
-      console.error(`[PMSSidebar] ❌ Error de integridad en diccionario '${i18n.language}':`, error);
+      console.error(`[PMSSidebar] ❌ Error de integridad en esquema Zod:`, error);
     }
   }
 
-  const toggleSubMenu = (menuKey: string) => {
-    setOpenMenus(prev => ({ ...prev, [menuKey]: !prev[menuKey] }));
-  };
-
-  /**
-   * Rota los temas del dashboard de forma secuencial al estar el menú colapsado
-   */
   const cycleDashboardTheme = () => {
     const themes: DashboardTheme[] = ['light', 'sovereign-dark', 'gemini-dark'];
     const currentIndex = themes.indexOf(dashboardTheme);
@@ -86,18 +74,22 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
     setDashboardTheme(themes[nextIndex]);
   };
 
-  // Configuración del menú consumiendo el esquema de traducción
+  // ============================================================================
+  // ⚙️ CONFIGURACIÓN SSoT DE MENÚS Y RESTRICCIONES (RBAC)
+  // ============================================================================
   const menuConfig: MenuItem[] = [
     {
       key: 'overview',
       label: t('overview'),
       icon: LayoutDashboard,
-      view: 'overview'
+      view: 'overview',
+      roles: ['admin', 'developer', 'receptionist', 'housekeeper', 'housekeeping_supervisor', 'guest']
     },
     {
       key: 'bookings',
       label: t('bookings.title'),
       icon: Calendar,
+      roles: ['admin', 'developer', 'receptionist'],
       subItems: [
         { key: 'map', label: t('bookings.room_map'), view: 'room_map' },
         { key: 'search', label: t('bookings.search'), view: 'booking_search' },
@@ -107,6 +99,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       key: 'property',
       label: t('property.title'),
       icon: Hotel,
+      roles: ['admin', 'developer', 'receptionist'],
       subItems: [
         { key: 'inventory', label: t('property.inventory'), view: 'room_inventory' },
         { key: 'rates', label: t('property.rates'), view: 'rates' },
@@ -116,13 +109,48 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       key: 'housekeeping',
       label: t('housekeeping'),
       icon: Sparkles,
-      view: 'housekeeping'
+      view: 'housekeeping',
+      roles: ['admin', 'developer', 'receptionist', 'housekeeper', 'housekeeping_supervisor']
     },
-    // 🚀 NUEVA SECCIÓN DE BASE DE DATOS (Supa Base Viewer)
+    {
+      key: 'accounting',
+      label: t('accounting.title'),
+      icon: Briefcase,
+      roles: ['admin', 'developer'],
+      subItems: [
+        { key: 'cash', label: t('accounting.cash_flow'), view: 'acc_cash_flow' },
+        { key: 'expenses', label: t('accounting.expenses'), view: 'acc_expenses' },
+      ]
+    },
+    {
+      key: 'reports',
+      label: t('reports.title'),
+      icon: BarChart3,
+      roles: ['admin', 'developer', 'receptionist'],
+      subItems: [
+        { key: 'revenue', label: t('reports.revenue'), view: 'report_revenue' },
+        { key: 'police', label: t('reports.police'), view: 'report_police' },
+      ]
+    },
+    {
+      key: 'agency_retail',
+      label: t('agency_retail.title', { defaultValue: 'Agências de Viagens' }),
+      icon: Users2,
+      view: 'agency_retail_portal',
+      roles: ['agency_retail']
+    },
+    {
+      key: 'agency_wholesale',
+      label: t('agency_wholesale.title', { defaultValue: 'Agências Majoristas' }),
+      icon: Briefcase,
+      view: 'agency_wholesale_portal',
+      roles: ['agency_wholesale']
+    },
     {
       key: 'database',
       label: t('database.title', { defaultValue: 'Base de Datos' }),
       icon: Database,
+      roles: ['developer'],
       subItems: [
         { key: 'db_users', label: t('database.users', { defaultValue: 'Tabela Users' }), view: 'db_users' },
         { key: 'db_guests', label: t('database.guests', { defaultValue: 'Tabela Guests' }), view: 'db_guests' },
@@ -133,27 +161,10 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       ]
     },
     {
-      key: 'accounting',
-      label: t('accounting.title'),
-      icon: Briefcase,
-      subItems: [
-        { key: 'cash', label: t('accounting.cash_flow'), view: 'acc_cash_flow' },
-        { key: 'expenses', label: t('accounting.expenses'), view: 'acc_expenses' },
-      ]
-    },
-    {
-      key: 'reports',
-      label: t('reports.title'),
-      icon: BarChart3,
-      subItems: [
-        { key: 'revenue', label: t('reports.revenue'), view: 'report_revenue' },
-        { key: 'police', label: t('reports.police'), view: 'report_police' },
-      ]
-    },
-    {
       key: 'settings',
       label: t('settings.title'),
       icon: Settings,
+      roles: ['admin', 'developer'],
       subItems: [
         { key: 'staff', label: t('settings.staff'), view: 'staff' },
         { key: 'all', label: t('settings.all_settings'), view: 'settings_all' },
@@ -161,27 +172,49 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
     }
   ];
 
+  // ============================================================================
+  // ⚡ FILTRADO REACTIVO DE SEGURIDAD (RBAC ENGINE)
+  // ============================================================================
+  const filteredMenu = menuConfig.filter(item => {
+    // El rol 'developer' tiene bypass absoluto para ver todo el ecosistema
+    if (activeRole === 'developer') return true;
+    
+    // Si el ítem define roles permitidos, verificar inclusión estricta
+    if (item.roles && !item.roles.includes(activeRole)) return false;
+    
+    return true;
+  });
+
+  const handleItemNavigation = (item: MenuItem) => {
+    if (item.view) {
+      onNavigate(item.view);
+    } else if (item.subItems && item.subItems.length > 0) {
+      // 🚀 NAVEGACIÓN PLANA VERCEL: Se redirige de inmediato al primer sub-elemento
+      onNavigate(item.subItems[0].view);
+    }
+  };
+
   return (
     <div 
       className={cn(
-        "h-screen bg-pms-surface text-pms-text-muted font-body flex flex-col justify-between transition-all duration-500 border-r border-pms-border shadow-2xl shrink-0 select-none",
+        "h-screen bg-pms-surface text-pms-text-muted font-body flex flex-col justify-between transition-all duration-300 border-r border-pms-border shadow-xl shrink-0 select-none",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
       <div>
-        {/* HEADER */}
-        <div className="p-6 mb-2 flex items-center justify-between">
+        {/* HEADER BRANDING */}
+        <div className="p-6 mb-4 flex items-center justify-between">
           {!isCollapsed && (
-            <div className="flex items-center gap-3 animate-in fade-in duration-700">
-              <div className="w-9 h-9 rounded-xl bg-pms-accent flex items-center justify-center text-pms-accent-foreground shadow-lg transition-transform duration-300">
-                <Hotel size={18} strokeWidth={2} />
+            <div className="flex items-center gap-3 animate-in fade-in duration-300">
+              <div className="w-8 h-8 rounded-xl bg-pms-accent flex items-center justify-center text-pms-accent-foreground shadow-md transition-transform duration-300">
+                <Hotel size={16} strokeWidth={2} />
               </div>
               <div className="flex flex-col">
                 <span className="font-display text-sm font-bold text-pms-text leading-tight">
-                  {t('brand_title', { defaultValue: 'Mini Hotel' })}
+                  {t('brand_title', { defaultValue: 'Hotel Beach' })}
                 </span>
                 <span className="text-[9px] font-bold text-pms-accent uppercase tracking-tighter">
-                  {t('brand_subtitle', { defaultValue: 'Premium PMS' })}
+                  {activeRole} Console
                 </span>
               </div>
             </div>
@@ -191,99 +224,75 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
             className="p-2 hover:bg-pms-surface-high rounded-xl transition-all text-pms-text-muted hover:text-pms-text cursor-pointer border-none bg-transparent"
             aria-label="Minimizar barra lateral"
           >
-            <Menu size={18} />
+            <Menu size={16} />
           </button>
         </div>
 
-        {/* NAV (Gobernación Semántica del Menú) */}
-        <div className="px-4 space-y-1 overflow-y-auto max-h-[calc(100vh-230px)] scrollbar-none">
+        {/* LISTADO DE ACCESOS PLANOS (Vercel Style) */}
+        <div className="px-4 space-y-1.5 overflow-y-auto max-h-[calc(100vh-230px)] scrollbar-none">
           {!isCollapsed && (
-            <p className="text-[10px] font-bold text-pms-text-muted uppercase tracking-[0.2em] pl-4 mb-3 mt-2 opacity-60">
+            <p className="text-[9px] font-bold text-pms-text-muted uppercase tracking-[0.25em] pl-4 mb-3 mt-2 opacity-60">
               {t('menu_principal')}
             </p>
           )}
 
-          {menuConfig.map((item) => {
+          {filteredMenu.map((item) => {
             const Icon = item.icon;
-            const isGroup = !!item.subItems;
-            const isOpen = openMenus[item.key];
+            
+            // Un ítem se considera activo si la vista coincide con su propiedad directa
+            // o si coincide con la vista de cualquiera de sus sub-elementos.
             const isActive = currentView === item.view || item.subItems?.some(s => s.view === currentView);
 
             return (
-              <div key={item.key} className="space-y-1">
+              <div key={item.key}>
                 <button
-                  onClick={() => isGroup ? toggleSubMenu(item.key) : item.view && onNavigate(item.view)}
+                  onClick={() => handleItemNavigation(item)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-2.5 rounded-2xl transition-all duration-300 group cursor-pointer border-none",
-                    isActive && !isGroup 
-                      ? "bg-pms-accent text-pms-accent-foreground shadow-lg" 
-                      : "hover:bg-pms-surface-high text-pms-text-muted hover:text-pms-text"
+                    "w-full flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-150 group cursor-pointer border-none text-left",
+                    isActive 
+                      ? "bg-pms-surface-high text-pms-text shadow-sm border border-pms-border" 
+                      : "bg-transparent text-pms-text-muted hover:text-pms-text hover:bg-pms-surface-high/30 border border-transparent"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <Icon 
-                      size={18} 
-                      strokeWidth={isActive ? 2.5 : 1.8} 
-                      className={cn(isActive ? "text-pms-accent-foreground" : "text-pms-text-muted group-hover:text-pms-text")} 
+                      size={16} 
+                      strokeWidth={isActive ? 2.2 : 1.6} 
+                      className={cn(isActive ? "text-pms-accent" : "text-pms-text-muted group-hover:text-pms-text")} 
                     />
                     {!isCollapsed && (
                       <span className={cn(
-                        "text-xs tracking-normal normal-case transition-all", 
-                        isActive ? "opacity-100 font-semibold text-pms-text" : "opacity-80 font-medium"
+                        "text-[13px] tracking-normal normal-case transition-all", 
+                        isActive ? "font-semibold text-pms-text" : "font-medium"
                       )}>
                         {item.label}
                       </span>
                     )}
                   </div>
-                  {isGroup && !isCollapsed && (
-                    isOpen ? <ChevronDown size={14} className="opacity-40" /> : <ChevronUp size={14} className="opacity-40" />
-                  )}
                 </button>
-
-                {isGroup && isOpen && !isCollapsed && (
-                  <div className="pl-11 space-y-1 animate-in slide-in-from-top-2 duration-300">
-                    {item.subItems?.map((sub) => (
-                      <button
-                        key={sub.key}
-                        onClick={() => onNavigate(sub.view)}
-                        className={cn(
-                          "w-full text-left px-4 py-2 rounded-xl text-[11px] font-normal tracking-normal normal-case transition-all cursor-pointer relative border-none bg-transparent",
-                          currentView === sub.view 
-                            ? "text-pms-accent font-semibold bg-pms-accent/5" 
-                            : "text-pms-text-muted hover:text-pms-text hover:bg-pms-surface-high"
-                        )}
-                      >
-                        {currentView === sub.view && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-pms-accent rounded-full" />
-                        )}
-                        {sub.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* FOOTER & CONTROL MULTITEMA INTEGRADO (SaaS Spec) */}
-      <div className="p-4 border-t border-pms-border flex flex-col gap-4 bg-pms-surface-high/20">
+      {/* FOOTER & CONTROL MULTITEMA INTEGRADO */}
+      <div className="p-4 border-t border-pms-border flex flex-col gap-4 bg-pms-surface-high/10">
         
         {/* Selector Multitema Píldora Segmentada */}
         <div className="flex justify-center">
           {isCollapsed ? (
             <button
               onClick={cycleDashboardTheme}
-              className="p-3 bg-pms-surface-high border border-pms-border rounded-full hover:bg-pms-accent hover:text-pms-accent-foreground transition-all cursor-pointer shadow-sm text-pms-text animate-pulse"
+              className="p-3 bg-pms-surface-high border border-pms-border rounded-full hover:bg-pms-accent hover:text-pms-accent-foreground transition-all cursor-pointer shadow-sm text-pms-text"
               title="Alternar Tema PMS"
             >
-              {dashboardTheme === 'light' && <Sun size={15} />}
-              {dashboardTheme === 'sovereign-dark' && <Moon size={15} />}
-              {dashboardTheme === 'gemini-dark' && <Sparkles size={15} />}
+              {dashboardTheme === 'light' && <Sun size={14} />}
+              {dashboardTheme === 'sovereign-dark' && <Moon size={14} />}
+              {dashboardTheme === 'gemini-dark' && <Sparkles size={14} />}
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 p-1.5 bg-pms-surface-high border border-pms-border rounded-full shadow-inner w-full max-w-[200px]">
+            <div className="flex items-center gap-1.5 p-1 bg-pms-surface-high border border-pms-border rounded-full shadow-inner w-full">
               {[
                 { key: 'light', icon: Sun, label: 'Light' },
                 { key: 'sovereign-dark', icon: Moon, label: 'Sovereign' },
@@ -297,13 +306,13 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
                     onClick={() => setDashboardTheme(themeOpt.key as DashboardTheme)}
                     title={themeOpt.label}
                     className={cn(
-                      "flex-1 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer border-none bg-transparent",
+                      "flex-1 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer border-none bg-transparent outline-none",
                       IsActiveTheme 
-                        ? "bg-pms-accent text-pms-accent-foreground shadow-md" 
-                        : "text-pms-text-muted hover:text-pms-text hover:bg-pms-surface/50"
+                        ? "bg-pms-surface text-pms-text shadow-sm border border-pms-border" 
+                        : "text-pms-text-muted hover:text-pms-text"
                     )}
                   >
-                    <ThemeIcon size={14} className={IsActiveTheme ? "text-pms-accent-foreground" : ""} />
+                    <ThemeIcon size={12} className={IsActiveTheme ? "text-pms-accent" : ""} />
                   </button>
                 );
               })}
@@ -316,19 +325,19 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
           href="https://beachcanasvieiras.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pms-surface-high text-pms-text-muted hover:text-pms-text rounded-2xl transition-all text-xs font-semibold uppercase tracking-wider text-center"
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pms-surface-high text-pms-text-muted hover:text-pms-text rounded-xl transition-all text-xs font-semibold uppercase tracking-wider text-center"
         >
-          <ExternalLink size={16} />
+          <ExternalLink size={14} />
           {!isCollapsed && <span>{t('booking_engine')}</span>}
         </a>
 
         {/* Cerrar Sesión Segura */}
         <button
           onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-4 py-4 hover:bg-red-500/10 text-red-400/70 hover:text-red-400 rounded-2xl transition-all cursor-pointer border-none bg-transparent text-left"
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 text-red-400/70 hover:text-red-400 rounded-xl transition-all cursor-pointer border-none bg-transparent text-left"
         >
-          <LogOut size={16} />
-          {!isCollapsed && <span className="text-xs font-bold uppercase tracking-widest">{t('logout')}</span>}
+          <LogOut size={14} />
+          {!isCollapsed && <span className="text-[10px] font-bold uppercase tracking-widest">{t('logout')}</span>}
         </button>
       </div>
     </div>
