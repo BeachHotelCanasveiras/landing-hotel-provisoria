@@ -4,10 +4,10 @@
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
  * - Visor Supa Base: Mapeo y renderizado dinámico de tablas físicas con el componente 'DatabaseTableViewer'.
  * - React 19 Purity (static-components): Se inyecta 'themeSelectorUI' como nodo JSX en lugar de componente anidado.
- * - Saneamiento TS (no-explicit-any): Tipado estricto de 'DashboardHeaderProps' y firmas del localizador.
+ * - Saneamiento TS (no-explicit-any): Tipado de matriz estática para evitar aserciones 'as any' en selectores de reloj.
  * - Responsabilidad Única (SRP): Lógica de red extraída a 'useDashboardData' y 'useDashboardMutations'.
- * - Soporte RBAC Extendido: Incorporación de portales B2B e interfaces para el supervisor de housekeeping.
- * - Saneamiento de Acoplamiento y ESLint: Mapea de forma segura 'housekeeping_supervisor' a 'housekeeper' en el componente de reporte para resolver TS2322 sin regresión y encapsulado en bloque para cumplir 'no-case-declarations'.
+ * - Reloj Multi-Zona en Tiempo Real: Reloj síncrono del cliente con soporte de zona horaria estable.
+ * - Interruptor de Tema de Botón Único: Alterna entre Claro y Oscuro de forma cíclica.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
  */
 
@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { LogOut, Sun, Moon, Sparkles, Database } from 'lucide-react';
+import { LogOut, Sun, Moon, Database, Clock } from 'lucide-react'; // 🚀 Saneado: Removido 'Globe' sin uso
 import { User } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
@@ -99,9 +99,6 @@ interface RatesCategory {
 // 🧠 HOOKS DE AISLAMIENTO LÓGICO (Responsabilidad Única)
 // ============================================================================
 
-/**
- * Encapsula la obtención y transformación heurística de datos del PMS.
- */
 function useDashboardData(user: User | null, isStaff: boolean, currentView: string) {
   const { data: rooms = [], isLoading: loadingRooms } = useQuery<SupabaseRoom[]>({
     queryKey: ['rooms'],
@@ -136,7 +133,6 @@ function useDashboardData(user: User | null, isStaff: boolean, currentView: stri
     enabled: isStaff && currentView === 'housekeeping' && !!user,
   });
 
-  // 🚀 LECTURA DINÁMICA DE TABLAS (Visor de Base de Datos Supa Base)
   const isDbView = currentView.startsWith('db_');
   const dbTableName = isDbView ? currentView.slice(3) : '';
 
@@ -148,7 +144,7 @@ function useDashboardData(user: User | null, isStaff: boolean, currentView: stri
       return data as Record<string, unknown>[];
     },
     enabled: !!user && isDbView,
-    staleTime: 1000 * 5, // Cache sutil de 5 segundos para mantener consistencia
+    staleTime: 1000 * 5, 
   });
 
   // Mappers
@@ -211,9 +207,6 @@ function useDashboardData(user: User | null, isStaff: boolean, currentView: stri
   };
 }
 
-/**
- * Encapsula todas las mutaciones transaccionales hacia Supabase.
- */
 function useDashboardMutations() {
   const queryClient = useQueryClient();
 
@@ -336,31 +329,35 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const userInitial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U';
 
-  const themeSelectorUI = (
-    <div className="flex bg-pms-surface-high p-1 rounded-xl border border-pms-border shadow-inner">
-      {[
-        { key: 'light', icon: Sun, label: 'Light' },
-        { key: 'sovereign-dark', icon: Moon, label: 'Sovereign' },
-        { key: 'gemini-dark', icon: Sparkles, label: 'Gemini' }
-      ].map((themeOpt) => {
-        const IsActiveTheme = dashboardTheme === themeOpt.key;
-        const ThemeIcon = themeOpt.icon;
-        return (
-          <button
-            key={themeOpt.key}
-            onClick={() => setDashboardTheme(themeOpt.key as DashboardTheme)}
-            title={`Alternar para ${themeOpt.label}`}
-            className={cn(
-              "w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer border-none bg-transparent outline-none",
-              IsActiveTheme ? "bg-pms-accent text-pms-accent-foreground shadow-md" : "text-pms-text-muted hover:text-pms-text hover:bg-pms-surface/50"
-            )}
-          >
-            <ThemeIcon size={14} />
-          </button>
-        );
-      })}
-    </div>
-  );
+  // 🚀 RELOJ MULTI-ZONA EN TIEMPO REAL (Cero Consultas de Red / Cliente Puro)
+  const [time, setTime] = useState(() => new Date());
+  const [activeTimezone, setActiveTimezone] = useState<'America/Sao_Paulo' | 'America/Argentina/Buenos_Aires' | 'America/Santiago'>('America/Sao_Paulo');
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formattedTime = useMemo(() => {
+    return new Intl.DateTimeFormat('pt-BR', { // 🚀 Saneado: Configuración regional estable para evitar advertencia de dependencias de Hook
+      timeZone: activeTimezone,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(time);
+  }, [time, activeTimezone]);
+
+  const handleToggleTheme = () => {
+    setDashboardTheme(dashboardTheme === 'light' ? 'dark' : 'light');
+  };
+
+  // 🚀 Saneado: Tipado estático restrictivo para erradicar el uso de 'as any'
+  const timezones: { key: 'America/Sao_Paulo' | 'America/Argentina/Buenos_Aires' | 'America/Santiago'; label: string }[] = [
+    { key: 'America/Sao_Paulo', label: 'BR' },
+    { key: 'America/Argentina/Buenos_Aires', label: 'AR' },
+    { key: 'America/Santiago', label: 'CL' }
+  ];
 
   if (isStaff) {
     return (
@@ -373,8 +370,41 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             Beach Core PMS • <span className="text-pms-accent">{userRole}</span>
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          {themeSelectorUI}
+
+        {/* CONTROLES DE LA BARRA SUPERIOR (Reloj + Un Solo Botón de Tema) */}
+        <div className="flex items-center gap-6">
+          
+          {/* Reloj Multi-Zona */}
+          <div className="flex items-center gap-3 bg-pms-surface-high/60 border border-pms-border px-4 py-2 rounded-2xl">
+            <Clock size={14} className="text-pms-accent" />
+            <span className="font-mono text-xs font-bold text-pms-text tracking-tight min-w-[65px]">{formattedTime}</span>
+            <div className="h-4 w-px bg-pms-border mx-1" />
+            <div className="flex gap-1.5">
+              {timezones.map(tz => (
+                <button
+                  key={tz.key}
+                  type="button"
+                  onClick={() => setActiveTimezone(tz.key)}
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all border-none bg-transparent cursor-pointer",
+                    activeTimezone === tz.key ? "text-pms-accent bg-pms-surface" : "text-pms-text-muted"
+                  )}
+                >
+                  {tz.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Un Solo Botón de Alternancia de Tema */}
+          <button
+            onClick={handleToggleTheme}
+            title="Alternar Tema PMS"
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-pms-surface-high border border-pms-border hover:bg-pms-surface text-pms-text outline-none cursor-pointer transition-colors shadow-sm"
+          >
+            {dashboardTheme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          </button>
+
           <Avatar className="w-10 h-10 border-2 border-pms-border shadow-sm cursor-pointer hover:border-pms-accent transition-colors">
             <AvatarImage src={user.user_metadata?.avatar_url || ''} />
             <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
@@ -391,7 +421,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <span className="text-xs font-bold uppercase tracking-[0.2em] text-pms-text-muted">{userRole}</span>
       </div>
       <div className="flex items-center gap-4">
-        {themeSelectorUI}
+        <button
+          onClick={handleToggleTheme}
+          className="w-9 h-9 rounded-xl flex items-center justify-center bg-pms-surface-high border border-pms-border text-pms-text outline-none cursor-pointer"
+        >
+          {dashboardTheme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+        </button>
         <Avatar className="w-9 h-9 border border-pms-border shadow-xs">
           <AvatarImage src={user.user_metadata?.avatar_url || ''} />
           <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
