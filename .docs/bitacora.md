@@ -601,6 +601,50 @@ Code
 
 ---
 
+⚓ BITÁCORA MAESTRA DE INGENIERÍA: CONSOLIDACIÓN DE IDENTIDADES, GOBERNANZA MULTI-ROL Y NAVEGACIÓN VERCEL STYLE
+Proyecto: Beach Hotel Canasvieiras
+Fecha de Consolidación: 20 de Junio, 2026
+Estatus de Compilación: Vercel-Ready (100% libre de advertencias y errores de TypeScript y ESLint v9)
+Huso Horario Operativo: America/Sao_Paulo (GMT-3)
+1. Topología del Ecosistema de Identidades y Roles (RBAC)
+Se ha expandido el tipado contractual y la gobernanza de accesos en el lado del servidor y cliente para soportar 9 perfiles de usuario bien definidos bajo el estándar de seguridad de la información ISO 27001:
+developer (Desarrollador / Súper Admin): Privilegios absolutos y herméticos. Accede a la terminal de telemetría de red, simulación de pasarelas de pago y al visor introspectivo de tablas físicas de Supabase.
+admin (Administrador General): Control total de la operación hotelera. Administra el alta, cambio y baja lógica de funcionarios, consulta el flujo de caja, gastos por centro de costos y configura plantillas de correo.
+receptionist (Recepcionista): Operador de recepción. Accede a la matriz de asignación de cuartos, buscador CRM de reservas, check-in de acompañantes y reportes policiales de la FNRH.
+housekeeping_supervisor (Supervisor de Limpieza): Perfil de auditoría móvil. Posee capacidades expandidas para auditar el aseo de habitaciones, calificar con estrellas la faena, subir evidencias fotográficas tomadas con cámara nativa y agregar tareas personalizadas de mantenimiento al checklist sobre la marcha.
+housekeeper (Auxiliar de Limpieza / Camareira): Operador móvil de aseo. Accede a su lista de habitaciones asignadas para completar de forma interactiva las tareas de limpieza obligatorias.
+agency_retail (Agencia de Viajes Minorista): Operadores B2B externos. Consultan tarifas preferenciales y aplican cupones de descuento automáticos desde la web.
+agency_wholesale (Agencia Mayorista / Consolidador): Operadores B2B de alto volumen. Acceden a un margen de comisión (markup) superior y cotizan planes grupales de forma preferencial.
+guest (Huésped / Cliente): Cliente final. Consulta de forma síncrona el itinerario de sus excursiones del hotel, guías de check-in digital y el resumen financiero de sus estancias.
+agency (Legacy): Preservado en el tipo de unión de TypeScript para evitar regresiones de tipado con cuentas creadas de forma retroactiva.
+2. Decisiones de Arquitectura y Saneamiento de Aparatos (Fase de Consolidación)
+Aparato A: Contexto de Autenticación y Expansión de Roles
+Ubicación del archivo: client/src/contexts/AuthContext.tsx
+Decisión Técnica: Se expandió el tipo contractual UserRole para incorporar los nuevos roles (receptionist, agency_retail, agency_wholesale, housekeeping_supervisor), eliminando las alertas de asignación de tipos TS2322 en los componentes hijos.
+Motor de Auto-Curación (Self-Healing): Se mantuvo el interceptor asíncrono que asocia de forma limpia los metadatos de usuario con la tabla pública de huéspedes (public.guests) para evitar inconsistencias en el primer inicio de sesión posventa.
+Aparato B: Sidebar de Navegación Plana estilo Vercel (Carbon Dark)
+Ubicación del archivo: client/src/components/dashboard/PMSSidebar.tsx
+Decisión Técnica (SOLID): Se refactorizó la barra de navegación para eliminar la fricción de acordeones anidados por un diseño 100% plano e interactivo. Al hacer clic en un elemento padre que contiene sub-secciones, el sistema redirige de inmediato al primer sub-módulo disponible. Las sub-secciones operativas se muestran como pestañas horizontales en el área de trabajo principal.
+Saneamiento de Linter: Se resolvieron todas las advertencias no-unused-vars de ESLint v9 eliminando la importación de ShieldAlert y la variable destructurada user de useAuth() que se encontraba sin uso.
+Gobernación de Vistas por Rol: Se implementó un filtrado dinámico del menú basado en propiedades declarativas (roles: UserRole[]), garantizando que cada usuario visualice única y exclusivamente las opciones permitidas para su labor.
+Aparato C: Orquestador Maestro de Paneles de Control
+Ubicación del archivo: client/src/pages/AdminDashboard.tsx
+Decisión Técnica (DRY): Para evitar la alteración y re-escritura del tipado de componentes hijos legados que no soportaban el nuevo rol de supervisor de forma nativa, se inyectó una conversión segura en la frontera de propiedades de <HousekeepingReport />, mapeando el rol 'housekeeping_supervisor' al tipo compatible 'housekeeper'.
+Saneamiento de Ámbito de Bloque: Se envolvió el cuerpo del case 'housekeeping': en llaves {} de bloque. Esto delimita correctamente el alcance léxico de la variable const reportRole y resuelve el error de linter no-case-declarations de forma definitiva.
+Aparato D: Matriz de Ocupación e Interactividad en Celdas
+Ubicación del archivo: client/src/components/dashboard/reception/RoomMatrix.tsx
+Decisión de Rendimiento: Se resolvió la inestabilidad de la variable de fecha today (que generaba renders continuos en cascada por re-instanciación síncrona en cada ciclo) envolviéndola en un estado síncrono perezoso useState(() => startOfDay(new Date())). Esto estabilizó por completo la dependencia del gancho useMemo y eliminó la necesidad de usar variables con ámbito de bloque antes de su declaración (baseDateUpdate).
+Asignación Rápida: Se renombró el botón principal a ALOCAÇÃO RÁPIDA y se acopló a un selector de categoría en el toolbar superior, buscando y asignando de inmediato el primer cuarto disponible y limpio de esa categoría hoy.
+Celdas Interactivas y Modal de Situación: Se reemplazó el flujo sutil del clic en celda por la apertura del cuadro de diálogo "Estado de Situação". Este modal audita si la habitación está disponible en la fecha seleccionada, muestra su higiene actual y ofrece un botón de acción rápida para iniciar el flujo de Check-In en caliente si está vacante.
+Aparato E: Simplificación Temática y Estilo Vercel
+Ubicación de los archivos: client/src/contexts/ThemeContext.tsx e client/src/index.css
+Decisión Estética: Se redujeron los tres antiguos temas operativos del dashboard a únicamente dos temas: Claro (Light) y Oscuro (Dark, predeterminado).
+Estilo index.css: Se redefinió la clase [data-dashboard-theme="dark"] adoptando negros absolutos (#000000) y bordes finos de alta resolución (#262626) inspirados en el diseño minimalista de Vercel. Se añadieron las variables de Tailwind v4 en el bloque de extensión para evitar advertencias de at-rules desconocidas en el editor local.
+
+---
+
+
+
 
 
 

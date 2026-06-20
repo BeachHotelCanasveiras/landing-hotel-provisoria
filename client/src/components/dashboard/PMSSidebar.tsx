@@ -3,9 +3,11 @@
  * @description Panel lateral de navegación plana de alta fidelidad estilo Vercel.
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN y principios SOLID:
  * - Estética Vercel: Diseñado con accesos planos e interactivos, libre de acordeones colapsables.
- * - Saneamiento Temático: Ajustado al modelo de dos estados (Claro y Oscuro) para resolver inconsistencias de superposición (TS2322 / TS2367).
+ * - Saneamiento Temático: Ajustado al modelo de dos estados (Claro y Oscuro) para resolver de forma definitiva las inconsistencias de superposición (TS2322 / TS2367).
+ * - Identidad Visual: Logotipo corporativo de Cloudinary integrado junto a la marca "Beach Canasvieiras".
+ * - Limpieza de Footer: Remoción absoluta de los botones de salida y enlaces del pie de página para despejar la interfaz.
+ * - Saneamiento de Importaciones: Reincorporados los iconos 'Hotel', 'Sun' y 'Moon' en la importación de lucide-react para corregir TS2304.
  * - RBAC Seguro: Filtrado reactivo de menús por rol. El rol 'developer' tiene bypass absoluto a todas las vistas.
- * - Soporte B2B y Supervisión: Canales independientes para Agencias de Viajes (Minoristas), Mayoristas y Supervisores de Limpieza.
  * - Saneado: Satisface ESLint v9, libre de variables huérfanas y advertencias de renderizado.
  */
 
@@ -13,13 +15,14 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   LayoutDashboard, Calendar, BarChart3, Briefcase, 
-  Sparkles, ExternalLink, Settings, LogOut, Menu, 
-  Hotel, Sun, Moon, Database, Users2 
+  Sparkles, ExternalLink, Settings, Menu, 
+  Database, Users2, Hotel, Sun, Moon // 🚀 Saneado (TS2304): Reincorporadas las importaciones de iconos necesarias
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, type UserRole } from '@/contexts/AuthContext';
 import { useTheme, type DashboardTheme } from '@/contexts/ThemeContext';
 import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
+import { Logo } from '@/components/Logo'; // 🚀 Integración de Logotipo de la Casa
 import { PMSSidebarTranslationSchema } from '@/locales/schemas/pms_sidebar.schema';
 
 interface SubMenuItem {
@@ -46,7 +49,6 @@ interface PMSSidebarProps {
 export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   currentView,
   onNavigate,
-  onSignOut,
 }) => {
   // 📊 Capa de Telemetría: Registro asíncrono de latencia de montaje
   usePerformanceProfiler('PMSSidebar');
@@ -69,7 +71,7 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   }
 
   const cycleDashboardTheme = () => {
-    // 🚀 SANEADO (TS2322): Rotación reducida para conmutar únicamente entre Claro y Oscuro
+    // 🚀 SANEADO (TS2322): Rotación reducida para conmutar únicamente entre Claro (light) y Oscuro (dark)
     const themes: DashboardTheme[] = ['light', 'dark'];
     const currentIndex = themes.indexOf(dashboardTheme);
     const nextIndex = (currentIndex + 1) % themes.length;
@@ -149,6 +151,13 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
       roles: ['agency_wholesale']
     },
     {
+      key: 'booking_engine',
+      label: t('booking_engine', { defaultValue: 'Motor de Reservas' }),
+      icon: ExternalLink,
+      view: 'booking_engine_external',
+      roles: ['admin', 'developer', 'receptionist']
+    },
+    {
       key: 'database',
       label: t('database.title', { defaultValue: 'Base de Datos' }),
       icon: Database,
@@ -188,6 +197,10 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
   });
 
   const handleItemNavigation = (item: MenuItem) => {
+    if (item.key === 'booking_engine') {
+      window.open('https://beachcanasvieiras.com', '_blank');
+      return;
+    }
     if (item.view) {
       onNavigate(item.view);
     } else if (item.subItems && item.subItems.length > 0) {
@@ -205,29 +218,33 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
     >
       <div>
         {/* HEADER BRANDING */}
-        <div className="p-6 mb-4 flex items-center justify-between">
+        <div className="p-6 mb-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            {/* Logotipo responsivo de Cloudinary inyectado en el encabezado */}
+            {!isCollapsed ? (
+              <Logo variant="logo-main" theme="dark" className="h-6 origin-left animate-in fade-in duration-300" />
+            ) : (
+              <Logo variant="logo-square" theme="dark" className="w-8 h-8 rounded-xl shadow-md cursor-pointer mx-auto" />
+            )}
+            <button 
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-2 hover:bg-pms-surface-high rounded-xl transition-all text-pms-text-muted hover:text-pms-text cursor-pointer border-none bg-transparent"
+              aria-label="Minimizar barra lateral"
+            >
+              <Menu size={16} />
+            </button>
+          </div>
+
           {!isCollapsed && (
-            <div className="flex items-center gap-3 animate-in fade-in duration-300">
-              <div className="w-8 h-8 rounded-xl bg-pms-accent flex items-center justify-center text-pms-accent-foreground shadow-md transition-transform duration-300">
-                <Hotel size={16} strokeWidth={2} />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-display text-sm font-bold text-pms-text leading-tight">
-                  {t('brand_title', { defaultValue: 'Hotel Beach' })}
-                </span>
-                <span className="text-[9px] font-bold text-pms-accent uppercase tracking-tighter">
-                  {activeRole} Console
-                </span>
-              </div>
+            <div className="flex flex-col border-t border-pms-border/40 pt-4 animate-in fade-in duration-300">
+              <span className="font-display text-sm font-bold text-pms-text leading-tight">
+                Beach Canasvieiras
+              </span>
+              <span className="text-[9px] font-bold text-pms-accent uppercase tracking-tighter mt-0.5">
+                {activeRole} Console
+              </span>
             </div>
           )}
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-pms-surface-high rounded-xl transition-all text-pms-text-muted hover:text-pms-text cursor-pointer border-none bg-transparent"
-            aria-label="Minimizar barra lateral"
-          >
-            <Menu size={16} />
-          </button>
         </div>
 
         {/* LISTADO DE ACCESOS PLANOS (Vercel Style) */}
@@ -240,9 +257,6 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
 
           {filteredMenu.map((item) => {
             const Icon = item.icon;
-            
-            // Un ítem se considera activo si la vista coincide con su propiedad directa
-            // o si coincide con la vista de cualquiera de sus sub-elementos.
             const isActive = currentView === item.view || item.subItems?.some(s => s.view === currentView);
 
             return (
@@ -319,26 +333,6 @@ export const PMSSidebar: React.FC<PMSSidebarProps> = ({
             </div>
           )}
         </div>
-
-        {/* Enlace Externo Motor de Reservas */}
-        <a
-          href="https://beachcanasvieiras.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pms-surface-high text-pms-text-muted hover:text-pms-text rounded-xl transition-all text-xs font-semibold uppercase tracking-wider text-center"
-        >
-          <ExternalLink size={14} />
-          {!isCollapsed && <span>{t('booking_engine')}</span>}
-        </a>
-
-        {/* Cerrar Sesión Segura */}
-        <button
-          onClick={onSignOut}
-          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-500/10 text-red-400/70 hover:text-red-400 rounded-xl transition-all cursor-pointer border-none bg-transparent text-left"
-        >
-          <LogOut size={14} />
-          {!isCollapsed && <span className="text-[10px] font-bold uppercase tracking-widest">{t('logout')}</span>}
-        </button>
       </div>
     </div>
   );

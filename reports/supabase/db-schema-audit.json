@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-06-20T03:33:30.886Z",
+  "timestamp": "2026-06-20T05:43:20.283Z",
   "database_url": "https://dacexpclmsnqunnxckpz.supabase.co",
-  "total_tables_audited": 22,
+  "total_tables_audited": 23,
   "schema_structure": [
     {
       "table_name": "physical_inventory",
@@ -693,6 +693,61 @@
           "name": "sync_status",
           "type": "string",
           "format": "text",
+          "nullable": true,
+          "description": null
+        }
+      ]
+    },
+    {
+      "table_name": "view_product_durations",
+      "columns_count": 7,
+      "columns": [
+        {
+          "name": "id",
+          "type": "string",
+          "format": "uuid",
+          "nullable": true,
+          "description": "Note:\nThis is a Primary Key.<pk/>"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "current_stock",
+          "type": "integer",
+          "format": "integer",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "unit",
+          "type": "string",
+          "format": "text",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "daily_usage_per_guest",
+          "type": "number",
+          "format": "numeric",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "active_guests",
+          "type": "integer",
+          "format": "bigint",
+          "nullable": true,
+          "description": null
+        },
+        {
+          "name": "estimated_days_remaining",
+          "type": "number",
+          "format": "numeric",
           "nullable": true,
           "description": null
         }

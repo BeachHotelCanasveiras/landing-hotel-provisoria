@@ -4,14 +4,14 @@
  * Refactorizado bajo el MANIFIESTO DE NIVELACIÓN:
  * - Visor Supa Base: Mapeo y renderizado dinámico de tablas físicas con el componente 'DatabaseTableViewer'.
  * - React 19 Purity (static-components): Se inyecta 'themeSelectorUI' como nodo JSX en lugar de componente anidado.
- * - Saneamiento TS (no-explicit-any): Tipado de matriz estática para evitar aserciones 'as any' en selectores de reloj.
+ * - Saneamiento TS (no-explicit-any): Tipado estricto de 'DashboardHeaderProps' y firmas del localizador.
  * - Responsabilidad Única (SRP): Lógica de red extraída a 'useDashboardData' y 'useDashboardMutations'.
- * - Reloj Multi-Zona en Tiempo Real: Reloj síncrono del cliente con soporte de zona horaria estable.
- * - Interruptor de Tema de Botón Único: Alterna entre Claro y Oscuro de forma cíclica.
+ * - Reloj en Tiempo Real Simplificado: Reloj síncrono del cliente ampliado a formato grande fijado en hora de Florianópolis (Brasil).
+ * - Cierre de Sesión en Avatar: Dropdown interactivo con auto-cierre al hacer clic fuera para gestionar la salida.
  * - Observabilidad: Instrumentación con usePerformanceProfiler para trazas de latencia en montaje.
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
@@ -26,7 +26,6 @@ import { useTheme, type DashboardTheme } from '@/contexts/ThemeContext';
 import { usePerformanceProfiler } from '@/hooks/usePerformanceProfiler';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils';
 
 // Importaciones Atómicas de Módulos y Barriles
 import { GuestPortal, AgencyPortal, AdminPMS, DeveloperConsole } from '@/components/dashboard';
@@ -329,9 +328,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const userInitial = user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0).toUpperCase() || 'U';
 
-  // 🚀 RELOJ MULTI-ZONA EN TIEMPO REAL (Cero Consultas de Red / Cliente Puro)
+  // 🚀 RELOJ EN TIEMPO REAL FIJADO EN HORA DE FLORIANÓPOLIS (Cero Consultas de Red / Cliente Puro)
   const [time, setTime] = useState(() => new Date());
-  const [activeTimezone, setActiveTimezone] = useState<'America/Sao_Paulo' | 'America/Argentina/Buenos_Aires' | 'America/Santiago'>('America/Sao_Paulo');
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -339,25 +337,32 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   }, []);
 
   const formattedTime = useMemo(() => {
-    return new Intl.DateTimeFormat('pt-BR', { // 🚀 Saneado: Configuración regional estable para evitar advertencia de dependencias de Hook
-      timeZone: activeTimezone,
+    return new Intl.DateTimeFormat('pt-BR', { // 🚀 Saneado: Formateador con idioma local estable sin dependencias inestables
+      timeZone: 'America/Sao_Paulo', // Sincronizado por defecto con Florianópolis, Brasil (GMT-3)
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
       hour12: false
     }).format(time);
-  }, [time, activeTimezone]);
+  }, [time]);
+
+  // 🚀 CONTROL DESPLEGABLE DEL AVATAR CLIQUEABLE PARA CERRAR SESIÓN
+  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
+  const avatarMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(event.target as Node)) {
+        setIsAvatarMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleToggleTheme = () => {
     setDashboardTheme(dashboardTheme === 'light' ? 'dark' : 'light');
   };
-
-  // 🚀 Saneado: Tipado estático restrictivo para erradicar el uso de 'as any'
-  const timezones: { key: 'America/Sao_Paulo' | 'America/Argentina/Buenos_Aires' | 'America/Santiago'; label: string }[] = [
-    { key: 'America/Sao_Paulo', label: 'BR' },
-    { key: 'America/Argentina/Buenos_Aires', label: 'AR' },
-    { key: 'America/Santiago', label: 'CL' }
-  ];
 
   if (isStaff) {
     return (
@@ -371,29 +376,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </p>
         </div>
 
-        {/* CONTROLES DE LA BARRA SUPERIOR (Reloj + Un Solo Botón de Tema) */}
+        {/* CONTROLES DE LA BARRA SUPERIOR (Reloj Grande + Un Solo Botón de Tema + Avatar Cliqueable) */}
         <div className="flex items-center gap-6">
           
-          {/* Reloj Multi-Zona */}
-          <div className="flex items-center gap-3 bg-pms-surface-high/60 border border-pms-border px-4 py-2 rounded-2xl">
-            <Clock size={14} className="text-pms-accent" />
-            <span className="font-mono text-xs font-bold text-pms-text tracking-tight min-w-[65px]">{formattedTime}</span>
-            <div className="h-4 w-px bg-pms-border mx-1" />
-            <div className="flex gap-1.5">
-              {timezones.map(tz => (
-                <button
-                  key={tz.key}
-                  type="button"
-                  onClick={() => setActiveTimezone(tz.key)}
-                  className={cn(
-                    "px-2 py-0.5 rounded text-[9px] font-bold uppercase transition-all border-none bg-transparent cursor-pointer",
-                    activeTimezone === tz.key ? "text-pms-accent bg-pms-surface" : "text-pms-text-muted"
-                  )}
-                >
-                  {tz.label}
-                </button>
-              ))}
-            </div>
+          {/* Reloj Grande en Tiempo Real */}
+          <div className="flex items-center gap-2.5 bg-pms-surface-high/60 border border-pms-border px-4.5 py-2 rounded-2xl select-none">
+            <Clock size={15} className="text-pms-accent animate-pulse" />
+            <span className="font-mono text-sm sm:text-base font-bold text-pms-text tracking-tight min-w-[70px]">{formattedTime}</span>
           </div>
 
           {/* Un Solo Botón de Alternancia de Tema */}
@@ -405,10 +394,48 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             {dashboardTheme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
           </button>
 
-          <Avatar className="w-10 h-10 border-2 border-pms-border shadow-sm cursor-pointer hover:border-pms-accent transition-colors">
-            <AvatarImage src={user.user_metadata?.avatar_url || ''} />
-            <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
-          </Avatar>
+          {/* 🚀 AVATAR CLIQUEABLE CON DROPDOWN DE CONFIGURACIÓN Y SALIDA */}
+          <div className="relative" ref={avatarMenuRef}>
+            <button 
+              onClick={() => setIsAvatarMenuOpen(!isAvatarMenuOpen)}
+              className="focus:outline-none bg-transparent border-none p-0 cursor-pointer flex items-center"
+              aria-label="Menu do Usuário"
+            >
+              <Avatar className="w-10 h-10 border-2 border-pms-border shadow-sm hover:border-pms-accent transition-colors">
+                <AvatarImage src={user.user_metadata?.avatar_url || ''} />
+                <AvatarFallback className="bg-pms-surface-high text-pms-text font-bold">{userInitial}</AvatarFallback>
+              </Avatar>
+            </button>
+
+            <AnimatePresence>
+              {isAvatarMenuOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute right-0 mt-2 bg-pms-surface border border-pms-border rounded-2xl p-1.5 shadow-2xl z-50 min-w-[160px] text-pms-text"
+                >
+                  <div className="px-3.5 py-2.5 border-b border-pms-border/40 select-none">
+                    <p className="text-[10px] text-pms-accent uppercase tracking-widest font-bold">Ficha do Usuário</p>
+                    <p className="text-xs font-semibold mt-1 truncate">{user.user_metadata?.full_name || 'Usuário'}</p>
+                  </div>
+                  <div className="pt-1.5">
+                    <button 
+                      onClick={async () => {
+                        setIsAvatarMenuOpen(false);
+                        await signOut();
+                      }}
+                      className="w-full text-left px-3 py-2.5 hover:bg-red-500/10 text-red-500 rounded-xl text-xs font-bold flex items-center gap-2 border-none bg-transparent cursor-pointer"
+                    >
+                      <LogOut size={13} /> Sair da Conta
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
         </div>
       </header>
     );
